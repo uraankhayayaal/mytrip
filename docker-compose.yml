@@ -57,7 +57,9 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      # distroless/static не содержит shell и wget — healthcheck выполняем
+      # снаружи через compose (docker compose ps / curl), а не из контейнера.
+      test: ["NONE"]
       interval: 5s
       timeout: 3s
       retries: 10
