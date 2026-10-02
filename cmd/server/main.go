@@ -20,18 +20,18 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"mytrip/internal/api/handlers"
 	"mytrip/internal/api/middleware"
 	"mytrip/internal/config"
 	"mytrip/internal/domain"
+	"mytrip/internal/repo"
+	"mytrip/internal/service"
 )
 
 // Точки расширения DI: конструкторы сервисов/репозиториев/хендлеров
 // добавят BEL-03..06. Пока nil — маршруты /api/v1/* появятся вместе с ними.
 var (
-// TODO(BEL-03): tripService *service.TripService — инициализировать в main
-// TODO(BEL-04): photoService *service.PhotoService
-// TODO(BEL-05): stopService *service.StopService
-// TODO(BEL-06): authService *service.AuthService
+	// TODO(BEL-03..06): tripService, stopService, authService, photoService, exportHandler
 )
 
 func main() {
@@ -67,7 +67,7 @@ func main() {
 	r.Use(middleware.ErrorHandler)
 	r.Get("/healthz", healthHandler)
 	r.Route("/api/v1", func(r chi.Router) {
-		// TODO(BEL-03..06): маршруты /trips, /stops, /photos, /auth
+		r.With(authMiddleware).Get("/trips/{id}/export", exportHandler.Export)
 	})
 
 	srv := &http.Server{
