@@ -23,4 +23,5 @@
 ## План работ
 
 - [x] BEL-01 — корневой Makefile: help/deps/build/test/lint/run/e2e + backend-*/frontend-* (завершено).
+- [x] BEL-03 — SQL-миграции golang-migrate в db/migrations/: 0001_init (users, refresh_tokens, pgcrypto), 0002_trips, 0003_stops, 0004_photos (up/down). Проверено: все 5 таблиц создаются без ошибок, down-миграции откатывают схему.
 - [ ] DOL-03 (ARCH-02) — цели up/down/logs/ps/infra.* (будут ДОБАВЛЕНЫ в этот же Makefile, help подхватит автоматически).
