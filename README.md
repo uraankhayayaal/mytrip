@@ -25,6 +25,7 @@
 - [x] BEL-01 — корневой Makefile: help/deps/build/test/lint/run/e2e + backend-*/frontend-* (завершено).
 - [x] BEL-03 — SQL-миграции golang-migrate в db/migrations/: 0001_init (users, refresh_tokens, pgcrypto), 0002_trips, 0003_stops, 0004_photos (up/down). Проверено: все 5 таблиц создаются без ошибок, down-миграции откатывают схему.
 - [x] FEL-01 — Каркас SPA (frontend/): Vite+TS+Tailwind, React Router v6, Layout/ProtectedLayout, axios-клиент /api/v1 с JWT-интерцептором (refresh на 401), ApiError, клиенты auth/trips/stops/photos, QueryClient, страницы-заглушки, unit-тесты (vitest+jsdom). Проверено: make frontend-build / frontend-test / frontend-lint зелёные.
+- [x] FEL-04 — MapView (Leaflet): `src/components/MapView.tsx` — MapContainer+TileLayer (OSM, без API-ключа), divIcon-маркеры с номером по order (выбранный — bg-red-600), drag → onMoveStop, click → onSelectStop, Polyline по stopsSorted (order). Unit-тесты `MapView.test.tsx` (мок react-leaflet, jsdom): N маркеров, dragend → onMoveStop, click → onSelectStop, polyline в порядке order, пустая карта. LSP-диагностика чистая; make frontend-build/frontend-test/frontend-lint — см. план работ (в этой сессии Run-песочница недоступна, docker-образ не поднимается).
 - [ ] DOL-03 (ARCH-02) — цели up/down/logs/ps/infra.* (будут ДОБАВЛЕНЫ в этот же Makefile, help подхватит автоматически).
 
 ## Фронтенд (frontend/)
