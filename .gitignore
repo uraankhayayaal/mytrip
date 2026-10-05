@@ -7,3 +7,18 @@ e2e/test-results/
 e2e/playwright-report/
 pgdata/
 miniodata/
+
+# артефакты сборки и скачанные тулчейны (дописано оркестратором, Ф-6)
+node_modules/
+dist/
+build/
+__pycache__/
+.venv/
+target/
+*.tsbuildinfo
+*.tar.gz
+*.tgz
+*.tar.xz
+*.tar.bz2
+*.zip
+node-v*/

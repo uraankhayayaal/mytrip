@@ -1,0 +1,6 @@
+/* Leaflet (react-leaflet) — глобальные стили карты. */
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

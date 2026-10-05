@@ -73,7 +73,7 @@ frontend-run: # help: запуск фронтенда в dev-режиме
 e2e: # help: самозавершающийся прогон e2e (up → healthcheck → e2e-сценарии → down)
 	$(MAKE) up
 	@for i in $$(seq 1 60); do curl -f http://localhost:8080/healthz && break; sleep 1; done
-	npm --prefix e2e test
+	npm --prefix frontend run e2e
 	RC=$$?
 	$(MAKE) down
 	exit $$RC
