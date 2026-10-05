@@ -16,20 +16,39 @@ export interface StopFormProps {
 const stopSchema = z.object({
   title: z.string().min(1, 'Название обязательно'),
   description: z.string().default(''),
-  lat: z.coerce.number({ invalid_type_error: 'Широта должна быть числом' }).min(-90, 'Широта должна быть в диапазоне -90..90').max(90, 'Широта должна быть в диапазоне -90..90'),
-  lng: z.coerce.number({ invalid_type_error: 'Долгота должна быть числом' }).min(-180, 'Долгота должна быть в диапазоне -180..180').max(180, 'Долгота должна быть в диапазоне -180..180'),
+  lat: z.coerce
+    .number({ invalid_type_error: 'Широта должна быть числом' })
+    .min(-90, 'Широта должна быть в диапазоне -90..90')
+    .max(90, 'Широта должна быть в диапазоне -90..90'),
+  lng: z.coerce
+    .number({ invalid_type_error: 'Долгота должна быть числом' })
+    .min(-180, 'Долгота должна быть в диапазоне -180..180')
+    .max(180, 'Долгота должна быть в диапазоне -180..180'),
   visit_date: z.string().min(1, 'Дата посещения обязательна'),
-  order: z.coerce.number({ invalid_type_error: 'Порядок должен быть числом' }).min(0, 'Порядок должен быть >= 0'),
+  order: z.coerce
+    .number({ invalid_type_error: 'Порядок должен быть числом' })
+    .min(0, 'Порядок должен быть >= 0'),
 });
 
 type StopInput = z.infer<typeof stopSchema>;
 
 export function StopForm({ tripId, initial, onSaved, onCancel }: StopFormProps): JSX.Element {
   const [apiError, setApiError] = useState<string | null>(null);
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<StopInput>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<StopInput>({
     resolver: zodResolver(stopSchema),
     defaultValues: initial
-      ? { title: initial.title, description: initial.description, lat: initial.location.lat, lng: initial.location.lng, visit_date: initial.visit_date, order: initial.order }
+      ? {
+          title: initial.title,
+          description: initial.description,
+          lat: initial.location.lat,
+          lng: initial.location.lng,
+          visit_date: initial.visit_date,
+          order: initial.order,
+        }
       : undefined,
   });
 
@@ -67,33 +86,77 @@ export function StopForm({ tripId, initial, onSaved, onCancel }: StopFormProps):
         </div>
       )}
       <div>
-        <label htmlFor="stop-title" className="block text-sm font-medium">Название</label>
-        <input id="stop-title" type="text" {...register('title')} className="mt-1 block w-full rounded border border-gray-300 px-2 py-1" />
+        <label htmlFor="stop-title" className="block text-sm font-medium">
+          Название
+        </label>
+        <input
+          id="stop-title"
+          type="text"
+          {...register('title')}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1"
+        />
         {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
       </div>
       <div>
-        <label htmlFor="stop-description" className="block text-sm font-medium">Описание</label>
-        <textarea id="stop-description" {...register('description')} className="mt-1 block w-full rounded border border-gray-300 px-2 py-1" />
+        <label htmlFor="stop-description" className="block text-sm font-medium">
+          Описание
+        </label>
+        <textarea
+          id="stop-description"
+          {...register('description')}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1"
+        />
         {errors.description && <p className="text-sm text-red-600">{errors.description.message}</p>}
       </div>
       <div>
-        <label htmlFor="stop-lat" className="block text-sm font-medium">Широта</label>
-        <input id="stop-lat" type="number" step="0.000001" {...register('lat')} className="mt-1 block w-full rounded border border-gray-300 px-2 py-1" />
+        <label htmlFor="stop-lat" className="block text-sm font-medium">
+          Широта
+        </label>
+        <input
+          id="stop-lat"
+          type="number"
+          step="0.000001"
+          {...register('lat')}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1"
+        />
         {errors.lat && <p className="text-sm text-red-600">{errors.lat.message}</p>}
       </div>
       <div>
-        <label htmlFor="stop-lng" className="block text-sm font-medium">Долгота</label>
-        <input id="stop-lng" type="number" step="0.000001" {...register('lng')} className="mt-1 block w-full rounded border border-gray-300 px-2 py-1" />
+        <label htmlFor="stop-lng" className="block text-sm font-medium">
+          Долгота
+        </label>
+        <input
+          id="stop-lng"
+          type="number"
+          step="0.000001"
+          {...register('lng')}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1"
+        />
         {errors.lng && <p className="text-sm text-red-600">{errors.lng.message}</p>}
       </div>
       <div>
-        <label htmlFor="stop-visit-date" className="block text-sm font-medium">Дата посещения</label>
-        <input id="stop-visit-date" type="date" {...register('visit_date')} className="mt-1 block w-full rounded border border-gray-300 px-2 py-1" />
+        <label htmlFor="stop-visit-date" className="block text-sm font-medium">
+          Дата посещения
+        </label>
+        <input
+          id="stop-visit-date"
+          type="date"
+          {...register('visit_date')}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1"
+        />
         {errors.visit_date && <p className="text-sm text-red-600">{errors.visit_date.message}</p>}
       </div>
       <div>
-        <label htmlFor="stop-order" className="block text-sm font-medium">Порядок</label>
-        <input id="stop-order" type="number" min={0} {...register('order')} className="mt-1 block w-full rounded border border-gray-300 px-2 py-1" />
+        <label htmlFor="stop-order" className="block text-sm font-medium">
+          Порядок
+        </label>
+        <input
+          id="stop-order"
+          type="number"
+          min={0}
+          {...register('order')}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1"
+        />
         {errors.order && <p className="text-sm text-red-600">{errors.order.message}</p>}
       </div>
       <div className="flex gap-2">

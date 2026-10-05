@@ -8,7 +8,7 @@ import { MapView } from '../components/MapView';
 import { PhotoUploader } from '../components/PhotoUploader';
 import { StopForm } from '../components/StopForm';
 import { formatDate } from '../lib/dates';
-import type { Location, Stop } from '../lib/types';
+import type { Location, Stop, StopPayload } from '../lib/types';
 
 export function TripDetail(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -19,14 +19,27 @@ export function TripDetail(): JSX.Element {
   const [editingStop, setEditingStop] = useState<Stop | null>(null);
   const [showStopForm, setShowStopForm] = useState(false);
 
-  const tripQuery = useQuery({ queryKey: ['trip', id], queryFn: () => getTrip(id!), enabled: !!id });
-  const stopsQuery = useQuery({ queryKey: ['stops', id], queryFn: () => listStops(id!), enabled: !!id });
-  const photosQuery = useQuery({ queryKey: ['photos', id], queryFn: () => listPhotos(id!), enabled: !!id });
+  const tripQuery = useQuery({
+    queryKey: ['trip', id],
+    queryFn: () => getTrip(id!),
+    enabled: !!id,
+  });
+  const stopsQuery = useQuery({
+    queryKey: ['stops', id],
+    queryFn: () => listStops(id!),
+    enabled: !!id,
+  });
+  const photosQuery = useQuery({
+    queryKey: ['photos', id],
+    queryFn: () => listPhotos(id!),
+    enabled: !!id,
+  });
 
   const invalidateStops = () => queryClient.invalidateQueries({ queryKey: ['stops', id] });
 
   const updateStopMut = useMutation({
-    mutationFn: ({ stopId, payload }: { stopId: string; payload: Parameters<typeof updateStop>[1] }) => updateStop(stopId, payload),
+    mutationFn: ({ stopId, payload }: { stopId: string; payload: StopPayload }) =>
+      updateStop(stopId, payload),
     onSuccess: invalidateStops,
   });
   const deleteStopMut = useMutation({
@@ -34,7 +47,7 @@ export function TripDetail(): JSX.Element {
     onSuccess: invalidateStops,
   });
   const createStopMut = useMutation({
-    mutationFn: (payload: Parameters<typeof createStop>[1]) => createStop(id!, payload),
+    mutationFn: (payload: StopPayload) => createStop(id!, payload),
     onSuccess: invalidateStops,
   });
 
@@ -50,7 +63,13 @@ export function TripDetail(): JSX.Element {
     if (!s) return;
     updateStopMut.mutate({
       stopId,
-      payload: { title: s.title, description: s.description, location, visit_date: s.visit_date, order: s.order },
+      payload: {
+        title: s.title,
+        description: s.description,
+        location,
+        visit_date: s.visit_date,
+        order: s.order,
+      },
     });
   };
 
@@ -85,20 +104,31 @@ export function TripDetail(): JSX.Element {
             </p>
           )}
         </div>
-        <button type="button" onClick={() => navigate(`/trips/${id}/edit`)} className="rounded border border-gray-300 px-3 py-1">
+        <button
+          type="button"
+          onClick={() => navigate(`/trips/${id}/edit`)}
+          className="rounded border border-gray-300 px-3 py-1"
+        >
           Редактировать
         </button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
-          <MapView stops={stops} onMoveStop={onMoveStop} selectedStopId={selectedStopId} onSelectStop={setSelectedStopId} />
+          <MapView
+            stops={stops}
+            onMoveStop={onMoveStop}
+            selectedStopId={selectedStopId}
+            onSelectStop={setSelectedStopId}
+          />
           {selectedStop && (
             <div className="rounded border border-gray-200 p-3 text-sm">
               <p className="font-semibold">{selectedStop.title}</p>
               <p>{selectedStop.description}</p>
               <p>Дата: {formatDate(selectedStop.visit_date)}</p>
-              <p>Координаты: {selectedStop.location.lat} / {selectedStop.location.lng}</p>
+              <p>
+                Координаты: {selectedStop.location.lat} / {selectedStop.location.lng}
+              </p>
             </div>
           )}
         </div>
@@ -107,7 +137,11 @@ export function TripDetail(): JSX.Element {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Стопы</h2>
-              <button type="button" onClick={openCreate} className="rounded bg-blue-600 px-3 py-1 text-white">
+              <button
+                type="button"
+                onClick={openCreate}
+                className="rounded bg-blue-600 px-3 py-1 text-white"
+              >
                 + Стоп
               </button>
             </div>
@@ -135,10 +169,18 @@ export function TripDetail(): JSX.Element {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <button type="button" onClick={() => openEdit(stop)} className="rounded border border-gray-300 px-2 py-0.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(stop)}
+                        className="rounded border border-gray-300 px-2 py-0.5 text-xs"
+                      >
                         Изменить
                       </button>
-                      <button type="button" onClick={() => handleDeleteStop(stop)} className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-600">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStop(stop)}
+                        className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-600"
+                      >
                         Удалить
                       </button>
                     </div>
@@ -150,14 +192,30 @@ export function TripDetail(): JSX.Element {
 
           <div>
             <h2 className="mb-2 text-lg font-semibold">Фото</h2>
-            <PhotoUploader tripId={id} photos={photos} onPhotosChange={() => queryClient.invalidateQueries({ queryKey: ['photos', id] })} />
+            <PhotoUploader
+              tripId={id}
+              photos={photos}
+              onPhotosChange={() => queryClient.invalidateQueries({ queryKey: ['photos', id] })}
+            />
           </div>
 
           <div className="flex gap-2">
-            <button type="button" onClick={() => { window.location.href = `/api/v1/trips/${id}/export?format=pdf`; }} className="rounded border border-gray-300 px-3 py-1">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = `/api/v1/trips/${id}/export?format=pdf`;
+              }}
+              className="rounded border border-gray-300 px-3 py-1"
+            >
               Экспорт PDF
             </button>
-            <button type="button" onClick={() => { window.location.href = `/api/v1/trips/${id}/export?format=csv`; }} className="rounded border border-gray-300 px-3 py-1">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = `/api/v1/trips/${id}/export?format=csv`;
+              }}
+              className="rounded border border-gray-300 px-3 py-1"
+            >
               Экспорт CSV
             </button>
           </div>

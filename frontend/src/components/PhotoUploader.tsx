@@ -38,7 +38,11 @@ export function PhotoUploader({ tripId, photos, onPhotosChange }: PhotoUploaderP
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleFiles} />
-        {uploading && <span data-testid="photo-uploader-spinner" className="text-sm text-gray-500">Загрузка…</span>}
+        {uploading && (
+          <span data-testid="photo-uploader-spinner" className="text-sm text-gray-500">
+            Загрузка…
+          </span>
+        )}
       </div>
       {photos.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
