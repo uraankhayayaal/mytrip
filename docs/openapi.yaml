@@ -14,27 +14,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserRegister'
+              $ref: '#/components/schemas/RegisterRequest'
       responses:
         '201':
-          description: Пользователь успешно зарегистрирован
+          description: Пользователь создан
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
         '400':
-          description: Некорректные данные
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: Пользователь с таким email уже существует
+          $ref: '#/components/responses/ConflictError'
   /auth/login:
     post:
-      summary: Вход пользователя
+      summary: Вход в систему
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserLogin'
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
           description: Успешный вход
@@ -43,22 +43,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
-          description: Неверные учетные данные
+          $ref: '#/components/responses/UnauthorizedError'
   /auth/refresh:
     post:
       summary: Обновление токена
       responses:
         '200':
-          description: Токен успешно обновлён
+          description: Токен обновлён
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
         '401':
-          description: Неверный refresh токен
+          $ref: '#/components/responses/UnauthorizedError'
   /auth/logout:
     post:
-      summary: Выход пользователя
+      summary: Выход из системы
       responses:
         '204':
           description: Успешный выход
@@ -73,7 +73,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
-          description: Неавторизованный доступ
+          $ref: '#/components/responses/UnauthorizedError'
   /trips:
     get:
       summary: Получить список поездок
@@ -93,19 +93,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TripCreate'
+              $ref: '#/components/schemas/TripRequest'
       responses:
         '201':
-          description: Поездка успешно создана
+          description: Поездка создана
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trip'
         '400':
-          description: Некорректные данные
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
   /trips/{id}:
     get:
-      summary: Получить поездку по ID
+      summary: Получить информацию о поездке
       parameters:
         - name: id
           in: path
@@ -114,13 +116,13 @@ paths:
             type: string
       responses:
         '200':
-          description: Поездка найдена
+          description: Информация о поездке
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trip'
         '404':
-          description: Поездка не найдена
+          $ref: '#/components/responses/NotFoundError'
     put:
       summary: Обновить поездку
       parameters:
@@ -134,18 +136,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TripUpdate'
+              $ref: '#/components/schemas/TripRequest'
       responses:
         '200':
-          description: Поездка успешно обновлена
+          description: Поездка обновлена
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trip'
-        '404':
-          description: Поездка не найдена
         '400':
-          description: Некорректные данные
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
     delete:
       summary: Удалить поездку
       parameters:
@@ -156,9 +158,9 @@ paths:
             type: string
       responses:
         '204':
-          description: Поездка успешно удалена
+          description: Поездка удалена
         '404':
-          description: Поездка не найдена
+          $ref: '#/components/responses/NotFoundError'
   /trips/{id}/stops:
     get:
       summary: Получить список остановок поездки
@@ -190,16 +192,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StopCreate'
+              $ref: '#/components/schemas/StopRequest'
       responses:
         '201':
-          description: Остановка успешно создана
+          description: Остановка создана
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Stop'
         '400':
-          description: Некорректные данные
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
   /stops/{stopId}:
     put:
       summary: Обновить остановку
@@ -214,18 +218,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StopUpdate'
+              $ref: '#/components/schemas/StopRequest'
       responses:
         '200':
-          description: Остановка успешно обновлена
+          description: Остановка обновлена
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Stop'
-        '404':
-          description: Остановка не найдена
         '400':
-          description: Некорректные данные
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
     delete:
       summary: Удалить остановку
       parameters:
@@ -236,9 +240,9 @@ paths:
             type: string
       responses:
         '204':
-          description: Остановка успешно удалена
+          description: Остановка удалена
         '404':
-          description: Остановка не найдена
+          $ref: '#/components/responses/NotFoundError'
   /trips/{id}/photos:
     post:
       summary: Загрузить фото для поездки
@@ -253,16 +257,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PhotoUpload'
+              $ref: '#/components/schemas/PhotoUploadRequest'
       responses:
         '201':
-          description: Фото успешно загружено
+          description: Фото загружено
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Photo'
+                $ref: '#/components/schemas/PhotoUrlResponse'
         '400':
-          description: Некорректные данные
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
   /photos/{id}/url:
     get:
       summary: Получить URL фото
@@ -278,9 +284,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PhotoUrl'
+                $ref: '#/components/schemas/PhotoUrlResponse'
         '404':
-          description: Фото не найдено
+          $ref: '#/components/responses/NotFoundError'
   /photos/{id}:
     delete:
       summary: Удалить фото
@@ -292,9 +298,9 @@ paths:
             type: string
       responses:
         '204':
-          description: Фото успешно удалено
+          description: Фото удалено
         '404':
-          description: Фото не найдено
+          $ref: '#/components/responses/NotFoundError'
   /trips/{id}/export:
     get:
       summary: Экспорт поездки
@@ -309,78 +315,39 @@ paths:
           required: true
           schema:
             type: string
-            enum: [pdf, csv]
+            enum:
+              - pdf
+              - csv
       responses:
         '200':
-          description: Экспорт успешно завершён
+          description: Экспорт данных
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
         '400':
-          description: Неверный формат
+          $ref: '#/components/responses/ValidationError'
         '404':
-          description: Поездка не найдена
+          $ref: '#/components/responses/NotFoundError'
   /healthz:
     get:
-      summary: Проверка состояния сервиса
+      summary: Проверка состояния
       responses:
         '200':
           description: Сервис работает
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Health'
+                $ref: '#/components/schemas/HealthResponse'
 components:
   schemas:
-    UserRegister:
-      type: object
-      required:
-        - email
-        - password
-        - name
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
-        name:
-          type: string
-    UserLogin:
-      type: object
-      required:
-        - email
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
-    LoginResponse:
-      type: object
-      required:
-        - access_token
-        - user
-      properties:
-        access_token:
-          type: string
-        refresh_token:
-          type: string
-        user:
-          $ref: '#/components/schemas/User'
-    TokenResponse:
-      type: object
-      required:
-        - access_token
-      properties:
-        access_token:
-          type: string
     User:
       type: object
-      required:
-        - id
-        - email
-        - name
       properties:
         id:
           type: string
@@ -388,13 +355,46 @@ components:
           type: string
         name:
           type: string
-    Trip:
+        created_at:
+          type: string
+          format: date-time
+    RegisterRequest:
       type: object
       required:
-        - id
-        - title
-        - start_date
-        - end_date
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+    Trip:
+      type: object
       properties:
         id:
           type: string
@@ -414,24 +414,7 @@ components:
         updated_at:
           type: string
           format: date-time
-    TripCreate:
-      type: object
-      required:
-        - title
-        - start_date
-        - end_date
-      properties:
-        title:
-          type: string
-        description:
-          type: string
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
-    TripUpdate:
+    TripRequest:
       type: object
       properties:
         title:
@@ -446,12 +429,10 @@ components:
           format: date-time
     Stop:
       type: object
-      required:
-        - id
-        - name
-        - location
       properties:
         id:
+          type: string
+        trip_id:
           type: string
         name:
           type: string
@@ -459,37 +440,13 @@ components:
           type: string
         location:
           $ref: '#/components/schemas/Location'
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-    StopCreate:
-      type: object
-      required:
-        - name
-        - location
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        location:
-          $ref: '#/components/schemas/Location'
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
-    StopUpdate:
+    StopRequest:
       type: object
       properties:
         name:
@@ -498,73 +455,49 @@ components:
           type: string
         location:
           $ref: '#/components/schemas/Location'
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
     Location:
       type: object
-      required:
-        - lat
-        - lng
       properties:
         lat:
           type: number
-          format: float
         lng:
           type: number
-          format: float
     Photo:
       type: object
-      required:
-        - id
-        - url
       properties:
         id:
+          type: string
+        trip_id:
           type: string
         url:
           type: string
         created_at:
           type: string
           format: date-time
-    PhotoUpload:
+    PhotoUploadRequest:
       type: object
-      required:
-        - file
       properties:
         file:
           type: string
           format: binary
-    PhotoUrl:
+    PhotoUrlResponse:
       type: object
-      required:
-        - url
-        - expires_at
       properties:
         url:
           type: string
         expires_at:
           type: string
           format: date-time
-    Health:
+    HealthResponse:
       type: object
-      required:
-        - status
       properties:
         status:
           type: string
     Error:
       type: object
-      required:
-        - error
       properties:
         error:
           type: object
-          required:
-            - code
-            - message
           properties:
             code:
               type: string
@@ -572,15 +505,28 @@ components:
               type: string
             details:
               type: object
-      example:
-        error:
-          code: validation
-          message: Некорректные данные
-          details: {}
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-security:
-  - BearerAuth: []
+  responses:
+    ValidationError:
+      description: Ошибка валидации
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: Не найдено
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnauthorizedError:
+      description: Неавторизован
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ConflictError:
+      description: Конфликт
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
