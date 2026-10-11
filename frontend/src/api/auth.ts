@@ -1,22 +1,26 @@
-import api from './client'
-import { RegisterPayload, LoginPayload, LoginResponse, User } from '../lib/types'
+import { api } from './client';
+import { User, RegisterPayload, LoginPayload, LoginResponse } from '../lib/types';
 
-export const register = (p: RegisterPayload): Promise<User> => {
-  return api.post('/auth/register', p).then(res => res.data.user)
+export async function register(p: RegisterPayload): Promise<User> {
+  const response = await api.post('/auth/register', p);
+  return response.data.user;
 }
 
-export const login = (p: LoginPayload): Promise<LoginResponse> => {
-  return api.post('/auth/login', p).then(res => res.data)
+export async function login(p: LoginPayload): Promise<LoginResponse> {
+  const response = await api.post('/auth/login', p);
+  return response.data;
 }
 
-export const refresh = (): Promise<{ access_token: string }> => {
-  return api.post('/auth/refresh').then(res => res.data)
+export async function refresh(): Promise<{ access_token: string }> {
+  const response = await api.post('/auth/refresh');
+  return response.data;
 }
 
-export const logout = (): Promise<void> => {
-  return api.post('/auth/logout').then(() => undefined)
+export async function logout(): Promise<void> {
+  await api.post('/auth/logout');
 }
 
-export const me = (): Promise<User> => {
-  return api.get('/users/me').then(res => res.data)
+export async function me(): Promise<User> {
+  const response = await api.get('/users/me');
+  return response.data;
 }

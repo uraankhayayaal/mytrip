@@ -1,36 +1,37 @@
-import React from 'react'
-import { Outlet, Navigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { me } from '../api/auth'
-import { getAccessToken } from '../api/client'
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { me } from '../api/auth';
+import { getAccessToken } from '../api/client';
+import { Layout } from './Layout';
+import { Outlet } from 'react-router-dom';
 
 export function ProtectedLayout(): JSX.Element {
-  const { data, isLoading, isError, error } = useQuery({
+  const navigate = useNavigate();
+
+  const { isLoading, error } = useQuery({
     queryKey: ['me'],
     queryFn: me,
-    enabled: getAccessToken() !== null
-  })
+    enabled: getAccessToken() !== null,
+  });
 
-  // Loading state
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Загрузка...</div>
-  }
-
-  // Error handling
-  if (isError) {
-    // Check if it's an unauthorized error
-    if (error && typeof error === 'object' && 'response' in error && error.response && 
-        (error.response as any).status === 401) {
-      return <Navigate to="/login" replace />
+  React.useEffect(() => {
+    if (error && (error as any).response?.status === 401) {
+      navigate('/login', { replace: true });
     }
-    // For other errors, we might want to show an error message
-    return <Navigate to="/login" replace />
+  }, [error, navigate]);
+
+  if (isLoading) {
+    return <div>Загрузка...</div>;
   }
 
-  // Render layout with children
+  if (error) {
+    return <div>Ошибка: {(error as any).message}</div>;
+  }
+
   return (
     <Layout>
       <Outlet />
     </Layout>
-  )
+  );
 }

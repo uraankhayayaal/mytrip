@@ -1,5 +1,3 @@
-import React from 'react'
-
 export function Login(): JSX.Element {
-  return <div>TODO: Login</div>
+  return <div>TODO: Login</div>;
 }

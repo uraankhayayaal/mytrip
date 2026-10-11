@@ -1,10 +1,10 @@
 module.exports = {
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
-    'react-hooks',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended',
   ],
-  rules: {
-    // custom rules here
-  }
-}
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint'],
+  root: true,
+};
