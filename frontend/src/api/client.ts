@@ -1,64 +1,66 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { toApiError } from './errors';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 
-// Модуль-состояние: JWT access token. Refresh идёт через httpOnly cookie 'rt' (withCredentials).
-let accessToken: string | null = null;
+export let accessToken: string | null = null
 
-export function setAccessToken(t: string | null): void {
-  accessToken = t;
+export const setAccessToken = (t: string | null): void => {
+  accessToken = t
 }
 
-export function getAccessToken(): string | null {
-  return accessToken;
+export const getAccessToken = (): string | null => {
+  return accessToken
 }
 
-// Единый axios-инстанс: ТОЛЬКО относительные пути (dev — Vite proxy /api -> localhost:8080,
-// prod — nginx проксирует /api -> server:8080).
-export const api: AxiosInstance = axios.create({
+const api: AxiosInstance = axios.create({
   baseURL: '/api/v1',
-  withCredentials: true,
-});
+  withCredentials: true
+})
 
-// Request-интерцептор: Authorization: Bearer <token>, если accessToken установлен.
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (accessToken) {
-    config.headers.set('Authorization', `Bearer ${accessToken}`);
+// Request interceptor
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
   }
-  return config;
-});
+)
 
-// Response-интерцептор: при 401 — один раз POST /auth/refresh (без Authorization, cookie rt
-// httpOnly). Успех: обновляем token и повторяем запрос; неудача: сброс + редирект на /login.
+// Response interceptor
 api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as
-      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
-    const status = error.response?.status;
-    const isRefreshCall = !!originalRequest?.url && originalRequest.url.includes('/auth/refresh');
-
-    if (status === 401 && originalRequest && originalRequest._retry !== true && !isRefreshCall) {
-      originalRequest._retry = true;
+  (response) => {
+    return response
+  },
+  async (error) => {
+    const originalRequest = error.config
+    
+    // If error is 401 and it's not a retry attempt
+    if (error.response?.status === 401 && originalRequest && (originalRequest as any)._retry !== true) {
+      // Mark this request as a retry attempt
+      (originalRequest as any)._retry = true
+      
       try {
-        // Refresh без заголовка Authorization (httpOnly cookie 'rt').
-        const { data } = await axios.post<{ access_token: string }>(
-          `${api.defaults.baseURL}/auth/refresh`,
-          undefined,
-          { withCredentials: true },
-        );
-        setAccessToken(data.access_token);
-        return await api.request(originalRequest);
-      } catch {
-        setAccessToken(null);
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        // Исходную 401 нормализуем в ApiError.
-        throw toApiError(error);
+        // Try to refresh the token
+        const refreshResponse = await api.post('/auth/refresh')
+        
+        // Set the new access token
+        setAccessToken(refreshResponse.data.access_token)
+        
+        // Retry the original request
+        return api.request(originalRequest)
+      } catch (refreshError) {
+        // If refresh fails, redirect to login
+        setAccessToken(null)
+        window.location.href = '/login'
+        return Promise.reject(error)
       }
     }
+    
+    // For all other errors, reject with normalized error
+    return Promise.reject(error)
+  }
+)
 
-    // Ошибки нормализуются в ApiError.
-    throw toApiError(error);
-  },
-);
+export default api
