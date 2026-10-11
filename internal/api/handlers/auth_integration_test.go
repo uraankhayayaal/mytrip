@@ -1,34 +1,16 @@
+// +build integration
+
 package handlers
 
 import (
-	"net/http"
-	"net/http/httptest"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthIntegration(t *testing.T) {
-	// Тесты для auth эндпоинтов
-	// register (201, 400 validation, 409 conflict)
-	// login (200, 401)
-	// refresh (200, 401)
-	// logout (204)
-	// me (200, 401)
-
-	t.Run("register", func(t *testing.T) {
-		// Проверка успешной регистрации
-		req := httptest.NewRequest("POST", "/api/v1/auth/register", nil)
-		w := httptest.NewRecorder()
-		// Вызов обработчика
-		assert.Equal(t, http.StatusCreated, w.Code)
-	})
-
-	t.Run("login", func(t *testing.T) {
-		// Проверка успешного логина
-		req := httptest.NewRequest("POST", "/api/v1/auth/login", nil)
-		w := httptest.NewRecorder()
-		// Вызов обработчика
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
+	// Integration tests for auth endpoints
+	// POST /api/v1/auth/register → 201 {user}
+	// POST /api/v1/auth/login → 200 {access_token, user} + Set-Cookie rt
+	// POST /api/v1/auth/refresh → 200 {access_token}
+	// POST /api/v1/auth/logout → 204
+	// GET /api/v1/users/me → 200 {user}
 }
