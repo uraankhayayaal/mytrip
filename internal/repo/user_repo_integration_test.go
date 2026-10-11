@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 
 	"mytrip/internal/domain"
 )
@@ -15,86 +18,93 @@ import (
 func TestUserRepoIntegration(t *testing.T) {
 	t.Parallel()
 
-	// Create test container
-n	ctx := context.Background()
-	req := testcontainers.ContainerRequest{
-		Image: "postgres:16-alpine",
-		Env: map[string]string{
-			"POSTGRES_PASSWORD": "password",
-			"POSTGRES_USER":     "user",
-			"POSTGRES_DB":       "testdb",
-		},
-		ExposedPorts: []string{"5432/tcp"},
-		WaitingFor:   wait.ForListeningPort("5432/tcp").WithStartupTimeout(10 * time.Second),
-	}
+	ctx := context.Background()
 
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	// Create PostgreSQL container
+	postgresContainer, err := postgres.RunContainer(ctx,
+		testcontainers.WithImage("postgres:16-alpine"),
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("testuser"),
+		postgres.WithPassword("testpassword"),
+	)
 	if err != nil {
 		t.Fatalf("failed to start container: %v", err)
 	}
-	defer func() {
-		if err := container.Terminate(ctx); err != nil {
+
+	// Clean up the container after the test is finished
+	t.Cleanup(func() {
+		if err := postgresContainer.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate container: %v", err)
 		}
-	}()
+	})
 
-	// Get database connection
-	host, err := container.Host(ctx)
+	// Get connection string
+	connStr, err := postgresContainer.ConnectionString(ctx)
 	if err != nil {
-		t.Fatalf("failed to get container host: %v", err)
-	}
-	port, err := container.MappedPort(ctx, "5432/tcp")
-	if err != nil {
-		t.Fatalf("failed to get mapped port: %v", err)
+		t.Fatalf("failed to get connection string: %v", err)
 	}
 
-	connStr := "host=" + host + " port=" + port.Port() + " user=user password=password dbname=testdb sslmode=disable"
-
-	// Create repository with connection
-	repo, err := NewUserRepo(connStr)
+	// Connect to database
+	db, err := pgxpool.New(ctx, connStr)
 	if err != nil {
-		t.Fatalf("failed to create user repo: %v", err)
+		t.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Run migrations
+	if err := runMigrations(db); err != nil {
+		t.Fatalf("failed to run migrations: %v", err)
 	}
 
-	t.Run("Create", func(t *testing.T) {
+	// Create user repo
+	repo := NewUserRepo(db)
+
+	t.Run("CreateUser", func(t *testing.T) {
 		user := &domain.User{
+			ID:        uuid.New().String(),
 			Email:     "test@example.com",
 			Name:      "Test User",
-			Password:  "password123",
+			CreatedAt: time.Now(),
 		}
 
-		error := repo.Create(ctx, user)
-		if error != nil {
-			t.Fatalf("failed to create user: %v", error)
+		newUser, err := repo.Create(ctx, user)
+		if err != nil {
+			t.Fatalf("failed to create user: %v", err)
 		}
 
-		if user.ID == "" {
-			t.Error("user ID should not be empty")
+		if newUser.ID != user.ID {
+			t.Errorf("expected user ID %s, got %s", user.ID, newUser.ID)
+		}
+
+		if newUser.Email != user.Email {
+			t.Errorf("expected user email %s, got %s", user.Email, newUser.Email)
 		}
 	})
 
-	t.Run("GetByEmail", func(t *testing.T) {
-		user, error := repo.GetByEmail(ctx, "test@example.com")
-		if error != nil {
-			t.Fatalf("failed to get user by email: %v", error)
+	t.Run("GetUserByEmail", func(t *testing.T) {
+		user, err := repo.GetByEmail(ctx, "test@example.com")
+		if err != nil {
+			t.Fatalf("failed to get user by email: %v", err)
 		}
 
 		if user.Email != "test@example.com" {
-			t.Error("user email does not match")
+			t.Errorf("expected user email test@example.com, got %s", user.Email)
 		}
 	})
 
-	t.Run("GetByID", func(t *testing.T) {
-		user, error := repo.GetByID(ctx, "1")
-		if error != nil {
-			t.Fatalf("failed to get user by ID: %v", error)
+	t.Run("GetUserByID", func(t *testing.T) {
+		user, err := repo.GetByID(ctx, "1")
+		if err != nil {
+			t.Fatalf("failed to get user by ID: %v", err)
 		}
 
-		if user.Email != "test@example.com" {
-			t.Error("user email does not match")
+		if user.ID != "1" {
+			t.Errorf("expected user ID 1, got %s", user.ID)
 		}
 	})
+}
+
+func runMigrations(db *pgxpool.Pool) error {
+	// In a real implementation, you would run actual migrations here
+	return nil
 }

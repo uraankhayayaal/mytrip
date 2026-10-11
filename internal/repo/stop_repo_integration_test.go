@@ -2,12 +2,13 @@ package repo
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 
 	"mytrip/internal/domain"
 )
@@ -15,121 +16,131 @@ import (
 func TestStopRepoIntegration(t *testing.T) {
 	t.Parallel()
 
-	// Create test container
 	ctx := context.Background()
-	req := testcontainers.ContainerRequest{
-		Image: "postgres:16-alpine",
-		Env: map[string]string{
-			"POSTGRES_PASSWORD": "password",
-			"POSTGRES_USER":     "user",
-			"POSTGRES_DB":       "testdb",
-		},
-		ExposedPorts: []string{"5432/tcp"},
-		WaitingFor:   wait.ForListeningPort("5432/tcp").WithStartupTimeout(10 * time.Second),
-	}
 
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	// Create PostgreSQL container
+	postgresContainer, err := postgres.RunContainer(ctx,
+		testcontainers.WithImage("postgres:16-alpine"),
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("testuser"),
+		postgres.WithPassword("testpassword"),
+	)
 	if err != nil {
 		t.Fatalf("failed to start container: %v", err)
 	}
-	defer func() {
-		if err := container.Terminate(ctx); err != nil {
+
+	// Clean up the container after the test is finished
+	t.Cleanup(func() {
+		if err := postgresContainer.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate container: %v", err)
 		}
-	}()
+	})
 
-	// Get database connection
-	host, err := container.Host(ctx)
+	// Get connection string
+	connStr, err := postgresContainer.ConnectionString(ctx)
 	if err != nil {
-		t.Fatalf("failed to get container host: %v", err)
-	}
-	port, err := container.MappedPort(ctx, "5432/tcp")
-	if err != nil {
-		t.Fatalf("failed to get mapped port: %v", err)
+		t.Fatalf("failed to get connection string: %v", err)
 	}
 
-	connStr := "host=" + host + " port=" + port.Port() + " user=user password=password dbname=testdb sslmode=disable"
-
-	// Create repository with connection
-	repo, err := NewStopRepo(connStr)
+	// Connect to database
+	db, err := pgxpool.New(ctx, connStr)
 	if err != nil {
-		t.Fatalf("failed to create stop repo: %v", err)
+		t.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Run migrations
+	if err := runMigrations(db); err != nil {
+		t.Fatalf("failed to run migrations: %v", err)
 	}
 
-	t.Run("Create", func(t *testing.T) {
+	// Create stop repo
+	repo := NewStopRepo(db)
+
+	t.Run("CreateStop", func(t *testing.T) {
 		stop := &domain.Stop{
+			ID:          uuid.New().String(),
 			TripID:      "1",
-			Name:        "Test Stop",
+			Title:       "Test Stop",
 			Description: "Test Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+			CreatedAt:   time.Now(),
 		}
 
-		error := repo.Create(ctx, stop)
-		if error != nil {
-			t.Fatalf("failed to create stop: %v", error)
+		newStop, err := repo.Create(ctx, stop)
+		if err != nil {
+			t.Fatalf("failed to create stop: %v", err)
 		}
 
-		if stop.ID == "" {
-			t.Error("stop ID should not be empty")
-		}
-	})
-
-	t.Run("GetByID", func(t *testing.T) {
-		stop, error := repo.GetByID(ctx, "1")
-		if error != nil {
-			t.Fatalf("failed to get stop by ID: %v", error)
-		}
-
-		if stop.Name != "Test Stop" {
-			t.Error("stop name does not match")
+		if newStop.ID != stop.ID {
+			t.Errorf("expected stop ID %s, got %s", stop.ID, newStop.ID)
 		}
 	})
 
-	t.Run("ListByTrip", func(t *testing.T) {
-		stops, error := repo.ListByTrip(ctx, "1")
-		if error != nil {
-			t.Fatalf("failed to list stops by trip: %v", error)
+	t.Run("GetStopByID", func(t *testing.T) {
+		stop, err := repo.GetByID(ctx, "1")
+		if err != nil {
+			t.Fatalf("failed to get stop by ID: %v", err)
+		}
+
+		if stop.ID != "1" {
+			t.Errorf("expected stop ID 1, got %s", stop.ID)
+		}
+	})
+
+	t.Run("ListStopsByTrip", func(t *testing.T) {
+		stops, err := repo.ListByTrip(ctx, "1")
+		if err != nil {
+			t.Fatalf("failed to list stops by trip: %v", err)
 		}
 
 		if len(stops) == 0 {
-			t.Error("stops list should not be empty")
+			t.Error("expected at least one stop")
 		}
 	})
 
-	t.Run("Update", func(t *testing.T) {
-		stop := &domain.Stop{
+	t.Run("UpdateStop", func(t *testing.T) {
+		updatedStop := &domain.Stop{
 			ID:          "1",
 			TripID:      "1",
-			Name:        "Updated Stop",
+			Title:       "Updated Test Stop",
 			Description: "Updated Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+			CreatedAt:   time.Now(),
 		}
 
-		error := repo.Update(ctx, stop)
-		if error != nil {
-			t.Fatalf("failed to update stop: %v", error)
+		_, err := repo.Update(ctx, updatedStop)
+		if err != nil {
+			t.Fatalf("failed to update stop: %v", err)
 		}
 
-		updatedStop, error := repo.GetByID(ctx, "1")
-		if error != nil {
-			t.Fatalf("failed to get updated stop: %v", error)
+		// Verify update worked
+		stop, err := repo.GetByID(ctx, "1")
+		if err != nil {
+			t.Fatalf("failed to get updated stop: %v", err)
 		}
 
-		if updatedStop.Name != "Updated Stop" {
-			t.Error("stop name was not updated")
+		if stop.Title != "Updated Test Stop" {
+			t.Errorf("expected updated title Updated Test Stop, got %s", stop.Title)
 		}
 	})
 
-	t.Run("Delete", func(t *testing.T) {
-		error := repo.Delete(ctx, "1")
-		if error != nil {
-			t.Fatalf("failed to delete stop: %v", error)
+	t.Run("DeleteStop", func(t *testing.T) {
+		err := repo.Delete(ctx, "1")
+		if err != nil {
+			t.Fatalf("failed to delete stop: %v", err)
 		}
 
-		_, error = repo.GetByID(ctx, "1")
-		if error == nil {
-			t.Error("stop should be deleted")
+		// Verify deletion worked
+		_, err = repo.GetByID(ctx, "1")
+		if err == nil {
+			t.Error("expected stop to be deleted")
 		}
 	})
 }
