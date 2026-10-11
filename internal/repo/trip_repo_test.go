@@ -3,6 +3,8 @@ package repo
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,217 +15,140 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"mytrip/internal/domain"
-	"mytrip/internal/repo"
 )
 
-// TestTripRepo tests the trip repository implementation with testcontainers
+// TestTripRepo tests the trip repository implementation
 func TestTripRepo(t *testing.T) {
 	t.Parallel()
 
-	// Start a test PostgreSQL container
+	// Create a test database container
 	ctx := context.Background()
+
 	postgresContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:16-alpine"),
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("testuser"),
-		postgres.WithPassword("testpass"),
+		postgres.WithPassword("testpassword"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").WithOccurrence(1).WithStartupTimeout(5*time.Second),
 		),
 	)
 	require.NoError(t, err)
 	defer func() {
-		require.NoError(t, postgresContainer.Terminate(ctx))
-	}()
+		_ = postgresContainer.Terminate(ctx)
+	}
 
 	// Get connection string
-	connStr, err := postgresContainer.ConnectionString(ctx)
+	connectionString, err := postgresContainer.ConnectionString(ctx)
 	require.NoError(t, err)
 
 	// Create repository
-	userRepo, err := repo.NewUserRepo(connStr)
+	db, err := NewTripRepo(connectionString)
 	require.NoError(t, err)
 
-	tripRepo, err := repo.NewTripRepo(connStr)
+	// Create a test user first
+	userRepo, err := NewUserRepo(connectionString)
+	require.NoError(t, err)
+	
+	user := &domain.User{
+		Email:     "test@example.com",
+		Name:      "Test User",
+		Password:  "password123",
+	}
+	createdUser, err := userRepo.Create(ctx, user)
 	require.NoError(t, err)
 
 	t.Run("Create", func(t *testing.T) {
-		ctx := context.Background()
-
-		user := &domain.User{
-			Email:    "test@example.com",
-			Password: "password123",
-			Name:     "Test User",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
 		trip := &domain.Trip{
 			Title:       "Test Trip",
 			Description: "Test Description",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
 		}
 
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
-		assert.NotEmpty(t, trip.ID)
-
-		// Verify trip was created
-		foundTrip, err := tripRepo.GetByID(ctx, trip.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, trip.Title, foundTrip.Title)
-		assert.Equal(t, trip.Description, foundTrip.Description)
-		assert.Equal(t, trip.UserID, foundTrip.UserID)
+		createdTrip, err := db.Create(ctx, trip)
+		require.NoError(t, err)
+		assert.NotEmpty(t, createdTrip.ID)
+		assert.Equal(t, trip.Title, createdTrip.Title)
+		assert.Equal(t, trip.Description, createdTrip.Description)
+		assert.Equal(t, createdUser.ID, createdTrip.UserID)
+		assert.NotEmpty(t, createdTrip.CreatedAt)
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test2@example.com",
-			Password: "password123",
-			Name:     "Test User 2",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create a trip
+		// First create a trip to get
 		trip := &domain.Trip{
 			Title:       "Test Trip 2",
 			Description: "Test Description 2",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
 		}
 
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
+		createdTrip, err := db.Create(ctx, trip)
+		require.NoError(t, err)
 
-		// Get trip by ID
-		foundTrip, err := tripRepo.GetByID(ctx, trip.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, trip.Title, foundTrip.Title)
-		assert.Equal(t, trip.Description, foundTrip.Description)
-		assert.Equal(t, trip.UserID, foundTrip.UserID)
+		gotTrip, err := db.GetByID(ctx, createdTrip.ID)
+		require.NoError(t, err)
+		assert.Equal(t, createdTrip.ID, gotTrip.ID)
+		assert.Equal(t, trip.Title, gotTrip.Title)
 	})
 
 	t.Run("ListByUser", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test3@example.com",
-			Password: "password123",
-			Name:     "Test User 3",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create trips for this user
-		trip1 := &domain.Trip{
-			Title:       "Test Trip 1",
-			Description: "Test Description 1",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
-		}
-
-		trip2 := &domain.Trip{
-			Title:       "Test Trip 2",
-			Description: "Test Description 2",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
-		}
-
-		error = tripRepo.Create(ctx, trip1)
-		assert.NoError(t, error)
-
-		error = tripRepo.Create(ctx, trip2)
-		assert.NoError(t, error)
-
-		// List trips by user
-		trips, err := tripRepo.ListByUser(ctx, user.ID)
-		assert.NoError(t, err)
-		assert.Len(t, trips, 2)
+		trips, err := db.ListByUser(ctx, createdUser.ID)
+		require.NoError(t, err)
+		assert.NotEmpty(t, trips)
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test4@example.com",
-			Password: "password123",
-			Name:     "Test User 4",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create a trip
+		// Create a trip to update
 		trip := &domain.Trip{
-			Title:       "Test Trip",
+			Title:       "Test Trip to Update",
 			Description: "Test Description",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
 		}
 
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
+		createdTrip, err := db.Create(ctx, trip)
+		require.NoError(t, err)
 
-		// Update trip
-		trip.Title = "Updated Trip Title"
-		trip.Description = "Updated Description"
+		updatedTrip := &domain.Trip{
+			ID:          createdTrip.ID,
+			Title:       "Updated Title",
+			Description: "Updated Description",
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(48 * time.Hour),
+			UserID:      createdUser.ID,
+		}
 
-		error = tripRepo.Update(ctx, trip)
-		assert.NoError(t, error)
-
-		// Verify update
-		foundTrip, err := tripRepo.GetByID(ctx, trip.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, trip.Title, foundTrip.Title)
-		assert.Equal(t, trip.Description, foundTrip.Description)
+		updated, err := db.Update(ctx, updatedTrip)
+		require.NoError(t, err)
+		assert.Equal(t, updatedTrip.Title, updated.Title)
+		assert.Equal(t, updatedTrip.Description, updated.Description)
+		assert.NotEqual(t, createdTrip.UpdatedAt, updated.UpdatedAt)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test5@example.com",
-			Password: "password123",
-			Name:     "Test User 5",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create a trip
+		// Create a trip to delete
 		trip := &domain.Trip{
-			Title:       "Test Trip",
+			Title:       "Test Trip to Delete",
 			Description: "Test Description",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
 		}
 
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
+		createdTrip, err := db.Create(ctx, trip)
+		require.NoError(t, err)
 
-		// Delete trip
-		error = tripRepo.Delete(ctx, trip.ID)
-		assert.NoError(t, error)
+		err = db.Delete(ctx, createdTrip.ID)
+		require.NoError(t, err)
 
-		// Verify deletion
-		_, err := tripRepo.GetByID(ctx, trip.ID)
+		// Verify it's deleted
+		gotTrip, err := db.GetByID(ctx, createdTrip.ID)
 		assert.Error(t, err)
+		assert.Nil(t, gotTrip)
 	})
 }

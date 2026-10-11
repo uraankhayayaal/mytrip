@@ -3,6 +3,8 @@ package repo
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,166 +15,108 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"mytrip/internal/domain"
-	"mytrip/internal/repo"
 )
 
-// TestPhotoRepo tests the photo repository implementation with testcontainers
+// TestPhotoRepo tests the photo repository implementation
 func TestPhotoRepo(t *testing.T) {
 	t.Parallel()
 
-	// Start a test PostgreSQL container
+	// Create a test database container
 	ctx := context.Background()
+
 	postgresContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:16-alpine"),
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("testuser"),
-		postgres.WithPassword("testpass"),
+		postgres.WithPassword("testpassword"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").WithOccurrence(1).WithStartupTimeout(5*time.Second),
 		),
 	)
 	require.NoError(t, err)
 	defer func() {
-		require.NoError(t, postgresContainer.Terminate(ctx))
-	}()
+		_ = postgresContainer.Terminate(ctx)
+	}
 
 	// Get connection string
-	connStr, err := postgresContainer.ConnectionString(ctx)
+	connectionString, err := postgresContainer.ConnectionString(ctx)
 	require.NoError(t, err)
 
 	// Create repositories
-	userRepo, err := repo.NewUserRepo(connStr)
+	db, err := NewPhotoRepo(connectionString)
 	require.NoError(t, err)
 
-	tripRepo, err := repo.NewTripRepo(connStr)
+	userRepo, err := NewUserRepo(connectionString)
 	require.NoError(t, err)
 
-	photoRepo, err := repo.NewPhotoRepo(connStr)
+	tripRepo, err := NewTripRepo(connectionString)
+	require.NoError(t, err)
+
+	// Create a test user and trip
+	user := &domain.User{
+		Email:     "test@example.com",
+		Name:      "Test User",
+		Password:  "password123",
+	}
+	createdUser, err := userRepo.Create(ctx, user)
+	require.NoError(t, err)
+
+	trip := &domain.Trip{
+		Title:       "Test Trip",
+		Description: "Test Description",
+		StartAt:     time.Now(),
+		EndAt:       time.Now().Add(24 * time.Hour),
+		UserID:      createdUser.ID,
+	}
+	createdTrip, err := tripRepo.Create(ctx, trip)
 	require.NoError(t, err)
 
 	t.Run("Create", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test@example.com",
-			Password: "password123",
-			Name:     "Test User",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create a trip
-		trip := &domain.Trip{
-			Title:       "Test Trip",
-			Description: "Test Description",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
-		}
-
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
-
-		// Create a photo
 		photo := &domain.Photo{
-			TripID: trip.ID,
-			URL:    "http://example.com/photo.jpg",
+			TripID: createdTrip.ID,
+			URL:    "http://example.com/test.jpg",
 		}
 
-		error = photoRepo.Create(ctx, photo)
-		assert.NoError(t, error)
-		assert.NotEmpty(t, photo.ID)
-
-		// Verify photo was created
-		foundPhoto, err := photoRepo.GetByID(ctx, photo.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, photo.URL, foundPhoto.URL)
-		assert.Equal(t, photo.TripID, foundPhoto.TripID)
+		createdPhoto, err := db.Create(ctx, photo)
+		require.NoError(t, err)
+		assert.NotEmpty(t, createdPhoto.ID)
+		assert.Equal(t, photo.URL, createdPhoto.URL)
+		assert.Equal(t, createdTrip.ID, createdPhoto.TripID)
+		assert.NotEmpty(t, createdPhoto.CreatedAt)
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test2@example.com",
-			Password: "password123",
-			Name:     "Test User 2",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create a trip
-		trip := &domain.Trip{
-			Title:       "Test Trip 2",
-			Description: "Test Description 2",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
-		}
-
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
-
-		// Create a photo
+		// First create a photo to get
 		photo := &domain.Photo{
-			TripID: trip.ID,
-			URL:    "http://example.com/photo2.jpg",
+			TripID: createdTrip.ID,
+			URL:    "http://example.com/test2.jpg",
 		}
 
-		error = photoRepo.Create(ctx, photo)
-		assert.NoError(t, error)
+		createdPhoto, err := db.Create(ctx, photo)
+		require.NoError(t, err)
 
-		// Get photo by ID
-		foundPhoto, err := photoRepo.GetByID(ctx, photo.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, photo.URL, foundPhoto.URL)
-		assert.Equal(t, photo.TripID, foundPhoto.TripID)
+		gotPhoto, err := db.GetByID(ctx, createdPhoto.ID)
+		require.NoError(t, err)
+		assert.Equal(t, createdPhoto.ID, gotPhoto.ID)
+		assert.Equal(t, photo.URL, gotPhoto.URL)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test3@example.com",
-			Password: "password123",
-			Name:     "Test User 3",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Create a trip
-		trip := &domain.Trip{
-			Title:       "Test Trip 3",
-			Description: "Test Description 3",
-			StartDate:   time.Now(),
-			EndDate:     time.Now().AddDate(0, 0, 1),
-			UserID:      user.ID,
-		}
-
-		error = tripRepo.Create(ctx, trip)
-		assert.NoError(t, error)
-
-		// Create a photo
+		// Create a photo to delete
 		photo := &domain.Photo{
-			TripID: trip.ID,
-			URL:    "http://example.com/photo3.jpg",
+			TripID: createdTrip.ID,
+			URL:    "http://example.com/test3.jpg",
 		}
 
-		error = photoRepo.Create(ctx, photo)
-		assert.NoError(t, error)
+		createdPhoto, err := db.Create(ctx, photo)
+		require.NoError(t, err)
 
-		// Delete photo
-		error = photoRepo.Delete(ctx, photo.ID)
-		assert.NoError(t, error)
+		err = db.Delete(ctx, createdPhoto.ID)
+		require.NoError(t, err)
 
-		// Verify deletion
-		_, err := photoRepo.GetByID(ctx, photo.ID)
+		// Verify it's deleted
+		gotPhoto, err := db.GetByID(ctx, createdPhoto.ID)
 		assert.Error(t, err)
+		assert.Nil(t, gotPhoto)
 	})
 }

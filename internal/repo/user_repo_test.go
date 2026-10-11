@@ -3,6 +3,8 @@ package repo
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,119 +15,89 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"mytrip/internal/domain"
-	"mytrip/internal/repo"
 )
 
-// TestUserRepo tests the user repository implementation with testcontainers
+// TestUserRepo tests the user repository implementation
 func TestUserRepo(t *testing.T) {
 	t.Parallel()
 
-	// Start a test PostgreSQL container
+	// Create a test database container
 	ctx := context.Background()
+
 	postgresContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:16-alpine"),
 		postgres.WithDatabase("testdb"),
 		postgres.WithUsername("testuser"),
-		postgres.WithPassword("testpass"),
+		postgres.WithPassword("testpassword"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").WithOccurrence(1).WithStartupTimeout(5*time.Second),
 		),
 	)
 	require.NoError(t, err)
 	defer func() {
-		require.NoError(t, postgresContainer.Terminate(ctx))
-	}()
+		_ = postgresContainer.Terminate(ctx)
+	}
 
 	// Get connection string
-	connStr, err := postgresContainer.ConnectionString(ctx)
+	connectionString, err := postgresContainer.ConnectionString(ctx)
 	require.NoError(t, err)
 
 	// Create repository
-	userRepo, err := repo.NewUserRepo(connStr)
+	db, err := NewUserRepo(connectionString)
 	require.NoError(t, err)
 
 	t.Run("Create", func(t *testing.T) {
-		ctx := context.Background()
-
 		user := &domain.User{
-			Email:    "test@example.com",
-			Password: "password123",
-			Name:     "Test User",
+			Email:     "test@example.com",
+			Name:      "Test User",
+			Password:  "password123",
 		}
 
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-		assert.NotEmpty(t, user.ID)
-		
-		// Verify user was created
-		foundUser, err := userRepo.GetByID(ctx, user.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, user.Email, foundUser.Email)
-		assert.Equal(t, user.Name, foundUser.Name)
+		createdUser, err := db.Create(ctx, user)
+		require.NoError(t, err)
+		assert.NotEmpty(t, createdUser.ID)
+		assert.Equal(t, user.Email, createdUser.Email)
+		assert.Equal(t, user.Name, createdUser.Name)
+		assert.NotEmpty(t, createdUser.CreatedAt)
 	})
 
 	t.Run("GetByEmail", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
-		user := &domain.User{
-			Email:    "test2@example.com",
-			Password: "password123",
-			Name:     "Test User 2",
-		}
-
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
-
-		// Get user by email
-		foundUser, err := userRepo.GetByEmail(ctx, user.Email)
-		assert.NoError(t, err)
-		assert.Equal(t, user.Email, foundUser.Email)
-		assert.Equal(t, user.Name, foundUser.Name)
+		user, err := db.GetByEmail(ctx, "test@example.com")
+		require.NoError(t, err)
+		assert.Equal(t, "test@example.com", user.Email)
+		assert.Equal(t, "Test User", user.Name)
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create a user first
+		// First create a user to get
 		user := &domain.User{
-			Email:    "test3@example.com",
-			Password: "password123",
-			Name:     "Test User 3",
+			Email:     "test2@example.com",
+			Name:      "Test User 2",
+			Password:  "password123",
 		}
 
-		error := userRepo.Create(ctx, user)
-		assert.NoError(t, error)
+		createdUser, err := db.Create(ctx, user)
+		require.NoError(t, err)
 
-		// Get user by ID
-		foundUser, err := userRepo.GetByID(ctx, user.ID)
-		assert.NoError(t, err)
-		assert.Equal(t, user.Email, foundUser.Email)
-		assert.Equal(t, user.Name, foundUser.Name)
+		nonExistentUser, err := db.GetByID(ctx, "non-existent-id")
+		assert.Error(t, err)
+		assert.Nil(t, nonExistentUser)
+
+		gotUser, err := db.GetByID(ctx, createdUser.ID)
+		require.NoError(t, err)
+		assert.Equal(t, createdUser.ID, gotUser.ID)
+		assert.Equal(t, user.Email, gotUser.Email)
 	})
 
-	t.Run("CreateDuplicateEmail", func(t *testing.T) {
-		ctx := context.Background()
-
-		// Create first user
-		user1 := &domain.User{
-			Email:    "duplicate@example.com",
-			Password: "password123",
-			Name:     "Test User 1",
+	t.Run("GetByEmail conflict", func(t *testing.T) {
+		// Try to create user with existing email
+		user := &domain.User{
+			Email:     "test@example.com",
+			Name:      "Another User",
+			Password:  "password123",
 		}
 
-		error := userRepo.Create(ctx, user1)
-		assert.NoError(t, error)
-
-		// Try to create user with same email
-		user2 := &domain.User{
-			Email:    "duplicate@example.com",
-			Password: "password456",
-			Name:     "Test User 2",
-		}
-
-		error = userRepo.Create(ctx, user2)
-		assert.Error(t, error)
-		// You might want to check for specific error type
+		_, err := db.Create(ctx, user)
+		assert.Error(t, err)
 	})
 }
