@@ -1,33 +1,41 @@
-import { useQuery } from '@tanstack/react-query';
-import { Navigate, Outlet } from 'react-router-dom';
-import { me } from '../api/auth';
-import { getAccessToken } from '../api/client';
-import { ApiError } from '../api/errors';
-import { Layout } from './Layout';
+import React from 'react'
+import { Outlet, Navigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { me } from '../api/auth'
+import { getAccessToken } from '../api/client'
 
 export function ProtectedLayout(): JSX.Element {
-  const { isPending, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['me'],
     queryFn: me,
-    enabled: getAccessToken() !== null,
-  });
+    enabled: getAccessToken() !== null
+  })
 
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-      </div>
-    );
+  // Loading state
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Загрузка...</div>
   }
 
-  // 401 / ApiError code 'unauthorized' -> редирект на /login.
-  if (error instanceof ApiError && error.code === 'unauthorized') {
-    return <Navigate to="/login" replace />;
+  // Error handling
+  if (isError) {
+    // Check if it's an unauthorized error
+    if (error && typeof error === 'object' && 'response' in error && error.response && 
+        (error.response as any).status === 401) {
+      return <Navigate to="/login" replace />
+    }
+    // For other errors, we might want to show an error message
+    return <Navigate to="/login" replace />
   }
 
+  // Render layout with children
   return (
-    <Layout>
-      <Outlet />
-    </Layout>
-  );
+    <div>
+      <Layout>
+        <Outlet />
+      </Layout>
+    </div>
+  )
 }
+
+// We need to import Layout here
+import { Layout } from './Layout'
