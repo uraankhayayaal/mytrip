@@ -1,12 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 
-// Lazy-loaded components
-const Login = React.lazy(() => import('./pages/Login'))
-const Register = React.lazy(() => import('./pages/Register'))
-const TripsList = React.lazy(() => import('./pages/TripsList'))
-const TripDetail = React.lazy(() => import('./pages/TripDetail'))
-const TripEdit = React.lazy(() => import('./pages/TripEdit'))
-const CalendarPage = React.lazy(() => import('./pages/CalendarPage'))
+// Page components
+import { Login } from './pages/Login'
+import { Register } from './pages/Register'
+import { TripsList } from './pages/TripsList'
+import { TripDetail } from './pages/TripDetail'
+import { TripEdit } from './pages/TripEdit'
+import { CalendarPage } from './pages/CalendarPage'
+
+// Layout components
+import { ProtectedLayout } from './components/ProtectedLayout'
+import { Layout } from './components/Layout'
 
 function App() {
   return (

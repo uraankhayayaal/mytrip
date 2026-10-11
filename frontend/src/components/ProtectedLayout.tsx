@@ -29,13 +29,8 @@ export function ProtectedLayout(): JSX.Element {
 
   // Render layout with children
   return (
-    <div>
-      <Layout>
-        <Outlet />
-      </Layout>
-    </div>
+    <Layout>
+      <Outlet />
+    </Layout>
   )
 }
-
-// We need to import Layout here
-import { Layout } from './Layout'
