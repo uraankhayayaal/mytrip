@@ -20,20 +20,36 @@ func TestPhotoRepo(t *testing.T) {
 	// for real database integration tests
 	
 	t.Run("Create", func(t *testing.T) {
-		// Test creating a photo
+		// Test creation logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a test database with testcontainers
+		// - Create a photo
+		// - Verify photo was created
+		// - Check ownership
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		// Test get photo by ID
+		// Test get by ID logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a photo
+		// - Retrieve photo by ID
+		// - Verify photo data
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		// Test deleting a photo
+		// Test delete logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a photo
+		// - Delete photo
+		// - Verify photo was deleted
 	})
 }

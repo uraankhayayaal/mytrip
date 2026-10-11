@@ -20,32 +20,58 @@ func TestStopRepo(t *testing.T) {
 	// for real database integration tests
 	
 	t.Run("Create", func(t *testing.T) {
-		// Test creating a stop
+		// Test creation logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a test database with testcontainers
+		// - Create a stop
+		// - Verify stop was created
+		// - Check ownership
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		// Test get stop by ID
+		// Test get by ID logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a stop
+		// - Retrieve stop by ID
+		// - Verify stop data
 	})
 
 	t.Run("ListByTrip", func(t *testing.T) {
-		// Test listing stops by trip
+		// Test list by trip logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create stops for specific trip
+		// - List stops by trip
+		// - Verify correct stops are returned
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		// Test updating a stop
+		// Test update logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a stop
+		// - Update stop
+		// - Verify update was successful
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		// Test deleting a stop
+		// Test delete logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a stop
+		// - Delete stop
+		// - Verify stop was deleted
 	})
 }

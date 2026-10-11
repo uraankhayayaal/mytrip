@@ -21,21 +21,35 @@ func TestUserRepo(t *testing.T) {
 	
 	t.Run("Create", func(t *testing.T) {
 		// Test creation logic
-		// Would test creating a user with unique email
-		// Test for conflict errors when email already exists
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a test database with testcontainers
+		// - Create a user
+		// - Verify user was created
+		// - Check for email uniqueness constraint
 	})
 
 	t.Run("GetByEmail", func(t *testing.T) {
-		// Test get user by email
+		// Test get by email logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a user with specific email
+		// - Retrieve user by email
+		// - Verify user data
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		// Test get user by ID
+		// Test get by ID logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a user
+		// - Retrieve user by ID
+		// - Verify user data
 	})
 }

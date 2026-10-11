@@ -20,32 +20,58 @@ func TestTripRepo(t *testing.T) {
 	// for real database integration tests
 	
 	t.Run("Create", func(t *testing.T) {
-		// Test creating a trip
+		// Test creation logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a test database with testcontainers
+		// - Create a trip
+		// - Verify trip was created
+		// - Check ownership
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		// Test get trip by ID
+		// Test get by ID logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a trip
+		// - Retrieve trip by ID
+		// - Verify trip data
 	})
 
 	t.Run("ListByUser", func(t *testing.T) {
-		// Test listing trips by user
+		// Test list by user logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create trips for specific user
+		// - List trips by user
+		// - Verify correct trips are returned
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		// Test updating a trip
+		// Test update logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a trip
+		// - Update trip
+		// - Verify update was successful
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		// Test deleting a trip
+		// Test delete logic
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
+		
+		// In real implementation:
+		// - Create a trip
+		// - Delete trip
+		// - Verify trip was deleted
 	})
 }
