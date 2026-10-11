@@ -1,25 +1,18 @@
-import { api } from './client';
-import type { Stop, StopPayload } from '../lib/types';
+import api from './client'
+import { StopPayload, Stop } from '../lib/types'
 
-// GET /trips/{tripId}/stops
-export async function listStops(tripId: string): Promise<Stop[]> {
-  const r = await api.get<Stop[]>(`/trips/${tripId}/stops`);
-  return r.data;
+export const listStops = (tripId: string): Promise<Stop[]> => {
+  return api.get(`/trips/${tripId}/stops`).then(res => res.data)
 }
 
-// POST /trips/{tripId}/stops -> 201
-export async function createStop(tripId: string, p: StopPayload): Promise<Stop> {
-  const r = await api.post<Stop>(`/trips/${tripId}/stops`, p);
-  return r.data;
+export const createStop = (tripId: string, p: StopPayload): Promise<Stop> => {
+  return api.post(`/trips/${tripId}/stops`, p).then(res => res.data)
 }
 
-// PUT /stops/{stopId}
-export async function updateStop(stopId: string, p: StopPayload): Promise<Stop> {
-  const r = await api.put<Stop>(`/stops/${stopId}`, p);
-  return r.data;
+export const updateStop = (stopId: string, p: StopPayload): Promise<Stop> => {
+  return api.put(`/stops/${stopId}`, p).then(res => res.data)
 }
 
-// DELETE /stops/{stopId} -> 204
-export async function deleteStop(stopId: string): Promise<void> {
-  await api.delete(`/stops/${stopId}`);
+export const deleteStop = (stopId: string): Promise<void> => {
+  return api.delete(`/stops/${stopId}`).then(() => undefined)
 }

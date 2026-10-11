@@ -1,31 +1,22 @@
-import { api } from './client';
-import type { Trip, TripPayload } from '../lib/types';
+import api from './client'
+import { TripPayload, Trip } from '../lib/types'
 
-// GET /trips
-export async function listTrips(): Promise<Trip[]> {
-  const r = await api.get<Trip[]>('/trips');
-  return r.data;
+export const listTrips = (): Promise<Trip[]> => {
+  return api.get('/trips').then(res => res.data)
 }
 
-// POST /trips -> 201
-export async function createTrip(p: TripPayload): Promise<Trip> {
-  const r = await api.post<Trip>('/trips', p);
-  return r.data;
+export const createTrip = (p: TripPayload): Promise<Trip> => {
+  return api.post('/trips', p).then(res => res.data)
 }
 
-// GET /trips/{id}
-export async function getTrip(id: string): Promise<Trip> {
-  const r = await api.get<Trip>(`/trips/${id}`);
-  return r.data;
+export const getTrip = (id: string): Promise<Trip> => {
+  return api.get(`/trips/${id}`).then(res => res.data)
 }
 
-// PUT /trips/{id}
-export async function updateTrip(id: string, p: TripPayload): Promise<Trip> {
-  const r = await api.put<Trip>(`/trips/${id}`, p);
-  return r.data;
+export const updateTrip = (id: string, p: TripPayload): Promise<Trip> => {
+  return api.put(`/trips/${id}`, p).then(res => res.data)
 }
 
-// DELETE /trips/{id} -> 204
-export async function deleteTrip(id: string): Promise<void> {
-  await api.delete(`/trips/${id}`);
+export const deleteTrip = (id: string): Promise<void> => {
+  return api.delete(`/trips/${id}`).then(() => undefined)
 }

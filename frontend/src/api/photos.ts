@@ -1,23 +1,20 @@
-import { api } from './client';
-import type { Photo } from '../lib/types';
+import api from './client'
+import { Photo, PhotoUrlResponse } from '../lib/types'
 
-// GET /trips/{tripId}/photos
-export async function listPhotos(tripId: string): Promise<Photo[]> {
-  const r = await api.get<Photo[]>(`/trips/${tripId}/photos`);
-  return r.data;
+export const uploadPhoto = (tripId: string, file: File): Promise<Photo> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.post(`/trips/${tripId}/photos`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }).then(res => res.data)
 }
 
-// POST /trips/{tripId}/photos (multipart 'file') → 201 Photo
-export async function uploadPhoto(tripId: string, file: File): Promise<Photo> {
-  const form = new FormData();
-  form.append('file', file);
-  const r = await api.post<Photo>(`/trips/${tripId}/photos`, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return r.data;
+export const deletePhoto = (photoId: string): Promise<void> => {
+  return api.delete(`/photos/${photoId}`).then(() => undefined)
 }
 
-// DELETE /photos/{photoId} → 204
-export async function deletePhoto(photoId: string): Promise<void> {
-  await api.delete(`/photos/${photoId}`);
+export const getPhotoUrl = (photoId: string): Promise<PhotoUrlResponse> => {
+  return api.get(`/photos/${photoId}/url`).then(res => res.data)
 }
