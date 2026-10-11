@@ -1,15 +1,18 @@
-# Generated OpenAPI specification for MyTrip API
+# OpenAPI 3.0.3 specification for mytrip API
 openapi: 3.0.3
 info:
   title: MyTrip API
   version: 1.0.0
-  description: API for managing trips, stops and photos
+  description: API for managing trips, stops, photos and user authentication
+
 servers:
   - url: http://localhost:8080/api/v1
+
 paths:
   /auth/register:
     post:
-      summary: Register a new user
+      summary: Register new user
+      tags: [Auth]
       requestBody:
         required: true
         content:
@@ -18,7 +21,7 @@ paths:
               $ref: '#/components/schemas/UserRegister'
       responses:
         '201':
-          description: User created successfully
+          description: User registered successfully
           content:
             application/json:
               schema:
@@ -35,9 +38,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
   /auth/login:
     post:
       summary: Login user
+      tags: [Auth]
       requestBody:
         required: true
         content:
@@ -62,12 +67,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
   /auth/refresh:
     post:
       summary: Refresh access token
+      tags: [Auth]
       responses:
         '200':
-          description: New access token
+          description: Token refreshed successfully
           content:
             application/json:
               schema:
@@ -78,33 +85,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
   /auth/logout:
     post:
       summary: Logout user
+      tags: [Auth]
       responses:
         '204':
           description: Logout successful
+
   /users/me:
     get:
       summary: Get current user
+      tags: [User]
       security:
         - BearerAuth: []
       responses:
         '200':
-          description: Current user data
+          description: User information
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
-          description: Not authenticated
+          description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
   /trips:
     get:
-      summary: Get trips
+      summary: List trips
+      tags: [Trip]
       security:
         - BearerAuth: []
       responses:
@@ -116,8 +129,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Trip'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
-      summary: Create new trip
+      summary: Create trip
+      tags: [Trip]
       security:
         - BearerAuth: []
       requestBody:
@@ -139,9 +159,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /trips/{id}:
     get:
       summary: Get trip by ID
+      tags: [Trip]
       security:
         - BearerAuth: []
       parameters:
@@ -152,7 +180,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Trip data
+          description: Trip details
           content:
             application/json:
               schema:
@@ -163,8 +191,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       summary: Update trip
+      tags: [Trip]
       security:
         - BearerAuth: []
       parameters:
@@ -198,8 +233,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       summary: Delete trip
+      tags: [Trip]
       security:
         - BearerAuth: []
       parameters:
@@ -217,9 +259,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /trips/{id}/stops:
     get:
-      summary: Get stops for trip
+      summary: List stops for trip
+      tags: [Stop]
       security:
         - BearerAuth: []
       parameters:
@@ -237,8 +287,21 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Stop'
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
-      summary: Add stop to trip
+      summary: Create stop
+      tags: [Stop]
       security:
         - BearerAuth: []
       parameters:
@@ -266,9 +329,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /stops/{stopId}:
     put:
       summary: Update stop
+      tags: [Stop]
       security:
         - BearerAuth: []
       parameters:
@@ -302,8 +379,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       summary: Delete stop
+      tags: [Stop]
       security:
         - BearerAuth: []
       parameters:
@@ -321,9 +405,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /trips/{id}/photos:
     post:
       summary: Upload photo for trip
+      tags: [Photo]
       security:
         - BearerAuth: []
       parameters:
@@ -340,7 +432,7 @@ paths:
               $ref: '#/components/schemas/PhotoUpload'
       responses:
         '201':
-          description: Photo URL
+          description: Photo uploaded successfully
           content:
             application/json:
               schema:
@@ -351,9 +443,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /photos/{id}/url:
     get:
       summary: Get presigned URL for photo
+      tags: [Photo]
       security:
         - BearerAuth: []
       parameters:
@@ -368,16 +474,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PhotoUrl'
+                $ref: '#/components/schemas/PhotoURL'
         '404':
           description: Photo not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /photos/{id}:
     delete:
       summary: Delete photo
+      tags: [Photo]
       security:
         - BearerAuth: []
       parameters:
@@ -395,9 +509,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /trips/{id}/export:
     get:
       summary: Export trip data
+      tags: [Export]
       security:
         - BearerAuth: []
       parameters:
@@ -414,7 +536,7 @@ paths:
             enum: [pdf, csv]
       responses:
         '200':
-          description: Exported data stream
+          description: Exported data
           content:
             application/pdf:
               schema:
@@ -436,9 +558,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /healthz:
     get:
       summary: Health check
+      tags: [Health]
       responses:
         '200':
           description: Service is healthy
@@ -446,188 +576,164 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+
 components:
   schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-        name:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - email
-        - name
-        - created_at
-        - updated_at
     UserRegister:
       type: object
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-        name:
-          type: string
       required:
         - email
         - password
         - name
-    UserLogin:
-      type: object
       properties:
         email:
           type: string
+          format: email
         password:
           type: string
+          format: password
+          minLength: 8
+        name:
+          type: string
+
+    UserLogin:
+      type: object
       required:
         - email
         - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
     LoginResponse:
       type: object
+      required:
+        - access_token
+        - user
       properties:
         access_token:
           type: string
         user:
           $ref: '#/components/schemas/User'
-      required:
-        - access_token
-        - user
+
     TokenResponse:
       type: object
+      required:
+        - access_token
       properties:
         access_token:
           type: string
-      required:
-        - access_token
-    Trip:
+
+    User:
       type: object
+      required:
+        - id
+        - email
+        - name
       properties:
         id:
           type: string
-        title:
+        email:
           type: string
-        description:
+          format: email
+        name:
           type: string
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - title
-        - start_date
-        - end_date
-        - created_at
-        - updated_at
+
     TripCreate:
       type: object
+      required:
+        - name
+        - start_date
+        - end_date
       properties:
-        title:
+        name:
           type: string
         description:
           type: string
         start_date:
           type: string
-          format: date-time
+          format: date
         end_date:
           type: string
-          format: date-time
-      required:
-        - title
-        - start_date
-        - end_date
+          format: date
+        location:
+          $ref: '#/components/schemas/Location'
+
     TripUpdate:
       type: object
       properties:
-        title:
+        name:
           type: string
         description:
           type: string
         start_date:
           type: string
-          format: date-time
+          format: date
         end_date:
           type: string
-          format: date-time
-    Stop:
+          format: date
+        location:
+          $ref: '#/components/schemas/Location'
+
+    Trip:
       type: object
+      required:
+        - id
+        - name
+        - start_date
+        - end_date
+        - user_id
       properties:
         id:
           type: string
-        trip_id:
-          type: string
         name:
           type: string
         description:
           type: string
-        location:
-          $ref: '#/components/schemas/Location'
         start_date:
           type: string
-          format: date-time
+          format: date
         end_date:
           type: string
-          format: date-time
-        created_at:
+          format: date
+        user_id:
           type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - trip_id
-        - name
-        - created_at
-        - updated_at
+        location:
+          $ref: '#/components/schemas/Location'
+
     Location:
       type: object
-      properties:
-        lat:
-          type: number
-          format: float
-        lng:
-          type: number
-          format: float
       required:
-        - lat
-        - lng
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+
     StopCreate:
       type: object
+      required:
+        - name
+        - date
+        - location
       properties:
         name:
           type: string
         description:
           type: string
+        date:
+          type: string
+          format: date
         location:
           $ref: '#/components/schemas/Location'
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
-      required:
-        - name
-        - location
+
     StopUpdate:
       type: object
       properties:
@@ -635,82 +741,96 @@ components:
           type: string
         description:
           type: string
+        date:
+          type: string
+          format: date
         location:
           $ref: '#/components/schemas/Location'
-        start_date:
-          type: string
-          format: date-time
-        end_date:
-          type: string
-          format: date-time
-    Photo:
+
+    Stop:
       type: object
+      required:
+        - id
+        - name
+        - date
       properties:
         id:
           type: string
-        trip_id:
+        name:
           type: string
-        url:
+        description:
           type: string
-        created_at:
+        date:
           type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - trip_id
-        - url
-        - created_at
-        - updated_at
+          format: date
+        location:
+          $ref: '#/components/schemas/Location'
+
     PhotoUpload:
       type: object
+      required:
+        - file_name
+        - content_type
       properties:
-        file:
+        file_name:
           type: string
-          format: binary
+        content_type:
+          type: string
+
     PhotoResponse:
       type: object
+      required:
+        - photo_url
       properties:
         photo_url:
           type: string
-      required:
-        - photo_url
-    PhotoUrl:
+
+    PhotoURL:
       type: object
+      required:
+        - url
+        - expires_at
       properties:
         url:
           type: string
         expires_at:
           type: string
           format: date-time
-      required:
-        - url
-        - expires_at
+
     Error:
       type: object
+      required:
+        - error
       properties:
         error:
           type: object
+          required:
+            - code
+            - message
           properties:
             code:
               type: string
+              enum: [validation, not_found, unauthorized, conflict, internal]
             message:
               type: string
             details:
               type: object
-      required:
-        - error
+
     Health:
       type: object
+      required:
+        - status
       properties:
         status:
           type: string
-      required:
-        - status
+          enum: [ok]
+
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
