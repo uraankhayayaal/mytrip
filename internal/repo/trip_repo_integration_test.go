@@ -1,134 +1,135 @@
-//go:build integration
-
 package repo
 
 import (
 	"context"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	"mytrip/internal/domain"
-	"mytrip/internal/repo"
 )
 
 func TestTripRepoIntegration(t *testing.T) {
-	ctx := context.Background()
+	t.Parallel()
 
-	// Create PostgreSQL container
-	postgresContainer, err := postgres.RunContainer(ctx,
-		testcontainers.WithImage("postgres:16-alpine"),
-		postgres.WithDatabase("testdb"),
-		postgres.WithUsername("testuser"),
-		postgres.WithPassword("testpass"),
-	)
-	if err != nil {
-		t.Fatalf("failed to start postgres container: %v", err)
+	// Create test container
+	ctx := context.Background()
+	req := testcontainers.ContainerRequest{
+		Image: "postgres:16-alpine",
+		Env: map[string]string{
+			"POSTGRES_PASSWORD": "password",
+			"POSTGRES_USER":     "user",
+			"POSTGRES_DB":       "testdb",
+		},
+		ExposedPorts: []string{"5432/tcp"},
+		WaitingFor:   wait.ForListeningPort("5432/tcp").WithStartupTimeout(10 * time.Second),
 	}
 
-	// Clean up the container after the test is finished
-
-defer func() {
-		if err := postgresContainer.Terminate(ctx); err != nil {
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatalf("failed to start container: %v", err)
+	}
+	defer func() {
+		if err := container.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate container: %v", err)
 		}
 	}()
 
-	// Get connection string
-	connStr, err := postgresContainer.ConnectionString(ctx)
+	// Get database connection
+	host, err := container.Host(ctx)
 	if err != nil {
-		t.Fatalf("failed to get connection string: %v", err)
+		t.Fatalf("failed to get container host: %v", err)
 	}
-
-	// Initialize database connection
-	pool, err := pgxpool.New(ctx, connStr)
+	port, err := container.MappedPort(ctx, "5432/tcp")
 	if err != nil {
-		t.Fatalf("failed to create connection pool: %v", err)
+		t.Fatalf("failed to get mapped port: %v", err)
 	}
-	defer pool.Close()
 
-	// Run migrations
-	err = runMigrations(pool)
+	connStr := "host=" + host + " port=" + port.Port() + " user=user password=password dbname=testdb sslmode=disable"
+
+	// Create repository with connection
+	repo, err := NewTripRepo(connStr)
 	if err != nil {
-		t.Fatalf("failed to run migrations: %v", err)
+		t.Fatalf("failed to create trip repo: %v", err)
 	}
 
-	// Create user repository
-	userRepo := repo.NewUserRepo(pool)
-
-	// Create a user first
-	user := &domain.User{
-		Email:    "test@example.com",
-		Name:     "Test User",
-		Password: "password123",
-	}
-	createdUser, err := userRepo.Create(ctx, user)
-	if err != nil {
-		t.Fatalf("failed to create user: %v", err)
-	}
-
-	// Create trip repository
-	tripRepo := repo.NewTripRepo(pool)
-
-	// Test Create
 	t.Run("Create", func(t *testing.T) {
 		trip := &domain.Trip{
 			Title:       "Test Trip",
 			Description: "Test Description",
-			UserID:      createdUser.ID,
+			UserID:      "1",
 		}
 
-		createdTrip, err := tripRepo.Create(ctx, trip)
-		if err != nil {
-			t.Fatalf("failed to create trip: %v", err)
+		error := repo.Create(ctx, trip)
+		if error != nil {
+			t.Fatalf("failed to create trip: %v", error)
 		}
 
-		if createdTrip.ID == "" {
-			t.Error("created trip ID should not be empty")
+		if trip.ID == "" {
+			t.Error("trip ID should not be empty")
+		}
+	})
+
+	t.Run("GetByID", func(t *testing.T) {
+		trip, error := repo.GetByID(ctx, "1")
+		if error != nil {
+			t.Fatalf("failed to get trip by ID: %v", error)
 		}
 
-		// Test GetByID
-		retrievedTrip, err := tripRepo.GetByID(ctx, createdTrip.ID)
-		if err != nil {
-			t.Fatalf("failed to get trip by ID: %v", err)
+		if trip.Title != "Test Trip" {
+			t.Error("trip title does not match")
 		}
+	})
 
-		if retrievedTrip.ID != createdTrip.ID {
-			t.Error("retrieved trip ID should match created trip ID")
-		}
-
-		// Test ListByUser
-		trips, err := tripRepo.ListByUser(ctx, createdUser.ID)
-		if err != nil {
-			t.Fatalf("failed to list trips by user: %v", err)
+	t.Run("ListByUser", func(t *testing.T) {
+		trips, error := repo.ListByUser(ctx, "1")
+		if error != nil {
+			t.Fatalf("failed to list trips by user: %v", error)
 		}
 
 		if len(trips) == 0 {
-			t.Error("should have at least one trip")
+			t.Error("trips list should not be empty")
 		}
+	})
 
-		// Test Update
-		updatedTrip := &domain.Trip{
-			ID:          createdTrip.ID,
+	t.Run("Update", func(t *testing.T) {
+		trip := &domain.Trip{
+			ID:          "1",
 			Title:       "Updated Trip",
 			Description: "Updated Description",
-			UserID:      createdUser.ID,
+			UserID:      "1",
 		}
 
-		_, err = tripRepo.Update(ctx, updatedTrip)
-		if err != nil {
-			t.Fatalf("failed to update trip: %v", err)
+		error := repo.Update(ctx, trip)
+		if error != nil {
+			t.Fatalf("failed to update trip: %v", error)
 		}
 
-		// Test Delete
-		_, err = tripRepo.Delete(ctx, createdTrip.ID)
-		if err != nil {
-			t.Fatalf("failed to delete trip: %v", err)
+		updatedTrip, error := repo.GetByID(ctx, "1")
+		if error != nil {
+			t.Fatalf("failed to get updated trip: %v", error)
+		}
+
+		if updatedTrip.Title != "Updated Trip" {
+			t.Error("trip title was not updated")
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		error := repo.Delete(ctx, "1")
+		if error != nil {
+			t.Fatalf("failed to delete trip: %v", error)
+		}
+
+		_, error = repo.GetByID(ctx, "1")
+		if error == nil {
+			t.Error("trip should be deleted")
 		}
 	})
 }
