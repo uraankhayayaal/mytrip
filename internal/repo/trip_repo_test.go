@@ -32,9 +32,11 @@ func TestTripRepo(t *testing.T) {
 		),
 	)
 	require.NoError(t, err)
+	// Исправлено: добавлено defer с вызовом функции
 	defer func() {
-		_ = postgresContainer.Terminate(ctx)
-	}
+		err := postgresContainer.Terminate(ctx)
+		require.NoError(t, err)
+	}()
 
 	// Get connection string
 	connectionString, err := postgresContainer.ConnectionString(ctx)
