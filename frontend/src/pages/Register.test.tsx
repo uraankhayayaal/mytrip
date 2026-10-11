@@ -4,12 +4,7 @@ import { vi } from 'vitest';
 import { Register } from './Register';
 
 // Mock the auth API
-vi.mock('../api/auth', () => ({
-  register: vi.fn(),
-}));
-
 const mockRegister = vi.fn();
-
 vi.mock('../api/auth', () => ({
   register: mockRegister,
 }));
@@ -64,5 +59,58 @@ describe('Register', () => {
     await user.click(screen.getByText('Зарегистрироваться'));
     
     expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
+  });
+
+  it('shows error message for conflict (user already exists)', async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'conflict',
+            message: 'Conflict',
+          },
+        },
+      },
+    });
+    
+    render(<Register />);
+    
+    await user.type(screen.getByLabelText('Имя'), 'Test User');
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Зарегистрироваться'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Пользователь с таким email уже существует')).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation errors from backend for validation error', async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'validation',
+            message: 'Validation failed',
+            details: {
+              name: ['Name is required'],
+            },
+          },
+        },
+      },
+    });
+    
+    render(<Register />);
+    
+    await user.type(screen.getByLabelText('Имя'), 'Test User');
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Зарегистрироваться'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Name is required')).toBeInTheDocument();
+    });
   });
 });

@@ -4,23 +4,13 @@ import { vi } from 'vitest';
 import { Login } from './Login';
 
 // Mock the auth API
-vi.mock('../api/auth', () => ({
-  login: vi.fn(),
-}));
-
 const mockLogin = vi.fn();
-
 vi.mock('../api/auth', () => ({
   login: mockLogin,
 }));
 
 // Mock the client API
-vi.mock('../api/client', () => ({
-  setAccessToken: vi.fn(),
-}));
-
 const mockSetAccessToken = vi.fn();
-
 vi.mock('../api/client', () => ({
   setAccessToken: mockSetAccessToken,
 }));
@@ -96,6 +86,33 @@ describe('Login', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Неверный email или пароль')).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation errors from backend for validation error', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'validation',
+            message: 'Validation failed',
+            details: {
+              email: ['Email already exists'],
+            },
+          },
+        },
+      },
+    });
+    
+    render(<Login />);
+    
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Войти'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Email already exists')).toBeInTheDocument();
     });
   });
 });

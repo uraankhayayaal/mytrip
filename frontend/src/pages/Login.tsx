@@ -1,36 +1,38 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { LoginInput } from '../lib/schemas';
+import { loginSchema, LoginInput } from '../lib/schemas';
 import { login } from '../api/auth';
 import { setAccessToken } from '../api/client';
-
-interface LoginProps {
-  // No props needed
-}
+import { ApiError, toApiError } from '../api/errors';
 
 export function Login(): JSX.Element {
+  const [error, setError] = useState<string | null>(null);
+  
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    setError,
+    formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (values: LoginInput) => {
     try {
+      setError(null);
       const res = await login(values);
       setAccessToken(res.access_token);
       window.location.href = '/';
-    } catch (error: any) {
-      if (error.response?.data?.error?.code === 'unauthorized') {
-        setError('root', {
-          message: 'Неверный email или пароль',
-        });
-      } else {
-        throw error;
+    } catch (err) {
+      const apiError = toApiError(err);
+      if (apiError.code === 'unauthorized') {
+        setError('Неверный email или пароль');
+      } else if (apiError.code === 'validation') {
+        // Display validation errors from backend if any
+        const details = apiError.details;
+        if (details && typeof details === 'object' && 'email' in details) {
+          setError((details as any).email[0]);
+        }
       }
     }
   };
@@ -44,16 +46,19 @@ export function Login(): JSX.Element {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <input type="hidden" name="remember" value="true" />
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">
+              <label htmlFor="email" className="sr-only">
                 Email адрес
               </label>
               <input
-                id="email-address"
+                id="email"
                 type="email"
-                autoComplete="email"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email адрес"
                 {...register('email')}
@@ -69,7 +74,6 @@ export function Login(): JSX.Element {
               <input
                 id="password"
                 type="password"
-                autoComplete="current-password"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Пароль"
                 {...register('password')}
@@ -80,24 +84,18 @@ export function Login(): JSX.Element {
             </div>
           </div>
 
-          {errors.root && (
-            <div className="text-sm text-red-600 text-center">{errors.root.message}</div>
-          )}
-
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isSubmitting}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
               Войти
             </button>
           </div>
         </form>
         <div className="text-center">
-          <a
-            href="/register"
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-          >
+          <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
             Нет аккаунта? Регистрация
           </a>
         </div>
