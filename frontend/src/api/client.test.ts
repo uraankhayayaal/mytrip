@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import axios from 'axios'
 import { setAccessToken, getAccessToken } from './client'
 
@@ -24,23 +24,28 @@ describe('API Client', () => {
   it('should add Authorization header when token exists', () => {
     setAccessToken('test-token')
     
-    // Mock a request config
-    const config = { headers: {} }
+    // Test that the interceptor works correctly
+    const config = {
+      headers: {
+        Authorization: ''
+      }
+    }
     
     // This would be called by the interceptor
-    // We need to test the interceptor directly
-    const requestInterceptor = axios.interceptors.request.handlers[0].fulfilled
-    const result = requestInterceptor(config)
+    const interceptor = axios.interceptors.request.handlers[0].fulfilled
+    const result = interceptor(config)
     
     expect(result.headers.Authorization).toBe('Bearer test-token')
   })
 
   it('should not add Authorization header when no token', () => {
-    const config = { headers: {} }
+    const config = {
+      headers: {}
+    }
     
-    // Mock a request config
-    const requestInterceptor = axios.interceptors.request.handlers[0].fulfilled
-    const result = requestInterceptor(config)
+    // This would be called by the interceptor
+    const interceptor = axios.interceptors.request.handlers[0].fulfilled
+    const result = interceptor(config)
     
     expect(result.headers.Authorization).toBeUndefined()
   })
@@ -60,6 +65,7 @@ describe('API Client', () => {
     // Mock the request function
     mockedAxios.request.mockResolvedValueOnce({ data: 'success' })
     
+    // We need to test with a real axios call to trigger interceptors
     try {
       await axios.get('/test')
     } catch (error) {
