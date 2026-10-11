@@ -1,5 +1,3 @@
-//go:build unit_test
-
 package repo
 
 import (
@@ -8,117 +6,114 @@ import (
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.postgresql.org/pg/v4"
 
 	"mytrip/internal/domain"
 )
 
-func TestUserRepo_Create(t *testing.T) {
-	// Arrange
+func TestUserRepo(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	
-	// Create test container
-	container, err := postgres.RunContainer(ctx, testcontainers.WithImage("postgres:16-alpine"))
+
+	// Запуск testcontainers PostgreSQL
+	postgresContainer, err := postgres.RunContainer(ctx,
+		testcontainers.WithImage("postgres:16-alpine"),
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("testuser"),
+		postgres.WithPassword("testpass"),
+	)
 	require.NoError(t, err)
 	defer func() {
-		_ = container.Terminate(ctx)
-	}
+		_ = postgresContainer.Terminate(ctx)
+	}()
 
-	// Get connection string
-	connStr, err := container.ConnectionString(ctx)
+	// Подключение к базе данных
+	connStr, err := postgresContainer.ConnectionString(ctx)
 	require.NoError(t, err)
 
-	// Initialize repo
-	repo := NewUserRepo(connStr)
-
-	// Create user
-	user := &domain.User{
-		Email:    "test@example.com",
-		Name:     "Test User",
-		Password: "password123",
-	}
-
-	// Act
-	createdUser, err := repo.Create(ctx, user)
-
-	// Assert
+	pool, err := pgxpool.New(ctx, connStr)
 	require.NoError(t, err)
-	assert.NotNil(t, createdUser)
-	assert.NotEmpty(t, createdUser.ID)
-	assert.Equal(t, user.Email, createdUser.Email)
-	assert.Equal(t, user.Name, createdUser.Name)
+	defer pool.Close()
+
+	// Создание репозитория
+	repo := NewUserRepo(pool)
+
+	// Тесты
+	t.Run("Create", func(t *testing.T) {
+		user := &domain.User{
+			Email:    "test@example.com",
+			Name:     "Test User",
+			Password: "password123",
+		}
+
+		err := repo.Create(ctx, user)
+		assert.NoError(t, err)
+		assert.NotZero(t, user.ID)
+	})
+
+	t.Run("GetByEmail", func(t *testing.T) {
+		user, err := repo.GetByEmail(ctx, "test@example.com")
+		assert.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, "test@example.com", user.Email)
+	})
+
+	t.Run("GetByID", func(t *testing.T) {
+		user, err := repo.GetByID(ctx, 1)
+		assert.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, "test@example.com", user.Email)
+	})
 }
 
-func TestUserRepo_GetByEmail(t *testing.T) {
-	// Arrange
+func TestUserRepoConflict(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	
-	// Create test container
-	container, err := postgres.RunContainer(ctx, testcontainers.WithImage("postgres:16-alpine"))
+
+	// Запуск testcontainers PostgreSQL
+	postgresContainer, err := postgres.RunContainer(ctx,
+		testcontainers.WithImage("postgres:16-alpine"),
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("testuser"),
+		postgres.WithPassword("testpass"),
+	)
 	require.NoError(t, err)
 	defer func() {
-		_ = container.Terminate(ctx)
-	}
+		_ = postgresContainer.Terminate(ctx)
+	}()
 
-	// Get connection string
-	connStr, err := container.ConnectionString(ctx)
+	// Подключение к базе данных
+	connStr, err := postgresContainer.ConnectionString(ctx)
 	require.NoError(t, err)
 
-	// Initialize repo
-	repo := NewUserRepo(connStr)
+	pool, err := pgxpool.New(ctx, connStr)
+	require.NoError(t, err)
+	defer pool.Close()
 
-	// Create user first
+	// Создание репозитория
+	repo := NewUserRepo(pool)
+
+	// Создаем пользователя
 	user := &domain.User{
 		Email:    "test@example.com",
 		Name:     "Test User",
 		Password: "password123",
 	}
-	createdUser, err := repo.Create(ctx, user)
+
+	err := repo.Create(ctx, user)
 	require.NoError(t, err)
 
-	// Act
-	foundUser, err := repo.GetByEmail(ctx, user.Email)
-
-	// Assert
-	require.NoError(t, err)
-	assert.NotNil(t, foundUser)
-	assert.Equal(t, createdUser.ID, foundUser.ID)
-}
-
-func TestUserRepo_GetByID(t *testing.T) {
-	// Arrange
-	ctx := context.Background()
-	
-	// Create test container
-	container, err := postgres.RunContainer(ctx, testcontainers.WithImage("postgres:16-alpine"))
-	require.NoError(t, err)
-	defer func() {
-		_ = container.Terminate(ctx)
-	}
-
-	// Get connection string
-	connStr, err := container.ConnectionString(ctx)
-	require.NoError(t, err)
-
-	// Initialize repo
-	repo := NewUserRepo(connStr)
-
-	// Create user
-	user := &domain.User{
+	// Пытаемся создать пользователя с тем же email
+	user2 := &domain.User{
 		Email:    "test@example.com",
-		Name:     "Test User",
+		Name:     "Test User 2",
 		Password: "password123",
 	}
-	createdUser, err := repo.Create(ctx, user)
-	require.NoError(t, err)
 
-	// Act
-	foundUser, err := repo.GetByID(ctx, createdUser.ID)
-
-	// Assert
-	require.NoError(t, err)
-	assert.NotNil(t, foundUser)
-	assert.Equal(t, createdUser.ID, foundUser.ID)
+	err = repo.Create(ctx, user2)
+	assert.Error(t, err)
 }
