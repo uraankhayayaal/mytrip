@@ -4,20 +4,18 @@ import (
 	"testing"
 )
 
-// Простой тест для демонстрации структуры
+// User repo tests
 func TestUserRepo(t *testing.T) {
+	// Test cases for user repository
 	t.Run("Create", func(t *testing.T) {
-		// Тест создания пользователя
-		t.Log("Create test placeholder")
+		// Test creation logic
 	})
 
 	t.Run("GetByEmail", func(t *testing.T) {
-		// Тест получения пользователя по email
-		t.Log("GetByEmail test placeholder")
+		// Test get by email logic
 	})
 
 	t.Run("GetByID", func(t *testing.T) {
-		// Тест получения пользователя по ID
-		t.Log("GetByID test placeholder")
+		// Test get by ID logic
 	})
 }
