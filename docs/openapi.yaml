@@ -1,23 +1,28 @@
+# OpenAPI 3.0.3 specification for MyTrip API
 openapi: 3.0.3
 info:
   title: MyTrip API
   version: 1.0.0
-  description: API для приложения MyTrip
+  description: API for managing trips, stops, photos and user authentication
+
 servers:
   - url: http://localhost:8080/api/v1
+    description: Local development server
+
 paths:
   /auth/register:
     post:
-      summary: Регистрация пользователя
+      summary: Register a new user
+      tags: [Auth]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserRegisterRequest'
+              $ref: '#/components/schemas/UserRegister'
       responses:
         '201':
-          description: Пользователь создан
+          description: User registered successfully
           content:
             application/json:
               schema:
@@ -26,64 +31,79 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '409':
           $ref: '#/components/responses/ConflictError'
+
   /auth/login:
     post:
-      summary: Вход в систему
+      summary: Login user
+      tags: [Auth]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserLoginRequest'
+              $ref: '#/components/schemas/UserLogin'
       responses:
         '200':
-          description: Успешный вход
+          description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: '#/components/schemas/AuthResponse'
           headers:
             Set-Cookie:
               schema:
                 type: string
+                description: Refresh token cookie
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /auth/refresh:
     post:
-      summary: Обновление токена
+      summary: Refresh access token
+      tags: [Auth]
       responses:
         '200':
-          description: Токен обновлён
+          description: Token refreshed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /auth/logout:
     post:
-      summary: Выход из системы
+      summary: Logout user
+      tags: [Auth]
       responses:
         '204':
-          description: Успешный выход
+          description: Logout successful
+
   /users/me:
     get:
-      summary: Получить информацию о текущем пользователе
+      summary: Get current user
+      tags: [Users]
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Информация о пользователе
+          description: User data
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /trips:
     get:
-      summary: Получить список поездок
+      summary: Get trips
+      tags: [Trips]
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Список поездок
+          description: List of trips
           content:
             application/json:
               schema:
@@ -91,16 +111,19 @@ paths:
                 items:
                   $ref: '#/components/schemas/Trip'
     post:
-      summary: Создать новую поездку
+      summary: Create a new trip
+      tags: [Trips]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TripCreateRequest'
+              $ref: '#/components/schemas/TripCreate'
       responses:
         '201':
-          description: Поездка создана
+          description: Trip created
           content:
             application/json:
               schema:
@@ -109,9 +132,13 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /trips/{id}:
     get:
-      summary: Получить поездку по ID
+      summary: Get trip by ID
+      tags: [Trips]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -120,15 +147,20 @@ paths:
             type: string
       responses:
         '200':
-          description: Поездка найдена
+          description: Trip details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Trip'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
     put:
-      summary: Обновить поездку
+      summary: Update trip
+      tags: [Trips]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -140,10 +172,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TripUpdateRequest'
+              $ref: '#/components/schemas/TripUpdate'
       responses:
         '200':
-          description: Поездка обновлена
+          description: Trip updated
           content:
             application/json:
               schema:
@@ -155,7 +187,10 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
     delete:
-      summary: Удалить поездку
+      summary: Delete trip
+      tags: [Trips]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -164,14 +199,18 @@ paths:
             type: string
       responses:
         '204':
-          description: Поездка удалена
+          description: Trip deleted
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /trips/{id}/stops:
     get:
-      summary: Получить остановки поездки
+      summary: Get stops for trip
+      tags: [Stops]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -180,7 +219,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Список остановок
+          description: List of stops
           content:
             application/json:
               schema:
@@ -189,8 +228,13 @@ paths:
                   $ref: '#/components/schemas/Stop'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
     post:
-      summary: Добавить остановку в поездку
+      summary: Create stop for trip
+      tags: [Stops]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -202,10 +246,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StopCreateRequest'
+              $ref: '#/components/schemas/StopCreate'
       responses:
         '201':
-          description: Остановка создана
+          description: Stop created
           content:
             application/json:
               schema:
@@ -216,9 +260,13 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /stops/{stopId}:
     put:
-      summary: Обновить остановку
+      summary: Update stop
+      tags: [Stops]
+      security:
+        - bearerAuth: []
       parameters:
         - name: stopId
           in: path
@@ -230,10 +278,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StopUpdateRequest'
+              $ref: '#/components/schemas/StopUpdate'
       responses:
         '200':
-          description: Остановка обновлена
+          description: Stop updated
           content:
             application/json:
               schema:
@@ -245,7 +293,10 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
     delete:
-      summary: Удалить остановку
+      summary: Delete stop
+      tags: [Stops]
+      security:
+        - bearerAuth: []
       parameters:
         - name: stopId
           in: path
@@ -254,14 +305,18 @@ paths:
             type: string
       responses:
         '204':
-          description: Остановка удалена
+          description: Stop deleted
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /trips/{id}/photos:
     post:
-      summary: Загрузить фото для поездки
+      summary: Upload photo for trip
+      tags: [Photos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -273,10 +328,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PhotoUploadRequest'
+              $ref: '#/components/schemas/PhotoUpload'
       responses:
         '201':
-          description: Фото загружено
+          description: Photo uploaded
           content:
             application/json:
               schema:
@@ -287,9 +342,13 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /photos/{id}/url:
     get:
-      summary: Получить URL фото
+      summary: Get presigned URL for photo
+      tags: [Photos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -298,16 +357,20 @@ paths:
             type: string
       responses:
         '200':
-          description: URL фото
+          description: Presigned URL
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PhotoURLResponse'
         '404':
           $ref: '#/components/responses/NotFoundError'
-  /photos/{id}:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
     delete:
-      summary: Удалить фото
+      summary: Delete photo
+      tags: [Photos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -316,14 +379,18 @@ paths:
             type: string
       responses:
         '204':
-          description: Фото удалено
+          description: Photo deleted
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /trips/{id}/export:
     get:
-      summary: Экспорт поездки
+      summary: Export trip data
+      tags: [Trips]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -338,7 +405,7 @@ paths:
             enum: [pdf, csv]
       responses:
         '200':
-          description: Экспорт данных
+          description: Exported data
           content:
             application/pdf:
               schema:
@@ -354,18 +421,48 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
   /healthz:
     get:
-      summary: Проверка состояния сервиса
+      summary: Health check
+      tags: [Health]
       responses:
         '200':
-          description: Сервис работает
+          description: Service is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: '#/components/schemas/Health'
+
 components:
   schemas:
+    UserRegister:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        name:
+          type: string
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
     User:
       type: object
       properties:
@@ -378,34 +475,7 @@ components:
         created_at:
           type: string
           format: date-time
-      required:
-        - id
-        - email
-        - name
-    UserRegisterRequest:
-      type: object
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-        name:
-          type: string
-      required:
-        - email
-        - password
-        - name
-    UserLoginRequest:
-      type: object
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-      required:
-        - email
-        - password
-    LoginResponse:
+    AuthResponse:
       type: object
       properties:
         access_token:
@@ -438,14 +508,10 @@ components:
         updated_at:
           type: string
           format: date-time
-        user_id:
-          type: string
-      required:
-        - id
-        - title
-        - user_id
-    TripCreateRequest:
+    TripCreate:
       type: object
+      required:
+        - title
       properties:
         title:
           type: string
@@ -457,9 +523,7 @@ components:
         end_date:
           type: string
           format: date-time
-      required:
-        - title
-    TripUpdateRequest:
+    TripUpdate:
       type: object
       properties:
         title:
@@ -497,12 +561,10 @@ components:
         updated_at:
           type: string
           format: date-time
-      required:
-        - id
-        - trip_id
-        - name
-    StopCreateRequest:
+    StopCreate:
       type: object
+      required:
+        - name
       properties:
         name:
           type: string
@@ -516,9 +578,7 @@ components:
         end_date:
           type: string
           format: date-time
-      required:
-        - name
-    StopUpdateRequest:
+    StopUpdate:
       type: object
       properties:
         name:
@@ -538,33 +598,17 @@ components:
       properties:
         lat:
           type: number
+          format: float
         lng:
           type: number
-      required:
-        - lat
-        - lng
-    Photo:
+          format: float
+    PhotoUpload:
       type: object
-      properties:
-        id:
-          type: string
-        trip_id:
-          type: string
-        url:
-          type: string
-        created_at:
-          type: string
-          format: date-time
       required:
-        - id
-        - trip_id
-        - url
-    PhotoUploadRequest:
-      type: object
+        - file_name
       properties:
-        file:
+        file_name:
           type: string
-          format: binary
     PhotoResponse:
       type: object
       properties:
@@ -578,7 +622,7 @@ components:
         expires_at:
           type: string
           format: date-time
-    HealthResponse:
+    Health:
       type: object
       properties:
         status:
@@ -596,30 +640,37 @@ components:
               type: string
             details:
               type: object
-      required:
-        - error
+
   responses:
     ValidationError:
-      description: Ошибка валидации
+      description: Validation error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     NotFoundError:
-      description: Ресурс не найден
+      description: Resource not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     UnauthorizedError:
-      description: Не авторизован
+      description: Unauthorized
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     ConflictError:
-      description: Конфликт данных
+      description: Conflict
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+x-generator: OpenAPI Generator
