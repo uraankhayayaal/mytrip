@@ -1,3 +1,4 @@
+// Package handlers contains API handlers and integration tests
 package handlers
 
 import (
@@ -13,10 +14,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/modules/minio"
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"mytrip/internal/domain"
 	"mytrip/internal/repo"
+	"mytrip/internal/service"
+	"mytrip/internal/api/middleware"
 )
 
 // TestExportIntegration tests export endpoints with httptest and testcontainers
@@ -46,15 +50,18 @@ func TestExportIntegration(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup test environment
-	t.Run("ExportPDF - Success", func(t *testing.T) {
+	t.Run("Export PDF - Success", func(t *testing.T) {
+		// This would be a full integration test with actual server
 		t.Skip("Implementation requires full server setup")
 	})
 
-	t.Run("ExportCSV - Success", func(t *testing.T) {
+	t.Run("Export CSV - Success", func(t *testing.T) {
+		// This would be a full integration test with actual server
 		t.Skip("Implementation requires full server setup")
 	})
 
-	t.Run("ExportInvalidFormat - Error", func(t *testing.T) {
+	t.Run("Export - Invalid Format", func(t *testing.T) {
+		// This would be a full integration test with actual server
 		t.Skip("Implementation requires full server setup")
 	})
 }
