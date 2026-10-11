@@ -31,7 +31,7 @@ import (
 // Точки расширения DI: конструкторы сервисов/репозиториев/хендлеров
 // добавят BEL-03..06. Пока nil — маршруты /api/v1/* появятся вместе с ними.
 var (
-	// TODO(BEL-03..06): tripService, stopService, authService, photoService, exportHandler
+// TODO(BEL-03..06): tripService, stopService, authService, photoService, exportHandler
 )
 
 func main() {
