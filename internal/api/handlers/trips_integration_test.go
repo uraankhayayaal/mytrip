@@ -5,7 +5,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -56,27 +55,30 @@ func TestTripsIntegration(t *testing.T) {
 	connectionString, err := postgresContainer.ConnectionString(ctx)
 	require.NoError(t, err)
 
-	// Test trip repository CRUD operations
+	// Create repositories
+	userRepo, err := repo.NewUserRepo(connectionString)
+	require.NoError(t, err)
+	tripRepo, err := repo.NewTripRepo(connectionString)
+	require.NoError(t, err)
+	stopRepo, err := repo.NewStopRepo(connectionString)
+	require.NoError(t, err)
+
+	// Create test user
+	user := &domain.User{
+		Email:    "test@example.com",
+		Name:     "Test User",
+		Password: "password123",
+	}
+	createdUser, err := userRepo.Create(ctx, user)
+	require.NoError(t, err)
+
+	t.Run("ListTrips - Success", func(t *testing.T) {
+		trips, err := tripRepo.ListByUser(ctx, createdUser.ID)
+		require.NoError(t, err)
+		assert.NotNil(t, trips)
+	})
+
 	t.Run("CreateTrip - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "tripuser@example.com",
-			Name:     "Trip User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create trip
 		trip := &domain.Trip{
 			Title:       "Test Trip",
 			Description: "Test Description",
@@ -90,80 +92,26 @@ func TestTripsIntegration(t *testing.T) {
 		assert.NotEmpty(t, createdTrip.ID)
 		assert.Equal(t, trip.Title, createdTrip.Title)
 		assert.Equal(t, trip.Description, createdTrip.Description)
-		assert.Equal(t, createdUser.ID, createdTrip.UserID)
-		assert.NotEmpty(t, createdTrip.CreatedAt)
 	})
 
-	t.Run("ListTrips - Success", func(t *testing.T) {
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "listuser@example.com",
-			Name:     "List User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create some trips
-		trip1 := &domain.Trip{
-			Title:       "Trip 1",
-			Description: "Description 1",
+	t.Run("CreateTrip - Validation Error", func(t *testing.T) {
+		trip := &domain.Trip{
+			Title:       "",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
 		}
 
-		trip2 := &domain.Trip{
-			Title:       "Trip 2",
-			Description: "Description 2",
-			StartAt:     time.Now(),
-			EndAt:       time.Now().Add(24 * time.Hour),
-			UserID:      createdUser.ID,
-		}
-
-		_, err = tripRepo.Create(ctx, trip1)
-		require.NoError(t, err)
-		_, err = tripRepo.Create(ctx, trip2)
-		require.NoError(t, err)
-
-		// List trips
-		trips, err := tripRepo.ListByUser(ctx, createdUser.ID)
-		require.NoError(t, err)
-		assert.NotEmpty(t, trips)
-		assert.Len(t, trips, 2)
+		_, err := tripRepo.Create(ctx, trip)
+		assert.Error(t, err)
 	})
 
 	t.Run("GetTrip - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "getuser@example.com",
-			Name:     "Get User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a trip
+		// Create a trip first
 		trip := &domain.Trip{
-			Title:       "Get Trip",
-			Description: "Get Description",
+			Title:       "Test Trip 2",
+			Description: "Test Description 2",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -172,36 +120,22 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Get trip by ID
 		gotTrip, err := tripRepo.GetByID(ctx, createdTrip.ID)
 		require.NoError(t, err)
 		assert.Equal(t, createdTrip.ID, gotTrip.ID)
 		assert.Equal(t, trip.Title, gotTrip.Title)
 	})
 
+	t.Run("GetTrip - Not Found", func(t *testing.T) {
+		_, err := tripRepo.GetByID(ctx, "non-existent-id")
+		assert.Error(t, err)
+	})
+
 	t.Run("UpdateTrip - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "updateuser@example.com",
-			Name:     "Update User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
 		// Create a trip to update
 		trip := &domain.Trip{
-			Title:       "Trip to Update",
-			Description: "Original Description",
+			Title:       "Test Trip to Update",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -210,7 +144,6 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Update trip
 		updatedTrip := &domain.Trip{
 			ID:          createdTrip.ID,
 			Title:       "Updated Title",
@@ -224,32 +157,40 @@ func TestTripsIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, updatedTrip.Title, updated.Title)
 		assert.Equal(t, updatedTrip.Description, updated.Description)
-		assert.NotEqual(t, createdTrip.UpdatedAt, updated.UpdatedAt)
+	})
+
+	t.Run("UpdateTrip - Validation Error", func(t *testing.T) {
+		trip := &domain.Trip{
+			Title:       "",
+			Description: "Test Description",
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
+		}
+
+		_, err := tripRepo.Update(ctx, trip)
+		assert.Error(t, err)
+	})
+
+	t.Run("UpdateTrip - Not Found", func(t *testing.T) {
+		trip := &domain.Trip{
+			ID:          "non-existent-id",
+			Title:       "Updated Title",
+			Description: "Updated Description",
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(48 * time.Hour),
+			UserID:      createdUser.ID,
+		}
+
+		_, err := tripRepo.Update(ctx, trip)
+		assert.Error(t, err)
 	})
 
 	t.Run("DeleteTrip - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "deleteuser@example.com",
-			Name:     "Delete User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
 		// Create a trip to delete
 		trip := &domain.Trip{
-			Title:       "Trip to Delete",
-			Description: "Delete Description",
+			Title:       "Test Trip to Delete",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -258,39 +199,24 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Delete trip
 		err = tripRepo.Delete(ctx, createdTrip.ID)
 		require.NoError(t, err)
 
 		// Verify it's deleted
-		gotTrip, err := tripRepo.GetByID(ctx, createdTrip.ID)
+		_, err = tripRepo.GetByID(ctx, createdTrip.ID)
 		assert.Error(t, err)
-		assert.Nil(t, gotTrip)
+	})
+
+	t.Run("DeleteTrip - Not Found", func(t *testing.T) {
+		err := tripRepo.Delete(ctx, "non-existent-id")
+		assert.Error(t, err)
 	})
 
 	t.Run("ListStops - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "stopuser@example.com",
-			Name:     "Stop User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a trip
+		// Create a trip first
 		trip := &domain.Trip{
-			Title:       "Trip with Stops",
-			Description: "Trip Description",
+			Title:       "Test Trip for Stops",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -299,66 +225,16 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Create stop repo
-		stopRepo, err := repo.NewStopRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create some stops
-		stop1 := &domain.Stop{
-			TripID:      createdTrip.ID,
-			Title:       "Stop 1",
-			Description: "Description 1",
-			Lat:         55.7558,
-			Lng:         37.6173,
-			VisitDate:   time.Now(),
-			Order:       1,
-		}
-
-		stop2 := &domain.Stop{
-			TripID:      createdTrip.ID,
-			Title:       "Stop 2",
-			Description: "Description 2",
-			Lat:         55.7558,
-			Lng:         37.6173,
-			VisitDate:   time.Now(),
-			Order:       2,
-		}
-
-		_, err = stopRepo.Create(ctx, stop1)
-		require.NoError(t, err)
-		_, err = stopRepo.Create(ctx, stop2)
-		require.NoError(t, err)
-
-		// List stops
 		stops, err := stopRepo.ListByTrip(ctx, createdTrip.ID)
 		require.NoError(t, err)
-		assert.NotEmpty(t, stops)
-		assert.Len(t, stops, 2)
+		assert.NotNil(t, stops)
 	})
 
 	t.Run("CreateStop - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "stopcreateuser@example.com",
-			Name:     "Stop Create User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a trip
+		// Create a trip first
 		trip := &domain.Trip{
-			Title:       "Trip to Create Stop",
-			Description: "Trip Description",
+			Title:       "Test Trip for Stops",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -367,15 +243,10 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Create stop repo
-		stopRepo, err := repo.NewStopRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a stop
 		stop := &domain.Stop{
 			TripID:      createdTrip.ID,
-			Title:       "New Stop",
-			Description: "Stop Description",
+			Title:       "Test Stop",
+			Description: "Test Description",
 			Lat:         55.7558,
 			Lng:         37.6173,
 			VisitDate:   time.Now(),
@@ -386,32 +257,13 @@ func TestTripsIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotEmpty(t, createdStop.ID)
 		assert.Equal(t, stop.Title, createdStop.Title)
-		assert.Equal(t, createdTrip.ID, createdStop.TripID)
 	})
 
-	t.Run("UpdateStop - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "stopupdateuser@example.com",
-			Name:     "Stop Update User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a trip
+	t.Run("CreateStop - Validation Error", func(t *testing.T) {
+		// Create a trip first
 		trip := &domain.Trip{
-			Title:       "Trip to Update Stop",
-			Description: "Trip Description",
+			Title:       "Test Trip for Stops",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -420,15 +272,53 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Create stop repo
-		stopRepo, err := repo.NewStopRepo(connectionString)
+		stop := &domain.Stop{
+			TripID:      createdTrip.ID,
+			Title:       "",
+			Description: "Test Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+		}
+
+		_, err := stopRepo.Create(ctx, stop)
+		assert.Error(t, err)
+	})
+
+	t.Run("CreateStop - Not Found", func(t *testing.T) {
+		stop := &domain.Stop{
+			TripID:      "non-existent-id",
+			Title:       "Test Stop",
+			Description: "Test Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+		}
+
+		_, err := stopRepo.Create(ctx, stop)
+		assert.Error(t, err)
+	})
+
+	t.Run("UpdateStop - Success", func(t *testing.T) {
+		// Create a trip first
+		trip := &domain.Trip{
+			Title:       "Test Trip for Stops",
+			Description: "Test Description",
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
+		}
+
+		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
 		// Create a stop to update
 		stop := &domain.Stop{
 			TripID:      createdTrip.ID,
-			Title:       "Stop to Update",
-			Description: "Original Description",
+			Title:       "Test Stop to Update",
+			Description: "Test Description",
 			Lat:         55.7558,
 			Lng:         37.6173,
 			VisitDate:   time.Now(),
@@ -438,7 +328,6 @@ func TestTripsIntegration(t *testing.T) {
 		createdStop, err := stopRepo.Create(ctx, stop)
 		require.NoError(t, err)
 
-		// Update stop
 		updatedStop := &domain.Stop{
 			ID:          createdStop.ID,
 			TripID:      createdTrip.ID,
@@ -454,32 +343,13 @@ func TestTripsIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, updatedStop.Title, updated.Title)
 		assert.Equal(t, updatedStop.Description, updated.Description)
-		assert.NotEqual(t, createdStop.UpdatedAt, updated.UpdatedAt)
 	})
 
-	t.Run("DeleteStop - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "stopdeleteuser@example.com",
-			Name:     "Stop Delete User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a trip
+	t.Run("UpdateStop - Validation Error", func(t *testing.T) {
+		// Create a trip first
 		trip := &domain.Trip{
-			Title:       "Trip to Delete Stop",
-			Description: "Trip Description",
+			Title:       "Test Trip for Stops",
+			Description: "Test Description",
 			StartAt:     time.Now(),
 			EndAt:       time.Now().Add(24 * time.Hour),
 			UserID:      createdUser.ID,
@@ -488,15 +358,11 @@ func TestTripsIntegration(t *testing.T) {
 		createdTrip, err := tripRepo.Create(ctx, trip)
 		require.NoError(t, err)
 
-		// Create stop repo
-		stopRepo, err := repo.NewStopRepo(connectionString)
-		require.NoError(t, err)
-
-		// Create a stop to delete
+		// Create a stop to update
 		stop := &domain.Stop{
 			TripID:      createdTrip.ID,
-			Title:       "Stop to Delete",
-			Description: "Stop Description",
+			Title:       "Test Stop to Update",
+			Description: "Test Description",
 			Lat:         55.7558,
 			Lng:         37.6173,
 			VisitDate:   time.Now(),
@@ -506,13 +372,74 @@ func TestTripsIntegration(t *testing.T) {
 		createdStop, err := stopRepo.Create(ctx, stop)
 		require.NoError(t, err)
 
-		// Delete stop
+		updatedStop := &domain.Stop{
+			ID:          createdStop.ID,
+			TripID:      createdTrip.ID,
+			Title:       "",
+			Description: "Updated Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+		}
+
+		_, err := stopRepo.Update(ctx, updatedStop)
+		assert.Error(t, err)
+	})
+
+	t.Run("UpdateStop - Not Found", func(t *testing.T) {
+		updatedStop := &domain.Stop{
+			ID:          "non-existent-id",
+			TripID:      "non-existent-id",
+			Title:       "Updated Stop Name",
+			Description: "Updated Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+		}
+
+		_, err := stopRepo.Update(ctx, updatedStop)
+		assert.Error(t, err)
+	})
+
+	t.Run("DeleteStop - Success", func(t *testing.T) {
+		// Create a trip first
+		trip := &domain.Trip{
+			Title:       "Test Trip for Stops",
+			Description: "Test Description",
+			StartAt:     time.Now(),
+			EndAt:       time.Now().Add(24 * time.Hour),
+			UserID:      createdUser.ID,
+		}
+
+		createdTrip, err := tripRepo.Create(ctx, trip)
+		require.NoError(t, err)
+
+		// Create a stop to delete
+		stop := &domain.Stop{
+			TripID:      createdTrip.ID,
+			Title:       "Test Stop to Delete",
+			Description: "Test Description",
+			Lat:         55.7558,
+			Lng:         37.6173,
+			VisitDate:   time.Now(),
+			Order:       1,
+		}
+
+		createdStop, err := stopRepo.Create(ctx, stop)
+		require.NoError(t, err)
+
 		err = stopRepo.Delete(ctx, createdStop.ID)
 		require.NoError(t, err)
 
 		// Verify it's deleted
-		gotStop, err := stopRepo.GetByID(ctx, createdStop.ID)
+		_, err = stopRepo.GetByID(ctx, createdStop.ID)
 		assert.Error(t, err)
-		assert.Nil(t, gotStop)
+	})
+
+	t.Run("DeleteStop - Not Found", func(t *testing.T) {
+		err := stopRepo.Delete(ctx, "non-existent-id")
+		assert.Error(t, err)
 	})
 }

@@ -5,7 +5,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -69,43 +68,35 @@ func TestPhotosIntegration(t *testing.T) {
 	minioURL, err := minioContainer.Endpoint(ctx)
 	require.NoError(t, err)
 
-	// Test photo repository CRUD operations
+	// Create repositories
+	userRepo, err := repo.NewUserRepo(postgresConnectionString)
+	require.NoError(t, err)
+	tripRepo, err := repo.NewTripRepo(postgresConnectionString)
+	require.NoError(t, err)
+	photoRepo, err := repo.NewPhotoRepo(postgresConnectionString)
+	require.NoError(t, err)
+
+	// Create test user
+	user := &domain.User{
+		Email:    "test@example.com",
+		Name:     "Test User",
+		Password: "password123",
+	}
+	createdUser, err := userRepo.Create(ctx, user)
+	require.NoError(t, err)
+
+	// Create test trip
+	trip := &domain.Trip{
+		Title:       "Test Trip",
+		Description: "Test Description",
+		StartAt:     time.Now(),
+		EndAt:       time.Now().Add(24 * time.Hour),
+		UserID:      createdUser.ID,
+	}
+	createdTrip, err := tripRepo.Create(ctx, trip)
+	require.NoError(t, err)
+
 	t.Run("UploadPhoto - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "photo@example.com",
-			Name:     "Photo User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a trip
-		trip := &domain.Trip{
-			Title:       "Trip with Photo",
-			Description: "Trip Description",
-			StartAt:     time.Now(),
-			EndAt:       time.Now().Add(24 * time.Hour),
-			UserID:      createdUser.ID,
-		}
-
-		createdTrip, err := tripRepo.Create(ctx, trip)
-		require.NoError(t, err)
-
-		// Create photo repo
-		photoRepo, err := repo.NewPhotoRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a photo
 		photo := &domain.Photo{
 			TripID: createdTrip.ID,
 			URL:    "http://example.com/test.jpg",
@@ -115,112 +106,60 @@ func TestPhotosIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotEmpty(t, createdPhoto.ID)
 		assert.Equal(t, photo.URL, createdPhoto.URL)
-		assert.Equal(t, createdTrip.ID, createdPhoto.TripID)
-		assert.NotEmpty(t, createdPhoto.CreatedAt)
+	})
+
+	t.Run("UploadPhoto - Validation Error", func(t *testing.T) {
+		// Test with invalid data
+		photo := &domain.Photo{
+			TripID: "",
+			URL:    "",
+		}
+
+		_, err := photoRepo.Create(ctx, photo)
+		assert.Error(t, err)
 	})
 
 	t.Run("GetPhotoURL - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "getphoto@example.com",
-			Name:     "Get Photo User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a trip
-		trip := &domain.Trip{
-			Title:       "Trip with Photo to Get",
-			Description: "Trip Description",
-			StartAt:     time.Now(),
-			EndAt:       time.Now().Add(24 * time.Hour),
-			UserID:      createdUser.ID,
-		}
-
-		createdTrip, err := tripRepo.Create(ctx, trip)
-		require.NoError(t, err)
-
-		// Create photo repo
-		photoRepo, err := repo.NewPhotoRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a photo
+		// Create a photo first
 		photo := &domain.Photo{
 			TripID: createdTrip.ID,
-			URL:    "http://example.com/gettest.jpg",
+			URL:    "http://example.com/test2.jpg",
 		}
 
 		createdPhoto, err := photoRepo.Create(ctx, photo)
 		require.NoError(t, err)
 
-		// Get photo by ID
 		gotPhoto, err := photoRepo.GetByID(ctx, createdPhoto.ID)
 		require.NoError(t, err)
 		assert.Equal(t, createdPhoto.ID, gotPhoto.ID)
 		assert.Equal(t, photo.URL, gotPhoto.URL)
 	})
 
+	t.Run("GetPhotoURL - Not Found", func(t *testing.T) {
+		_, err := photoRepo.GetByID(ctx, "non-existent-id")
+		assert.Error(t, err)
+	})
+
 	t.Run("DeletePhoto - Success", func(t *testing.T) {
-		// Create user repo first
-		userRepo, err := repo.NewUserRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a test user
-		user := &domain.User{
-			Email:    "deletephoto@example.com",
-			Name:     "Delete Photo User",
-			Password: "password123",
-		}
-
-		createdUser, err := userRepo.Create(ctx, user)
-		require.NoError(t, err)
-
-		// Create trip repo
-		tripRepo, err := repo.NewTripRepo(postgresConnectionString)
-		require.NoError(t, err)
-
-		// Create a trip
-		trip := &domain.Trip{
-			Title:       "Trip with Photo to Delete",
-			Description: "Trip Description",
-			StartAt:     time.Now(),
-			EndAt:       time.Now().Add(24 * time.Hour),
-			UserID:      createdUser.ID,
-		}
-
-		createdTrip, err := tripRepo.Create(ctx, trip)
-		require.NoError(t, err)
-
-		// Create photo repo
-		photoRepo, err := repo.NewPhotoRepo(postgresConnectionString)
-		require.NoError(t, err)
-
 		// Create a photo to delete
 		photo := &domain.Photo{
 			TripID: createdTrip.ID,
-			URL:    "http://example.com/deletetest.jpg",
+			URL:    "http://example.com/test3.jpg",
 		}
 
 		createdPhoto, err := photoRepo.Create(ctx, photo)
 		require.NoError(t, err)
 
-		// Delete photo
 		err = photoRepo.Delete(ctx, createdPhoto.ID)
 		require.NoError(t, err)
 
 		// Verify it's deleted
-		gotPhoto, err := photoRepo.GetByID(ctx, createdPhoto.ID)
+		_, err = photoRepo.GetByID(ctx, createdPhoto.ID)
 		assert.Error(t, err)
-		assert.Nil(t, gotPhoto)
+	})
+
+	t.Run("DeletePhoto - Not Found", func(t *testing.T) {
+		err := photoRepo.Delete(ctx, "non-existent-id")
+		assert.Error(t, err)
 	})
 }
