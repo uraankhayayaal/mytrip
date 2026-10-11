@@ -21,6 +21,7 @@ func TestUserRepo(t *testing.T) {
 	
 	t.Run("Create", func(t *testing.T) {
 		// Test creation logic
+		// In real implementation, this would test with testcontainers Postgres
 		assert.NotNil(t, t)
 		require.NotNil(t, t)
 	})
