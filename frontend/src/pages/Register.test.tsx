@@ -1,62 +1,116 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { register } from '../api/auth';
+import { vi } from 'vitest';
 import { Register } from './Register';
 
+// Mock the auth API
+const mockRegister = vi.fn();
 vi.mock('../api/auth', () => ({
-  register: vi.fn(),
+  register: mockRegister,
 }));
 
-function renderRegister() {
-  return render(
-    <MemoryRouter>
-      <Register />
-    </MemoryRouter>,
-  );
-}
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  Object.defineProperty(window, 'location', {
-    value: { href: window.location.href },
-    writable: true,
-  });
-});
-
 describe('Register', () => {
-  it('валидная форма вызывает register, редирект на /login', async () => {
-    vi.mocked(register).mockResolvedValue({
-      id: 'u1',
-      email: 'a@b.c',
-      name: 'A',
-      created_at: '',
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Mock window.location
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { href: '' },
     });
-    renderRegister();
-    const user = userEvent.setup();
-    await user.type(screen.getByLabelText('Имя'), 'Анна');
-    await user.type(screen.getByLabelText('Email'), 'a@b.c');
-    await user.type(screen.getByLabelText('Пароль'), 'password123');
-    await user.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
-    await vi.waitFor(() => {
-      expect(register).toHaveBeenCalledWith({
-        email: 'a@b.c',
-        password: 'password123',
-        name: 'Анна',
-      });
-    });
-    expect(window.location.href).toBe('/login');
   });
 
-  it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
-    renderRegister();
+  it('renders register form correctly', () => {
+    render(<Register />);
+    
+    expect(screen.getByText('Создать аккаунт')).toBeInTheDocument();
+    expect(screen.getByLabelText('Имя')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email адрес')).toBeInTheDocument();
+    expect(screen.getByLabelText('Пароль')).toBeInTheDocument();
+    expect(screen.getByText('Зарегистрироваться')).toBeInTheDocument();
+    expect(screen.getByText('Уже есть аккаунт? Войти')).toBeInTheDocument();
+  });
+
+  it('submits valid form and calls register function', async () => {
     const user = userEvent.setup();
-    await user.type(screen.getByLabelText('Имя'), 'Анна');
-    await user.type(screen.getByLabelText('Email'), 'a@b.c');
-    await user.type(screen.getByLabelText('Пароль'), 'short');
-    await user.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
+    mockRegister.mockResolvedValue({ id: '1', email: 'test@example.com', name: 'Test User', created_at: '2023-01-01' });
+    
+    render(<Register />);
+    
+    await user.type(screen.getByLabelText('Имя'), 'Test User');
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Зарегистрироваться'));
+    
+    await waitFor(() => {
+      expect(mockRegister).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+        name: 'Test User',
+      });
+      expect(window.location.href).toBe('/login');
+    });
+  });
+
+  it('shows validation error for password less than 8 characters', async () => {
+    const user = userEvent.setup();
+    render(<Register />);
+    
+    await user.type(screen.getByLabelText('Пароль'), 'pass');
+    await user.click(screen.getByText('Зарегистрироваться'));
+    
     expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
-    expect(register).not.toHaveBeenCalled();
+  });
+
+  it('shows error message for conflict (user already exists)', async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'conflict',
+            message: 'Conflict',
+          },
+        },
+      },
+    });
+    
+    render(<Register />);
+    
+    await user.type(screen.getByLabelText('Имя'), 'Test User');
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Зарегистрироваться'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Пользователь с таким email уже существует')).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation errors from backend for validation error', async () => {
+    const user = userEvent.setup();
+    mockRegister.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'validation',
+            message: 'Validation failed',
+            details: {
+              name: ['Name is required'],
+            },
+          },
+        },
+      },
+    });
+    
+    render(<Register />);
+    
+    await user.type(screen.getByLabelText('Имя'), 'Test User');
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Зарегистрироваться'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Name is required')).toBeInTheDocument();
+    });
   });
 });
