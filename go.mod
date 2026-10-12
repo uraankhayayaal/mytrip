@@ -8,10 +8,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.0
 	github.com/go-chi/chi/v5 v5.3.2
-	github.com/golang-migrate/migrate/v4 v4.15.2
-	github.com/jackc/pgx/v5 v5.1.1
 	golang.org/x/crypto v0.21.0
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	github.com/golang-migrate/migrate/v4 v4.20.1
+	github.com/jackc/pgx/v5 v5.11.0
+	github.com/testcontainers/testcontainers-go v0.39.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.19.0
+	github.com/testcontainers/testcontainers-go/modules/minio v0.5.0
 )
 
 require (

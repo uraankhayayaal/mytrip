@@ -1,25 +1,21 @@
 import { api } from './client';
-import type { Stop, StopPayload } from '../lib/types';
+import { Stop, StopPayload } from '../lib/types';
 
-// GET /trips/{tripId}/stops
 export async function listStops(tripId: string): Promise<Stop[]> {
-  const r = await api.get<Stop[]>(`/trips/${tripId}/stops`);
-  return r.data;
+  const response = await api.get(`/trips/${tripId}/stops`);
+  return response.data;
 }
 
-// POST /trips/{tripId}/stops -> 201
 export async function createStop(tripId: string, p: StopPayload): Promise<Stop> {
-  const r = await api.post<Stop>(`/trips/${tripId}/stops`, p);
-  return r.data;
+  const response = await api.post(`/trips/${tripId}/stops`, p);
+  return response.data;
 }
 
-// PUT /stops/{stopId}
 export async function updateStop(stopId: string, p: StopPayload): Promise<Stop> {
-  const r = await api.put<Stop>(`/stops/${stopId}`, p);
-  return r.data;
+  const response = await api.put(`/stops/${stopId}`, p);
+  return response.data;
 }
 
-// DELETE /stops/{stopId} -> 204
 export async function deleteStop(stopId: string): Promise<void> {
   await api.delete(`/stops/${stopId}`);
 }
