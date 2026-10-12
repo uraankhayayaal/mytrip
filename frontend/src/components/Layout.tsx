@@ -1,46 +1,40 @@
-import type { ReactNode } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 
-export function Layout({ children }: { children: ReactNode }): JSX.Element {
-  async function handleLogout() {
-    try {
-      await logout();
-    } catch {
-      // не критично: редирект происходит в любом случае
-    } finally {
-      window.location.href = '/login';
-    }
-  }
+export function Layout({ children }: { children: React.ReactNode }): JSX.Element {
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3 sm:gap-4">
-          <Link to="/" className="text-lg font-bold text-blue-600">
-            MyTrip
-          </Link>
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            <Link to="/" className="rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100">
-              Поездки
-            </Link>
-            <Link
-              to="/calendar"
-              className="rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
-            >
-              Календарь
-            </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800 hover:bg-gray-200"
-            >
-              Выйти
-            </button>
+      <header className="bg-white shadow">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Link to="/" className="text-xl font-bold text-indigo-600">
+                MyTrip
+              </Link>
+            </div>
+            <nav className="hidden md:flex space-x-8">
+              <Link to="/" className="text-gray-700 hover:text-indigo-600">
+                Поездки
+              </Link>
+              <Link to="/calendar" className="text-gray-700 hover:text-indigo-600">
+                Календарь
+              </Link>
+            </nav>
+            <div className="flex items-center">
+              <button onClick={handleLogout} className="text-gray-700 hover:text-indigo-600">
+                Выйти
+              </button>
+            </div>
           </div>
-        </nav>
+        </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>
   );
 }
