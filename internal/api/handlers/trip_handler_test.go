@@ -221,7 +221,9 @@ func TestGetTripHandler_NotFound(t *testing.T) {
 		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
 	}
 	var res struct {
-		Err struct{ Code string `json:"code"` } `json:"error"`
+		Err struct {
+			Code string `json:"code"`
+		} `json:"error"`
 	}
 	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
 		t.Fatalf("json: %v", err)
