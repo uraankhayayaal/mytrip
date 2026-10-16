@@ -1,9 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import type { QueryObserverResult, UseMutationResult } from '@tanstack/react-query';
 import { TripEdit } from '../pages/TripEdit';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, updateTrip } from '../api/trips';
+import { updateTrip } from '../api/trips';
+import type { Trip, TripPayload } from '../lib/types';
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),
@@ -23,54 +25,57 @@ vi.mock('../api/trips', () => ({
   updateTrip: vi.fn(),
 }));
 
+const mockUseQuery = vi.mocked(useQuery) as Mock;
+const mockUseMutation = vi.mocked(useMutation) as Mock;
+const mockUseParams = vi.mocked(useParams) as Mock;
+const mockUseNavigate = vi.mocked(useNavigate) as Mock;
+const mockUpdateTrip = vi.mocked(updateTrip) as Mock;
+
+const mockTrip: Trip = {
+  id: '1',
+  title: 'Trip 1',
+  description: 'Desc 1',
+  start_date: '2024-01-01',
+  end_date: '2024-01-02',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockUseParams.mockReturnValue({ id: '1' });
+  mockUseNavigate.mockReturnValue(vi.fn());
+  mockUseQuery.mockReturnValue({
+    data: mockTrip,
+    isLoading: false,
+    isError: false,
+    error: null,
+  } satisfies Partial<QueryObserverResult<Trip, unknown>>);
+});
+
 describe('TripEdit', () => {
-  const mockTrip = {
-    id: '1',
-    title: 'Trip 1',
-    description: 'Desc 1',
-    start_date: '2024-01-01',
-    end_date: '2024-01-02',
-    created_at: '',
-    updated_at: '',
-  };
-
-  it('should prefill form with trip data', async () => {
-    vi.mocked(useParams).mockReturnValue({ id: '1' });
-    vi.mocked(useQuery).mockReturnValue({
-      data: mockTrip,
-      isLoading: false,
-      error: null,
-    });
-    vi.mocked(useMutation).mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({}),
-    });
-
+  it('should prefill form with trip data', () => {
     render(<TripEdit />);
     expect(screen.getByLabelText(/Название поездки/i)).toHaveValue('Trip 1');
     expect(screen.getByLabelText(/Описание/i)).toHaveValue('Desc 1');
   });
 
   it('should update trip and navigate on submit', async () => {
-    const navigate = vi.mocked(useNavigate);
-    vi.mocked(useParams).mockReturnValue({ id: '1' });
-    vi.mocked(useQuery).mockReturnValue({
-      data: mockTrip,
-      isLoading: false,
-      error: null,
-    });
-    const mutateAsync = vi.fn().mockResolvedValue({});
-    vi.mocked(useMutation).mockReturnValue({
+    const navigate = mockUseNavigate() as Mock;
+    mockUpdateTrip.mockResolvedValue(mockTrip);
+    const mutateAsync = vi.fn().mockImplementation(async (p: TripPayload) =>
+      mockUpdateTrip('1', p),
+    );
+    mockUseMutation.mockReturnValue({
       mutateAsync,
-    });
+    } satisfies Partial<UseMutationResult<Trip, unknown, TripPayload, unknown>>);
 
     render(<TripEdit />);
-    
-    // Find the submit button
     const submitBtn = screen.getByText('Сохранить');
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(mutateAsync).toHaveBeenCalled();
+      expect(mockUpdateTrip).toHaveBeenCalledWith('1', expect.objectContaining({ title: 'Trip 1' }));
       expect(navigate).toHaveBeenCalledWith('/trips/1');
     });
   });

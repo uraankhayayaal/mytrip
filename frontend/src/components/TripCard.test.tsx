@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { TripCard } from '../components/TripCard';
-import { Trip } from '../lib/types';
+import type { Trip } from '../lib/types';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteTrip } from '../api/trips';
@@ -20,6 +20,9 @@ vi.mock('@tanstack/react-query', () => ({
   })),
 }));
 
+const mockUseNavigate = vi.mocked(useNavigate) as Mock;
+const mockDeleteTrip = vi.mocked(deleteTrip) as Mock;
+
 const mockTrip: Trip = {
   id: '1',
   title: 'Поездка в горы',
@@ -31,6 +34,12 @@ const mockTrip: Trip = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockUseNavigate.mockReturnValue(vi.fn());
+  mockDeleteTrip.mockResolvedValue(undefined);
+});
+
 describe('TripCard', () => {
   it('should render title and dates', () => {
     render(<TripCard trip={mockTrip} />);
@@ -39,31 +48,31 @@ describe('TripCard', () => {
   });
 
   it('should navigate to detail page on click', () => {
-    const navigate = vi.mocked(useNavigate());
+    const navigate = mockUseNavigate() as Mock;
     render(<TripCard trip={mockTrip} />);
-    fireEvent.click(screen.getByText('Поездка в горы').closest('div'));
+    fireEvent.click(screen.getByText('Поездка в горы').closest('div')!);
     expect(navigate).toHaveBeenCalledWith('/trips/1');
   });
 
-  it('should navigate to edit page when clicking Edit', async () => {
-    const navigate = vi.mocked(useNavigate());
+  it('should navigate to edit page when clicking Edit', () => {
+    const navigate = mockUseNavigate() as Mock;
     render(<TripCard trip={mockTrip} />);
     fireEvent.click(screen.getByText('Изменить'));
     expect(navigate).toHaveBeenCalledWith('/trips/1/edit');
   });
 
   it('should call deleteTrip and invalidate queries when clicking Delete', async () => {
-    const invalidateQueries = vi.mocked(useQueryClient().invalidateQueries);
-    render(<TripCard trip={mockTrip} />);
-    
-    // Mock window.confirm
+    const invalidateQueries = vi.fn();
+    const { useQueryClient: mockUQC } = await import('../test-utils');
+    void mockUQC;
     vi.spyOn(window, 'confirm').mockImplementation(() => true);
-    
+    render(<TripCard trip={mockTrip} />);
+    const invalidate = vi.mocked(useQueryClient().invalidateQueries);
     fireEvent.click(screen.getByText('Удалить'));
-    
     await waitFor(() => {
-      expect(deleteTrip).toHaveBeenCalledWith('1');
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['trips'] });
+      expect(mockDeleteTrip).toHaveBeenCalledWith('1');
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['trips'] });
     });
+    void invalidateQueries;
   });
 });
