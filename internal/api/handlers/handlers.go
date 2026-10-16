@@ -4,7 +4,10 @@ package handlers
 // Контракты: методы, пути, тела JSON и коды ошибок зафиксированы комментариями ниже.
 // Правило: публичные сигнатуры и JSON-схемы менять НЕЛЬЗЯ.
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 // AuthHandler — /api/v1/auth/* (CHAT-07: A7-01).
 //
