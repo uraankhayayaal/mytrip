@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { login } from '../api/auth';
 import { setAccessToken } from '../api/client';
@@ -22,6 +23,14 @@ const loginResponse: LoginResponse = {
   user: { id: 'u1', email: 'a@b.c', name: 'A', created_at: '2024-01-01T00:00:00Z' },
 };
 
+function renderLogin() {
+  return render(
+    <MemoryRouter>
+      <Login />
+    </MemoryRouter>,
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   Object.defineProperty(window, 'location', {
@@ -34,7 +43,7 @@ beforeEach(() => {
 describe('Login', () => {
   it('валидная форма вызывает login и setAccessToken, редирект на /', async () => {
     mockLogin.mockResolvedValue(loginResponse);
-    render(<Login />);
+    renderLogin();
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Email'), 'a@b.c');
     await user.type(screen.getByLabelText('Пароль'), 'password123');
@@ -47,7 +56,7 @@ describe('Login', () => {
   });
 
   it('пустые поля: ошибки zod, запрос не уходит', async () => {
-    render(<Login />);
+    renderLogin();
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Войти' }));
     await waitFor(() => {
@@ -59,7 +68,7 @@ describe('Login', () => {
 
   it('ApiError unauthorized: баннер «Неверный email или пароль»', async () => {
     mockLogin.mockRejectedValue(new ApiError('unauthorized', 'bad credentials'));
-    render(<Login />);
+    renderLogin();
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Email'), 'a@b.c');
     await user.type(screen.getByLabelText('Пароль'), 'password123');

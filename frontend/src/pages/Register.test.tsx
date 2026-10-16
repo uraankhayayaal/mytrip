@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { register } from '../api/auth';
 import { Register } from './Register';
@@ -18,6 +19,14 @@ const user: User = {
   created_at: '2024-01-01T00:00:00Z',
 };
 
+function renderRegister() {
+  return render(
+    <MemoryRouter>
+      <Register />
+    </MemoryRouter>,
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   Object.defineProperty(window, 'location', {
@@ -30,7 +39,7 @@ beforeEach(() => {
 describe('Register', () => {
   it('валидная форма вызывает register, редирект на /login', async () => {
     mockRegister.mockResolvedValue(user);
-    render(<Register />);
+    renderRegister();
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Имя'), 'Анна');
     await user.type(screen.getByLabelText('Email'), 'a@b.c');
@@ -47,7 +56,7 @@ describe('Register', () => {
   });
 
   it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
-    render(<Register />);
+    renderRegister();
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Имя'), 'Анна');
     await user.type(screen.getByLabelText('Email'), 'a@b.c');
