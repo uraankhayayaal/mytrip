@@ -5,10 +5,11 @@ package repo
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -25,11 +26,22 @@ var _ TripRepo = (*PGTripRepo)(nil)
 // NewPGTripRepo — конструктор.
 func NewPGTripRepo(pool *pgxpool.Pool) *PGTripRepo { return &PGTripRepo{pool: pool} }
 
+// newTripID — UUID v4 без внешних зависимостей (RFC 4122, вариант 1).
+func newTripID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant 1
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
+
 // scanTrip — скан одной строки trips в *domain.Trip.
 func scanTrip(row interface{ Scan(...any) error }) (*domain.Trip, error) {
 	var (
-		t    domain.Trip
-		uid  string
+		t     domain.Trip
+		uid   string
 		cover *string
 	)
 	err := row.Scan(&t.ID, &uid, &t.Title, &t.Description, &t.StartDate, &t.EndDate, &cover, &t.CreatedAt, &t.UpdatedAt)
@@ -41,10 +53,10 @@ func scanTrip(row interface{ Scan(...any) error }) (*domain.Trip, error) {
 	return &t, nil
 }
 
-// Insert — INSERT trips; id генерируется (uuid v4), timestamps — now().
+// Insert — INSERT trips; пустой id генерируется (uuid v4), timestamps — now().
 func (r *PGTripRepo) Insert(ctx context.Context, t *domain.Trip) error {
 	if t.ID == "" {
-		t.ID = uuid.NewString()
+		t.ID = newTripID()
 	}
 	var id string
 	err := r.pool.QueryRow(ctx, `INSERT INTO trips (id, user_id, title, description, start_date, end_date, cover_photo_url, created_at, updated_at)
@@ -132,5 +144,3 @@ func (r *PGTripRepo) SetCover(ctx context.Context, userID, tripID, coverURL stri
 	}
 	return nil
 }
-
-var _ = fmt.Sprintf
