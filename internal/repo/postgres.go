@@ -80,7 +80,9 @@ type PGRefreshTokenRepo struct {
 var _ RefreshTokenRepo = (*PGRefreshTokenRepo)(nil)
 
 // NewPGRefreshTokenRepo — конструктор.
-func NewPGRefreshTokenRepo(pool *pgxpool.Pool) *PGRefreshTokenRepo { return &PGRefreshTokenRepo{pool: pool} }
+func NewPGRefreshTokenRepo(pool *pgxpool.Pool) *PGRefreshTokenRepo {
+	return &PGRefreshTokenRepo{pool: pool}
+}
 
 // Insert — INSERT refresh_tokens (token_hash UNIQUE).
 func (r *PGRefreshTokenRepo) Insert(ctx context.Context, userID, tokenHash string, expiresAt time.Time) error {

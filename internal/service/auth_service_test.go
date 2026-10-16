@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"mytrip/internal/domain"
 	"mytrip/internal/jwtutil"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // --- mocks ---
