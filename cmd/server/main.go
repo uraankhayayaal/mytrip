@@ -24,15 +24,48 @@ import (
 	"mytrip/internal/api/middleware"
 	"mytrip/internal/config"
 	"mytrip/internal/domain"
+	"mytrip/internal/jwtutil"
 	"mytrip/internal/repo"
 	"mytrip/internal/service"
 )
 
-// Точки расширения DI: конструкторы сервисов/репозиториев/хендлеров
-// добавят BEL-03..06. Пока nil — маршруты /api/v1/* появятся вместе с ними.
-var (
-	// TODO(BEL-03..06): tripService, stopService, authService, photoService, exportHandler
-)
+// authDeps — зависимости аутентификации (CHAT-07: A7-01).
+type authDeps struct {
+	auth      service.AuthService
+	validator jwtutil.TokenValidator
+}
+
+var deps *authDeps
+
+func newAuthDeps(cfg *config.Config, pool *pgxpool.Pool) (*authDeps, error) {
+	userRepo := repo.NewPGUserRepo(pool)
+	tokenRepo := repo.NewPGRefreshTokenRepo(pool)
+	issuer, validator, err := jwtutil.NewHS256(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	if err != nil {
+		return nil, err
+	}
+	auth := service.NewAuthService(userRepo, tokenRepo, tokenRepo, issuer, validator, cfg.JWTRefreshTTL)
+	return &authDeps{auth: auth, validator: validator}, nil
+}
+
+// authMiddleware — валидация Bearer JWT access-токена (CHAT-07: A7-01/A7-05).
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		header := r.Header.Get("Authorization")
+		const prefix = "Bearer "
+		if len(header) <= len(prefix) || header[:len(prefix)] != prefix {
+			middleware.WriteError(w, domain.NewUnauthorized("missing or malformed Authorization header"))
+			return
+		}
+		claims, err := deps.validator.Validate(header[len(prefix):], jwtutil.TokenKindAccess)
+		if err != nil {
+			middleware.WriteError(w, domain.NewUnauthorized("invalid or expired token"))
+			return
+		}
+		ctx := context.WithValue(r.Context(), middleware.UserIDKey, claims.Subject)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -62,12 +95,18 @@ func main() {
 	}
 	_ = s3Client // TODO(BEL-04): передать в storage-сервис
 
+	// Auth (CHAT-07: A7-01)
+	deps, err = newAuthDeps(cfg, pool)
+	if err != nil {
+		log.Fatalf("auth: %v", err)
+	}
+
 	// chi router
 	r := chi.NewRouter()
 	r.Use(middleware.ErrorHandler)
 	r.Get("/healthz", healthHandler)
 	r.Route("/api/v1", func(r chi.Router) {
-		r.With(authMiddleware).Get("/trips/{id}/export", exportHandler.Export)
+		handlers.NewAuthHandler(deps.auth).Mount(r)
 	})
 
 	srv := &http.Server{
@@ -88,6 +127,13 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("server: %v", err)
 	}
+}
+
+func toAppError(err error) *domain.AppError {
+	if ae, ok := err.(*domain.AppError); ok {
+		return ae
+	}
+	return domain.NewInternal()
 }
 
 // healthHandler — GET /healthz → 200 {"status":"ok"} (без auth).
@@ -129,5 +175,3 @@ func newS3Client(ctx context.Context, cfg *config.Config) (*s3.Client, error) {
 	})
 	return client, nil
 }
-
-var _ = domain.NewInternal // placeholder: domain-контракт используется в middleware

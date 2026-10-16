@@ -3,12 +3,6 @@ package repo
 // Слой репозиториев (Clean Architecture: infrastructure-слой, Postgres pgx).
 // Задачи CHAT-07: реализации пишут рядовые разработчики, контракты зафиксированы здесь.
 // Правило: публичные сигнатуры менять НЕЛЬЗЯ.
-//
-// Общий стиль:
-//   - pgx pool (*pgxpool.Pool) — из cmd/server/main.go.
-//   - UUID — string (cast в SQL: $1::uuid).
-//   - Ошибки «нет строки» → domain.NewNotFound, «дубль» → domain.NewConflict.
-//   - Контекст — всегда первый аргумент; ctx.Err() — propagate.
 
 import (
 	"context"
@@ -18,7 +12,6 @@ import (
 )
 
 // UserRepo — пользователи (таблица users, 0001_init).
-// TODO(A7-01): реализация по задаче A7-01.
 type UserRepo interface {
 	Insert(ctx context.Context, u *domain.User, passwordHash string) error
 	ByEmail(ctx context.Context, email string) (*domain.User, string /*passwordHash*/, error)
@@ -27,7 +20,6 @@ type UserRepo interface {
 
 // RefreshTokenRepo — refresh-токены (таблица refresh_tokens, 0001_init).
 // Хранится hash (SHA-256 hex) — НЕ сам JWT.
-// TODO(A7-01): реализация по задаче A7-01.
 type RefreshTokenRepo interface {
 	Insert(ctx context.Context, userID, tokenHash string, expiresAt time.Time) error
 	DeleteByHash(ctx context.Context, tokenHash string) error
