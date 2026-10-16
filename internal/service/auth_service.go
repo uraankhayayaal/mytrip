@@ -40,7 +40,7 @@ func newUserID() string {
 
 // RefreshTokenDeleter — удаление refresh-токена с индикатором (для ротации: 0 строк → отозван).
 type RefreshTokenDeleter interface {
-	DeleteByHash(ctx context.Context, tokenHash string) (int64, error)
+	DeleteByHashWithResult(ctx context.Context, tokenHash string) (int64, error)
 }
 
 type authService struct {
@@ -140,7 +140,7 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (string,
 // deleteOld — удаление старого hash; true если строка была удалена.
 func (s *authService) deleteOld(ctx context.Context, hash string) (bool, error) {
 	if s.deleter != nil {
-		n, err := s.deleter.DeleteByHash(ctx, hash)
+		n, err := s.deleter.DeleteByHashWithResult(ctx, hash)
 		if err != nil {
 			return false, err
 		}
