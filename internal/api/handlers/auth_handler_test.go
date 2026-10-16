@@ -279,3 +279,52 @@ func TestMeHandler_Unauthorized(t *testing.T) {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
 	}
 }
+
+func TestRegisterHandler_InvalidBody(t *testing.T) {
+	auth := &mockAuthService{registerFn: func(_ context.Context, _, _, _ string) (*domain.User, error) {
+		return nil, domain.NewValidation("email and name are required", nil)
+	}}
+	body := bytes.NewBufferString(`{"email":`)
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", body)
+	w := httptest.NewRecorder()
+	newTestRouter(auth).ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestLoginHandler_InvalidBody(t *testing.T) {
+	auth := &mockAuthService{}
+	body := bytes.NewBufferString(`not-json`)
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", body)
+	w := httptest.NewRecorder()
+	newTestRouter(auth).ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestRegisterHandler_EmptyFieldsValidation(t *testing.T) {
+	auth := &mockAuthService{registerFn: func(_ context.Context, _, _, _ string) (*domain.User, error) {
+		return nil, domain.NewValidation("email and name are required", nil)
+	}}
+	body := bytes.NewBufferString(`{"email":"","password":"password123","name":""}`)
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", body)
+	w := httptest.NewRecorder()
+	newTestRouter(auth).ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+	var eb struct {
+		Error struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &eb); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if eb.Error.Code != domain.ErrCodeValidation {
+		t.Fatalf("expected code validation, got %q", eb.Error.Code)
+	}
+}
