@@ -33,10 +33,6 @@ import (
 //	  err : 401
 //
 // Реализация: auth_handler.go (NewAuthHandler/Mount).
-type AuthHandler struct {
-	handler http.Handler
-}
-
 // TripHandler — /api/v1/trips* (CHAT-07: A7-02).
 type TripHandler struct{}
 
