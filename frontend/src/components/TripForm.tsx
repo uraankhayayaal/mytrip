@@ -30,7 +30,7 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); void onSubmitForm(e); }} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
+    <form onSubmit={handleSubmit((data) => onSubmitForm(data))} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
       <div className="grid grid-cols-1 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Название поездки</label>
