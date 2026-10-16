@@ -14,17 +14,30 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"mytrip/internal/domain"
 	"mytrip/internal/jwtutil"
 	"mytrip/internal/repo"
 )
+
+// newUserID — UUID v4 без внешних зависимостей (RFC 4122, вариант 1).
+func newUserID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant 1
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
 
 // RefreshTokenDeleter — удаление refresh-токена с индикатором (для ротации: 0 строк → отозван).
 type RefreshTokenDeleter interface {
@@ -64,7 +77,7 @@ func (s *authService) Register(ctx context.Context, email, password, name string
 	if err != nil {
 		return nil, domain.NewInternal()
 	}
-	u := &domain.User{ID: uuid.NewString(), Email: email, Name: name, CreatedAt: time.Now()}
+	u := &domain.User{ID: newUserID(), Email: email, Name: name, CreatedAt: time.Now()}
 	if err := s.users.Insert(ctx, u, string(hash)); err != nil {
 		return nil, err
 	}
