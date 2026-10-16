@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { createTrip, listTrips } from '../api/trips';
 import type { Trip } from '../lib/types';
 
+type QueryResult<T> = Partial<QueryObserverResult<T, unknown>>;
+
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),
   useQueryClient: vi.fn(() => ({
@@ -23,9 +25,9 @@ vi.mock('../api/trips', () => ({
   listTrips: vi.fn(),
 }));
 
-const mockUseQuery = vi.mocked(useQuery) as Mock;
-const mockUseNavigate = vi.mocked(useNavigate) as Mock;
-const mockCreateTrip = vi.mocked(createTrip) as Mock;
+const mockUseQuery = vi.mocked(useQuery);
+const mockUseNavigate = vi.mocked(useNavigate);
+const mockCreateTrip = vi.mocked(createTrip);
 
 function makeTrip(id: string, title: string, description: string): Trip {
   return {
@@ -47,7 +49,7 @@ beforeEach(() => {
     isLoading: false,
     isError: false,
     error: null,
-  } satisfies Partial<QueryObserverResult<Trip[], unknown>>);
+  } satisfies QueryResult<Trip[]>);
 });
 
 describe('TripsList', () => {
@@ -58,7 +60,7 @@ describe('TripsList', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } satisfies Partial<QueryObserverResult<Trip[], unknown>>);
+    } satisfies QueryResult<Trip[]>);
 
     render(<TripsList />);
     expect(screen.getByText('Trip 1')).toBeInTheDocument();
@@ -71,14 +73,14 @@ describe('TripsList', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } satisfies Partial<QueryObserverResult<Trip[], unknown>>);
+    } satisfies QueryResult<Trip[]>);
 
     render(<TripsList />);
     expect(screen.getByText('Пока нет поездок')).toBeInTheDocument();
   });
 
   it('should create a draft trip and navigate to edit when clicking + New Trip', async () => {
-    const navigate = mockUseNavigate() as Mock;
+    const navigate = mockUseNavigate() as ReturnType<typeof useNavigate>;
     const newTrip: Trip = makeTrip('new-id', 'Новая поездка', '');
     mockCreateTrip.mockResolvedValue(newTrip);
 
