@@ -8,7 +8,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -18,18 +17,16 @@ import (
 	"mytrip/internal/service"
 )
 
-type tripHandler struct {
+// tripDeps — состояние TripHandler.
+type tripDeps struct {
 	trips service.TripService
-}
-
-// TripHandler — реализация контракта из handlers.go (embed реализация).
-type TripHandler struct {
-	*tripHandler
 }
 
 // NewTripHandler — конструктор TripHandler.
 func NewTripHandler(trips service.TripService) *TripHandler {
-	return &TripHandler{tripHandler: &tripHandler{trips: trips}}
+	h := &TripHandler{}
+	h.deps = &tripDeps{trips: trips}
+	return h
 }
 
 // Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
@@ -67,11 +64,11 @@ func toTripJSON(t *domain.Trip) tripJSON {
 }
 
 type tripRequest struct {
-	Title         string     `json:"title"`
-	Description   string     `json:"description"`
-	StartDate     time.Time  `json:"start_date"`
-	EndDate       time.Time  `json:"end_date"`
-	CoverPhotoURL *string    `json:"cover_photo_url,omitempty"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	StartDate     time.Time `json:"start_date"`
+	EndDate       time.Time `json:"end_date"`
+	CoverPhotoURL *string   `json:"cover_photo_url,omitempty"`
 }
 
 func (b tripRequest) payload() *service.TripPayload {
@@ -85,9 +82,9 @@ func (b tripRequest) payload() *service.TripPayload {
 }
 
 // GET /trips — список поездок пользователя.
-func (h *tripHandler) list(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) list(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
-	trips, err := h.trips.List(r.Context(), userID)
+	trips, err := h.deps.trips.List(r.Context(), userID)
 	if err != nil {
 		middleware.WriteError(w, toAppError(err))
 		return
@@ -103,14 +100,14 @@ func (h *tripHandler) list(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /trips — создание поездки.
-func (h *tripHandler) create(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) create(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	var body tripRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		middleware.WriteError(w, domain.NewValidation("invalid request body", nil))
 		return
 	}
-	t, err := h.trips.Create(r.Context(), userID, body.payload())
+	t, err := h.deps.trips.Create(r.Context(), userID, body.payload())
 	if err != nil {
 		middleware.WriteError(w, toAppError(err))
 		return
@@ -119,10 +116,10 @@ func (h *tripHandler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /trips/{id} — поездка по id.
-func (h *tripHandler) get(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) get(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	tripID := chi.URLParam(r, "id")
-	t, err := h.trips.Get(r.Context(), userID, tripID)
+	t, err := h.deps.trips.Get(r.Context(), userID, tripID)
 	if err != nil {
 		middleware.WriteError(w, toAppError(err))
 		return
@@ -131,7 +128,7 @@ func (h *tripHandler) get(w http.ResponseWriter, r *http.Request) {
 }
 
 // PUT /trips/{id} — обновление поездки.
-func (h *tripHandler) update(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) update(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	tripID := chi.URLParam(r, "id")
 	var body tripRequest
@@ -139,7 +136,7 @@ func (h *tripHandler) update(w http.ResponseWriter, r *http.Request) {
 		middleware.WriteError(w, domain.NewValidation("invalid request body", nil))
 		return
 	}
-	t, err := h.trips.Update(r.Context(), userID, tripID, body.payload())
+	t, err := h.deps.trips.Update(r.Context(), userID, tripID, body.payload())
 	if err != nil {
 		middleware.WriteError(w, toAppError(err))
 		return
@@ -148,14 +145,12 @@ func (h *tripHandler) update(w http.ResponseWriter, r *http.Request) {
 }
 
 // DELETE /trips/{id} — удаление поездки → 204.
-func (h *tripHandler) delete(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) delete(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	tripID := chi.URLParam(r, "id")
-	if err := h.trips.Delete(r.Context(), userID, tripID); err != nil {
+	if err := h.deps.trips.Delete(r.Context(), userID, tripID); err != nil {
 		middleware.WriteError(w, toAppError(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-var _ = strings.TrimSpace
