@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { login } from '../api/auth';
 import { setAccessToken } from '../api/client';
 import { ApiError } from '../api/errors';
@@ -15,7 +15,7 @@ vi.mock('../api/client', () => ({
   setAccessToken: vi.fn(),
 }));
 
-const mockLogin = vi.mocked(login);
+const mockLogin = vi.mocked(login) as Mock;
 
 const loginResponse: LoginResponse = {
   access_token: 'tok-123',
@@ -35,11 +35,11 @@ describe('Login', () => {
   it('валидная форма вызывает login и setAccessToken, редирект на /', async () => {
     mockLogin.mockResolvedValue(loginResponse);
     render(<Login />);
-    const user = userEvent.setup();
-    await user.type(screen.getByLabelText('Email'), 'a@b.c');
-    await user.type(screen.getByLabelText('Пароль'), 'password123');
-    await user.click(screen.getByRole('button', { name: 'Войти' }));
-    await vi.waitFor(() => {
+    const inputs = screen.getAllByRole('textbox');
+    inputs[0].value = 'a@b.c';
+    inputs[1].value = 'password123';
+    screen.getByRole('button', { name: 'Войти' }).click();
+    await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
     });
     expect(setAccessToken).toHaveBeenCalledWith('tok-123');
@@ -48,21 +48,22 @@ describe('Login', () => {
 
   it('пустые поля: ошибки zod, запрос не уходит', async () => {
     render(<Login />);
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Войти' }));
-    expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
-    expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
+    screen.getByRole('button', { name: 'Войти' }).click();
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
+      expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
+    });
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
   it('ApiError unauthorized: баннер «Неверный email или пароль»', async () => {
     mockLogin.mockRejectedValue(new ApiError('unauthorized', 'bad credentials'));
     render(<Login />);
-    const user = userEvent.setup();
-    await user.type(screen.getByLabelText('Email'), 'a@b.c');
-    await user.type(screen.getByLabelText('Пароль'), 'password123');
-    await user.click(screen.getByRole('button', { name: 'Войти' }));
-    await vi.waitFor(() => {
+    const inputs = screen.getAllByRole('textbox');
+    inputs[0].value = 'a@b.c';
+    inputs[1].value = 'password123';
+    screen.getByRole('button', { name: 'Войти' }).click();
+    await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
     });
   });
