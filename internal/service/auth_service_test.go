@@ -12,6 +12,7 @@ import (
 
 	"mytrip/internal/domain"
 	"mytrip/internal/jwtutil"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // --- mocks ---
@@ -111,6 +112,10 @@ func (m *mockValidator) Validate(token string, expectedKind jwtutil.TokenKind) (
 func newTestService(users *mockUserRepo, tokens *mockRefreshTokenRepo, del *mockDeleter, iss *mockIssuer, val *mockValidator) AuthService {
 	return NewAuthService(users, tokens, del, iss, val, time.Hour)
 }
+func testHash(pw string) string {
+	h, _ := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	return string(h)
+}
 
 // --- Register ---
 
@@ -169,7 +174,7 @@ func TestRegister_Conflict(t *testing.T) {
 
 func TestLogin_Success(t *testing.T) {
 	users := &mockUserRepo{byEmailFn: func(_ context.Context, _ string) (*domain.User, string, error) {
-		return &domain.User{ID: "u1", Email: "a@b.com", Name: "Alice"}, "hash", nil
+		return &domain.User{ID: "u1", Email: "a@b.com", Name: "Alice"}, testHash("password123"), nil
 	}}
 	tokens := &mockRefreshTokenRepo{}
 	iss := &mockIssuer{access: "acc", refresh: "ref"}
