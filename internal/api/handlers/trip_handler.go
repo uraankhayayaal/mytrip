@@ -23,23 +23,24 @@ type tripHandler struct {
 }
 
 // NewTripHandler — конструктор TripHandler.
-func NewTripHandler(trips service.TripService) *TripHandler {
-	return &TripHandler{handler: &tripHandler{trips: trips}}
+// Контракт TripHandler зафиксирован в handlers.go — расширяем через embed.
+type TripHandler struct {
+	*tripHandler
 }
 
-// TripHandler — реализация контракта из handlers.go.
-type TripHandler struct {
-	handler *tripHandler
+// NewTripHandler — конструктор TripHandler.
+func NewTripHandler(trips service.TripService) *TripHandler {
+	return &TripHandler{tripHandler: &tripHandler{trips: trips}}
 }
 
 // Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
 // Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
 func (h *TripHandler) Mount(r chi.Router) {
-	r.Get("/trips", h.handler.list)
-	r.Post("/trips", h.handler.create)
-	r.Get("/trips/{id}", h.handler.get)
-	r.Put("/trips/{id}", h.handler.update)
-	r.Delete("/trips/{id}", h.handler.delete)
+	r.Get("/trips", h.list)
+	r.Post("/trips", h.create)
+	r.Get("/trips/{id}", h.get)
+	r.Put("/trips/{id}", h.update)
+	r.Delete("/trips/{id}", h.delete)
 }
 
 type tripJSON struct {
