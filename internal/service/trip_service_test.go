@@ -123,18 +123,18 @@ func TestTripService_Create_Success(t *testing.T) {
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	p := &TripPayload{Title: "  Trip  ", Description: "d",
 		StartDate: start, EndDate: start.AddDate(0, 1, 0)}
-	t, err := s.Create(context.Background(), "u1", p)
+	created, err := s.Create(context.Background(), "u1", p)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if t.ID == "" {
+	if created.ID == "" {
 		t.Fatal("expected generated id")
 	}
-	if t.Title != "Trip" {
-		t.Fatalf("expected trimmed title, got %q", t.Title)
+	if created.Title != "Trip" {
+		t.Fatalf("expected trimmed title, got %q", created.Title)
 	}
-	if t.UserID != "u1" || repo.inserted == nil || repo.inserted.ID != t.ID {
-		t.Fatalf("repo.inserted mismatch: %+v / %+v", repo.inserted, t)
+	if created.UserID != "u1" || repo.inserted == nil || repo.inserted.ID != created.ID {
+		t.Fatalf("repo.inserted mismatch: %+v / %+v", repo.inserted, created)
 	}
 }
 
