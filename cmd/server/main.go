@@ -34,6 +34,22 @@ var (
 	// TODO(BEL-03..06): tripService, stopService, authService, photoService, exportHandler
 )
 
+func newAuthDeps(cfg *config.Config) (service.AuthService, jwtutil.TokenIssuer, jwtutil.TokenValidator) {
+	pool := pgxpool.New(context.Background(), cfg.DatabaseURL)
+	userRepo := repo.NewPGUserRepo(pool)
+	tokenRepo := repo.NewPGRefreshTokenRepo(pool)
+	issuer, validator, err := jwtutil.NewHS256(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	if err != nil {
+		log.Fatalf("jwtutil: %v", err)
+	}
+	auth := service.NewAuthService(userRepo, tokenRepo, tokenRepo, issuer, validator, cfg.JWTRefreshTTL)
+	return auth, issuer, validator
+}
+
+func newAuthHandler(auth service.AuthService, issuer jwtutil.TokenIssuer) *handlers.AuthHandler {
+	return handlers.NewAuthHandler(auth)
+}
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
