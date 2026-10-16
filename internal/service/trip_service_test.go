@@ -136,6 +136,7 @@ func TestTripService_Create_Success(t *testing.T) {
 	if t.UserID != "u1" || repo.inserted == nil || repo.inserted.ID != t.ID {
 		t.Fatalf("repo.inserted mismatch: %+v / %+v", repo.inserted, t)
 	}
+}
 
 func TestTripService_Create_Validation(t *testing.T) {
 	repo := &mockTripRepo{}
