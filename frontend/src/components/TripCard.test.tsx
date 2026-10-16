@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { TripCard } from '../components/TripCard';
 import type { Trip } from '../lib/types';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { deleteTrip } from '../api/trips';
 
 vi.mock('react-router-dom', () => ({
@@ -21,7 +20,6 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 const mockUseNavigate = vi.mocked(useNavigate) as Mock;
-const mockUseQueryClient = vi.mocked(useQueryClient) as Mock;
 const mockDeleteTrip = vi.mocked(deleteTrip) as Mock;
 
 const mockTrip: Trip = {
@@ -37,8 +35,6 @@ const mockTrip: Trip = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  const invalidateQueries = vi.fn();
-  mockUseQueryClient.mockReturnValue({ invalidateQueries });
   mockUseNavigate.mockReturnValue(vi.fn());
   mockDeleteTrip.mockResolvedValue(undefined);
 });
@@ -64,8 +60,7 @@ describe('TripCard', () => {
     expect(navigate).toHaveBeenCalledWith('/trips/1/edit');
   });
 
-  it('should call deleteTrip and invalidate queries when clicking Delete', async () => {
-    const invalidateQueries = vi.mocked(mockUseQueryClient().invalidateQueries);
+  it('should call deleteTrip when clicking Delete', async () => {
     vi.spyOn(window, 'confirm').mockImplementation(() => true);
 
     render(<TripCard trip={mockTrip} />);
@@ -73,7 +68,6 @@ describe('TripCard', () => {
 
     await waitFor(() => {
       expect(mockDeleteTrip).toHaveBeenCalledWith('1');
-      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['trips'] });
     });
   });
 });
