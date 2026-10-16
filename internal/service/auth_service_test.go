@@ -75,7 +75,7 @@ type mockDeleter struct {
 	err     error
 }
 
-func (m *mockDeleter) DeleteByHash(ctx context.Context, tokenHash string) (int64, error) {
+func (m *mockDeleter) DeleteByHashWithResult(ctx context.Context, tokenHash string) (int64, error) {
 	return m.deleted, m.err
 }
 
