@@ -78,9 +78,12 @@ describe('TripEdit', () => {
     render(<TripEdit />);
     // Заполняем поля формы значениями mockTrip
     const titleInput = screen.getByLabelText(/Название поездки/i) as HTMLInputElement;
-    titleInput.value = 'Trip 1';
     const descInput = screen.getByLabelText(/Описание/i) as HTMLTextAreaElement;
+    titleInput.value = 'Trip 1';
+    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
     descInput.value = 'Desc 1';
+    descInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 100));
 
     const submitBtn = screen.getByText('Сохранить');
     fireEvent.click(submitBtn);
