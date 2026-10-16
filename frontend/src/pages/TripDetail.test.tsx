@@ -1,7 +1,6 @@
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import type { QueryObserverResult } from '@tanstack/react-query';
+import type { QueryObserverResult, UseMutationResult } from '@tanstack/react-query';
 import { TripDetail } from './TripDetail';
 import { getTrip } from '../api/trips';
 import { listStops, createStop, updateStop, deleteStop } from '../api/stops';
@@ -9,7 +8,7 @@ import { listPhotos } from '../api/photos';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapView } from '../components/MapView';
-import type { Trip, Stop, Photo, StopPayload, Location } from '../lib/types';
+import type { Location, Photo, Stop, Trip } from '../lib/types';
 
 vi.mock('../api/trips', () => ({ getTrip: vi.fn() }));
 vi.mock('../api/stops', () => ({
@@ -20,7 +19,7 @@ vi.mock('../api/stops', () => ({
 }));
 vi.mock('../api/photos', () => ({ listPhotos: vi.fn() }));
 vi.mock('react-router-dom', () => ({
-  useParams: vi.fn(() => ({ id: 'trip-1' })),
+  useParams: vi.fn(),
   useNavigate: vi.fn(),
 }));
 vi.mock('@tanstack/react-query', () => ({
@@ -31,23 +30,36 @@ vi.mock('@tanstack/react-query', () => ({
   })),
 }));
 vi.mock('../components/MapView', () => ({
-  MapView: vi.fn(({ stops, onMoveStop, selectedStopId, onSelectStop }: { stops: Stop[]; onMoveStop?: (id: string, loc: Location) => void; selectedStopId?: string | null; onSelectStop?: (id: string) => void }) => (
-    <div data-testid="map-view">
-      <span data-testid="stops-count">{stops.length}</span>
-      <span data-testid="selected">{selectedStopId ?? 'none'}</span>
-      <button type="button" onClick={() => onSelectStop?.('stop-1')}>select</button>
-      <button
-        type="button"
-        onClick={() => onMoveStop?.('stop-1', { lat: 10, lng: 20 })}
-      >
-        move
-      </button>
-    </div>
-  )),
+  MapView: vi.fn(
+    ({
+      stops,
+      onMoveStop,
+      selectedStopId,
+      onSelectStop,
+    }: {
+      stops: Stop[];
+      onMoveStop?: (id: string, loc: Location) => void;
+      selectedStopId?: string | null;
+      onSelectStop?: (id: string) => void;
+    }) => (
+      <div data-testid="map-view">
+        <span data-testid="stops-count">{stops.length}</span>
+        <span data-testid="selected">{selectedStopId ?? 'none'}</span>
+        <button type="button" onClick={() => onSelectStop?.('stop-1')}>
+          select
+        </button>
+        <button type="button" onClick={() => onMoveStop?.('stop-1', { lat: 10, lng: 20 })}>
+          move
+        </button>
+      </div>
+    ),
+  ),
 }));
 
 const mockUseQuery = vi.mocked(useQuery) as Mock;
 const mockUseMutation = vi.mocked(useMutation) as Mock;
+const mockUseParams = vi.mocked(useParams) as Mock;
+const mockUseNavigate = vi.mocked(useNavigate) as Mock;
 
 const trip: Trip = {
   id: 'trip-1',
@@ -78,7 +90,7 @@ const photo: Photo = {
   created_at: '2025-05-01T00:00:00Z',
 };
 
-function mockTripDetailQueries() {
+function mockQueries() {
   mockUseQuery.mockImplementation((options: { queryKey: readonly unknown[] }) => {
     const key = options.queryKey[0] as string;
     if (key === 'trip') {
@@ -108,19 +120,20 @@ function mockTripDetailQueries() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.spyOn(window, 'location', 'assign').mockImplementation(() => undefined);
-  Object.defineProperty(window, 'location', {
-    value: { ...window.location, href: window.location.href },
-    writable: true,
-  });
-  mockTripDetailQueries();
-  vi.spyOn(window, 'confirm').mockReturnValue(true);
-  const mutate = vi.fn();
+  mockUseParams.mockReturnValue({ id: 'trip-1' });
+  mockUseNavigate.mockReturnValue(vi.fn());
+  mockQueries();
   mockUseMutation.mockReturnValue({
-    mutate,
+    mutate: vi.fn(),
     mutateAsync: vi.fn(),
     reset: vi.fn(),
-  } as unknown as ReturnType<typeof useMutation>);
+  } as unknown as UseMutationResult);
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  Object.defineProperty(window, 'location', {
+    value: { href: window.location.href },
+    writable: true,
+    configurable: true,
+  });
 });
 
 describe('TripDetail', () => {
@@ -131,19 +144,19 @@ describe('TripDetail', () => {
   });
 
   it('drag маркера вызывает updateStop', async () => {
-    const updateStopMutate = vi.fn();
+    const mutate = vi.fn();
     mockUseMutation.mockReturnValue({
-      mutate: updateStopMutate,
+      mutate,
       mutateAsync: vi.fn(),
       reset: vi.fn(),
-    } as unknown as ReturnType<typeof useMutation>);
+    } as unknown as UseMutationResult);
     render(<TripDetail />);
     await waitFor(() => expect(screen.getByTestId('stops-count')).toBeInTheDocument());
 
-    fireEventClick(screen, 'move');
+    fireEvent.click(screen.getByRole('button', { name: 'move' }));
 
-    await waitFor(() => expect(updateStopMutate).toHaveBeenCalledTimes(1));
-    expect(updateStopMutate).toHaveBeenCalledWith({
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+    expect(mutate).toHaveBeenCalledWith({
       stopId: 'stop-1',
       payload: expect.objectContaining({ location: { lat: 10, lng: 20 } }),
     });
@@ -151,9 +164,10 @@ describe('TripDetail', () => {
 
   it('экспорт PDF/CSV устанавливает window.location.href', () => {
     render(<TripDetail />);
-    fireEventClick(screen, 'Экспорт PDF');
+    fireEvent.click(screen.getByRole('button', { name: /Экспорт PDF/ }));
     expect(window.location.href).toBe('/api/v1/trips/trip-1/export?format=pdf');
-    fireEventClick(screen, 'Экспорт CSV');
+
+    fireEvent.click(screen.getByRole('button', { name: /Экспорт CSV/ }));
     expect(window.location.href).toBe('/api/v1/trips/trip-1/export?format=csv');
   });
 
@@ -161,15 +175,10 @@ describe('TripDetail', () => {
     render(<TripDetail />);
     await waitFor(() => expect(screen.getByTestId('stops-count')).toBeInTheDocument());
 
-    fireEventClick(screen, 'Стоп');
+    fireEvent.click(screen.getByRole('button', { name: /\+ Стоп/ }));
 
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /Сохранить/ })).toBeInTheDocument(),
     );
   });
 });
-
-function fireEventClick(screen: { getByRole: (r: string, o?: { name?: string | RegExp }) => HTMLElement }, name: string | RegExp) {
-  const btn = screen.getByRole('button', { name });
-  btn.click();
-}

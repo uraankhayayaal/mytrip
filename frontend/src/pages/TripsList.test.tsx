@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import type { QueryObserverResult, UseMutateFunction } from '@tanstack/react-query';
+import type { QueryObserverResult } from '@tanstack/react-query';
 import { TripsList } from '../pages/TripsList';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -48,10 +48,7 @@ beforeEach(() => {
 
 describe('TripsList', () => {
   it('should render a list of trips', async () => {
-    const mockTrips: Trip[] = [
-      makeTrip('1', 'Trip 1', 'Desc 1'),
-      makeTrip('2', 'Trip 2', 'Desc 2'),
-    ];
+    const mockTrips: Trip[] = [makeTrip('1', 'Trip 1', 'Desc 1'), makeTrip('2', 'Trip 2', 'Desc 2')];
     mockUseQuery.mockReturnValue({
       data: mockTrips,
       isLoading: false,

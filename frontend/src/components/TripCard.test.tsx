@@ -21,6 +21,7 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 const mockUseNavigate = vi.mocked(useNavigate) as Mock;
+const mockUseQueryClient = vi.mocked(useQueryClient) as Mock;
 const mockDeleteTrip = vi.mocked(deleteTrip) as Mock;
 
 const mockTrip: Trip = {
@@ -36,6 +37,8 @@ const mockTrip: Trip = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  const invalidateQueries = vi.fn();
+  mockUseQueryClient.mockReturnValue({ invalidateQueries });
   mockUseNavigate.mockReturnValue(vi.fn());
   mockDeleteTrip.mockResolvedValue(undefined);
 });
@@ -62,17 +65,15 @@ describe('TripCard', () => {
   });
 
   it('should call deleteTrip and invalidate queries when clicking Delete', async () => {
-    const invalidateQueries = vi.fn();
-    const { useQueryClient: mockUQC } = await import('../test-utils');
-    void mockUQC;
+    const invalidateQueries = vi.mocked(mockUseQueryClient().invalidateQueries);
     vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
     render(<TripCard trip={mockTrip} />);
-    const invalidate = vi.mocked(useQueryClient().invalidateQueries);
     fireEvent.click(screen.getByText('Удалить'));
+
     await waitFor(() => {
       expect(mockDeleteTrip).toHaveBeenCalledWith('1');
-      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['trips'] });
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['trips'] });
     });
-    void invalidateQueries;
   });
 });

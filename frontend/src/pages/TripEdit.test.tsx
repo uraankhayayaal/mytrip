@@ -4,7 +4,7 @@ import type { QueryObserverResult, UseMutationResult } from '@tanstack/react-que
 import { TripEdit } from '../pages/TripEdit';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { updateTrip } from '../api/trips';
+import { getTrip, updateTrip } from '../api/trips';
 import type { Trip, TripPayload } from '../lib/types';
 
 vi.mock('@tanstack/react-query', () => ({
@@ -51,6 +51,7 @@ beforeEach(() => {
     isError: false,
     error: null,
   } satisfies Partial<QueryObserverResult<Trip, unknown>>);
+  mockUpdateTrip.mockResolvedValue(mockTrip);
 });
 
 describe('TripEdit', () => {
@@ -62,10 +63,7 @@ describe('TripEdit', () => {
 
   it('should update trip and navigate on submit', async () => {
     const navigate = mockUseNavigate() as Mock;
-    mockUpdateTrip.mockResolvedValue(mockTrip);
-    const mutateAsync = vi.fn().mockImplementation(async (p: TripPayload) =>
-      mockUpdateTrip('1', p),
-    );
+    const mutateAsync = vi.fn().mockImplementation(async (p: TripPayload) => mockUpdateTrip('1', p));
     mockUseMutation.mockReturnValue({
       mutateAsync,
     } satisfies Partial<UseMutationResult<Trip, unknown, TripPayload, unknown>>);
@@ -75,7 +73,10 @@ describe('TripEdit', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(mockUpdateTrip).toHaveBeenCalledWith('1', expect.objectContaining({ title: 'Trip 1' }));
+      expect(mockUpdateTrip).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({ title: 'Trip 1' }),
+      );
       expect(navigate).toHaveBeenCalledWith('/trips/1');
     });
   });
