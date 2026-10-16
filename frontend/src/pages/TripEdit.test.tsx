@@ -76,6 +76,12 @@ describe('TripEdit', () => {
     } satisfies Partial<UseMutationResult<Trip, unknown, TripPayload, unknown>>);
 
     render(<TripEdit />);
+    // Заполняем поля формы значениями mockTrip
+    const titleInput = screen.getByLabelText(/Название поездки/i) as HTMLInputElement;
+    titleInput.value = 'Trip 1';
+    const descInput = screen.getByLabelText(/Описание/i) as HTMLTextAreaElement;
+    descInput.value = 'Desc 1';
+
     const submitBtn = screen.getByText('Сохранить');
     fireEvent.click(submitBtn);
 
