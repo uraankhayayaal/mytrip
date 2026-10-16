@@ -9,6 +9,9 @@ import type { Trip } from '../lib/types';
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),
+  useQueryClient: vi.fn(() => ({
+    invalidateQueries: vi.fn(),
+  })),
 }));
 
 vi.mock('react-router-dom', () => ({
