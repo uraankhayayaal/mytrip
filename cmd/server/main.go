@@ -31,9 +31,11 @@ import (
 
 // authDeps — зависимости аутентификации (CHAT-07: A7-01).
 type authDeps struct {
-	auth     service.AuthService
+	auth      service.AuthService
 	validator jwtutil.TokenValidator
 }
+
+var deps *authDeps
 
 func newAuthDeps(cfg *config.Config, pool *pgxpool.Pool) (*authDeps, error) {
 	userRepo := repo.NewPGUserRepo(pool)
@@ -98,7 +100,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("auth: %v", err)
 	}
-	var deps *authDeps
 
 	// chi router
 	r := chi.NewRouter()
@@ -106,15 +107,6 @@ func main() {
 	r.Get("/healthz", healthHandler)
 	r.Route("/api/v1", func(r chi.Router) {
 		handlers.NewAuthHandler(deps.auth).Mount(r)
-		r.With(authMiddleware).Get("/users/me", func(w http.ResponseWriter, req *http.Request) {
-			u, err := deps.auth.Me(req.Context(), middleware.AuthContext(req.Context()))
-			if err != nil {
-				middleware.WriteError(w, toAppError(err))
-				return
-			}
-			_ = u
-			middleware.WriteJSON(w, http.StatusOK, u)
-		})
 	})
 
 	srv := &http.Server{
@@ -136,8 +128,6 @@ func main() {
 		log.Fatalf("server: %v", err)
 	}
 }
-
-var deps *authDeps
 
 func toAppError(err error) *domain.AppError {
 	if ae, ok := err.(*domain.AppError); ok {
