@@ -14,14 +14,13 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
   const navigate = useNavigate();
   const {
     register,
-    handleSubmit,
     formState: { errors },
   } = useForm<TripInput>({
     resolver: zodResolver(tripSchema),
     defaultValues: initial,
   });
 
-  const handleSubmit = async (data: TripInput) => {
+  const onSubmitForm = async (data: TripInput) => {
     try {
       await onSubmit(data as TripPayload);
     } catch (err) {
@@ -31,7 +30,7 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
   };
 
   return (
-    <form onSubmit={handleSubmit(handleSubmit)} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
+    <form onSubmit={(e) => { e.preventDefault(); void onSubmitForm(e); }} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
       <div className="grid grid-cols-1 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Название поездки</label>
