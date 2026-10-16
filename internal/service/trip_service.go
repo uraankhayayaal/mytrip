@@ -7,13 +7,26 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"fmt"
 	"strings"
-
-	"github.com/google/uuid"
+	"time"
 
 	"mytrip/internal/domain"
 	"mytrip/internal/repo"
 )
+
+// tripID — UUID v4 без внешних зависимостей (RFC 4122, вариант 1).
+// Аналог newUserID (internal/service/auth_service.go).
+func tripID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant 1
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
 
 // tripService — реализация TripService.
 type tripService struct {
@@ -55,7 +68,7 @@ func (s *tripService) Create(ctx context.Context, userID string, p *TripPayload)
 		return nil, err
 	}
 	t := &domain.Trip{
-		ID:            uuid.NewString(),
+		ID:            tripID(),
 		UserID:        userID,
 		Title:         strings.TrimSpace(p.Title),
 		Description:   p.Description,
