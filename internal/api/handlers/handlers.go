@@ -4,6 +4,8 @@ package handlers
 // Контракты: методы, пути, тела JSON и коды ошибок зафиксированы комментариями ниже.
 // Правило: публичные сигнатуры и JSON-схемы менять НЕЛЬЗЯ.
 
+import "net/http"
+
 // AuthHandler — /api/v1/auth/* (CHAT-07: A7-01).
 //
 // Эндпоинты и контракты:
@@ -28,13 +30,9 @@ package handlers
 //	  err : 401
 //
 // Реализация: auth_handler.go (NewAuthHandler/Mount).
-
 type AuthHandler struct {
 	handler http.Handler
 }
-
-// NewAuthHandler — конструктор AuthHandler (реализация в auth_handler.go).
-// См. func NewAuthHandler(auth service.AuthService) *AuthHandler.
 
 // TripHandler — /api/v1/trips* (CHAT-07: A7-02).
 type TripHandler struct{}
@@ -65,5 +63,3 @@ type PhotoHandler struct{}
 
 // ExportHandler — GET /api/v1/trips/{id}/export.
 type ExportHandler struct{}
-
-import_placeholder

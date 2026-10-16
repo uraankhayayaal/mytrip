@@ -27,8 +27,8 @@ type AuthService interface {
 type TripService interface {
 	List(ctx context.Context, userID string) ([]*domain.Trip, error)
 	Get(ctx context.Context, userID, tripID string) (*domain.Trip, error)
-	Create(ctx context.Context, userID string, p *domain.TripPayload) (*domain.Trip, error)
-	Update(ctx context.Context, userID, tripID string, p *domain.TripPayload) (*domain.Trip, error)
+	Create(ctx context.Context, userID string, p *TripPayload) (*domain.Trip, error)
+	Update(ctx context.Context, userID, tripID string, p *TripPayload) (*domain.Trip, error)
 	Delete(ctx context.Context, userID, tripID string) error
 }
 
@@ -45,8 +45,8 @@ type TripPayload struct {
 type StopService interface {
 	List(ctx context.Context, userID, tripID string) ([]*domain.Stop, error)
 	Get(ctx context.Context, userID, tripID, stopID string) (*domain.Stop, error)
-	Create(ctx context.Context, userID, tripID string, p *domain.StopPayload) (*domain.Stop, error)
-	Update(ctx context.Context, userID, tripID, stopID string, p *domain.StopPayload) (*domain.Stop, error)
+	Create(ctx context.Context, userID, tripID string, p *StopPayload) (*domain.Stop, error)
+	Update(ctx context.Context, userID, tripID, stopID string, p *StopPayload) (*domain.Stop, error)
 	Delete(ctx context.Context, userID, tripID, stopID string) error
 }
 
