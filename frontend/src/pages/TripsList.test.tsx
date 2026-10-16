@@ -4,7 +4,7 @@ import type { QueryObserverResult } from '@tanstack/react-query';
 import { TripsList } from '../pages/TripsList';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { createTrip } from '../api/trips';
+import { createTrip, listTrips } from '../api/trips';
 import type { Trip } from '../lib/types';
 
 vi.mock('@tanstack/react-query', () => ({
@@ -17,6 +17,7 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('../api/trips', () => ({
   createTrip: vi.fn(),
+  listTrips: vi.fn(),
 }));
 
 const mockUseQuery = vi.mocked(useQuery) as Mock;
