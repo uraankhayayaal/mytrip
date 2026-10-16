@@ -17,15 +17,19 @@ import (
 	"mytrip/internal/service"
 )
 
-// tripDeps — состояние TripHandler.
-type tripDeps struct {
+// tripHandler — приватная реализация TripHandler (handlers.go).
+type tripHandler struct {
 	trips service.TripService
 }
+
+var _ *TripHandler = (*TripHandler)(nil)
 
 // NewTripHandler — конструктор TripHandler.
 func NewTripHandler(trips service.TripService) *TripHandler {
 	h := &TripHandler{}
-	h.deps = &tripDeps{trips: trips}
+	_ = &tripHandler{trips: trips} // приватное состояние хранится в переменной пакета
+	tripInstances = append(tripInstances, h)
+	tripState = &tripHandler{trips: trips}
 	return h
 }
 
