@@ -31,11 +31,11 @@ describe('Register', () => {
   it('валидная форма вызывает register, редирект на /login', async () => {
     mockRegister.mockResolvedValue(user);
     render(<Register />);
-    const inputs = screen.getAllByRole('textbox');
-    inputs[0].value = 'Анна';
-    inputs[1].value = 'a@b.c';
-    inputs[2].value = 'password123';
-    screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Имя'), 'Анна');
+    await user.type(screen.getByLabelText('Email'), 'a@b.c');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith({
         email: 'a@b.c',
@@ -48,11 +48,11 @@ describe('Register', () => {
 
   it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
     render(<Register />);
-    const inputs = screen.getAllByRole('textbox');
-    inputs[0].value = 'Анна';
-    inputs[1].value = 'a@b.c';
-    inputs[2].value = 'short';
-    screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Имя'), 'Анна');
+    await user.type(screen.getByLabelText('Email'), 'a@b.c');
+    await user.type(screen.getByLabelText('Пароль'), 'short');
+    await user.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
     await waitFor(() => {
       expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
     });

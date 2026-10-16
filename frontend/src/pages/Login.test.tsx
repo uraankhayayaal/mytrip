@@ -35,10 +35,10 @@ describe('Login', () => {
   it('валидная форма вызывает login и setAccessToken, редирект на /', async () => {
     mockLogin.mockResolvedValue(loginResponse);
     render(<Login />);
-    const inputs = screen.getAllByRole('textbox');
-    inputs[0].value = 'a@b.c';
-    inputs[1].value = 'password123';
-    screen.getByRole('button', { name: 'Войти' }).click();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Email'), 'a@b.c');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Войти' }));
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
     });
@@ -48,7 +48,8 @@ describe('Login', () => {
 
   it('пустые поля: ошибки zod, запрос не уходит', async () => {
     render(<Login />);
-    screen.getByRole('button', { name: 'Войти' }).click();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Войти' }));
     await waitFor(() => {
       expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
       expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
@@ -59,10 +60,10 @@ describe('Login', () => {
   it('ApiError unauthorized: баннер «Неверный email или пароль»', async () => {
     mockLogin.mockRejectedValue(new ApiError('unauthorized', 'bad credentials'));
     render(<Login />);
-    const inputs = screen.getAllByRole('textbox');
-    inputs[0].value = 'a@b.c';
-    inputs[1].value = 'password123';
-    screen.getByRole('button', { name: 'Войти' }).click();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Email'), 'a@b.c');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Войти' }));
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
     });
