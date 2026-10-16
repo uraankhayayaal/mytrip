@@ -5,7 +5,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"time"
 
@@ -104,6 +103,16 @@ func (r *PGRefreshTokenRepo) DeleteByUser(ctx context.Context, userID string) er
 	return err
 }
 
+// DeleteByHashWithResult — удаление по hash с количеством удалённых строк (для ротации).
+// Реализует service.RefreshTokenDeleter.
+func (r *PGRefreshTokenRepo) DeleteByHashWithResult(ctx context.Context, tokenHash string) (int64, error) {
+	tag, err := r.pool.Exec(ctx, `DELETE FROM refresh_tokens WHERE token_hash = $1`, tokenHash)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
 // isUniqueViolation — PostgreSQL unique_violation (23505).
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
@@ -112,5 +121,3 @@ func isUniqueViolation(err error) bool {
 	}
 	return false
 }
-
-var _ = sql.ErrNoRows // placeholder: не используется, pgx.ErrNoRows — основной маркер

@@ -6,8 +6,9 @@ package service
 // Логика:
 //   - Register: bcrypt-хэш пароля, INSERT users; дубль email — domain.NewConflict (из репо).
 //   - Login: bcrypt CompareHashAndPassword; выдача access + refresh JWT через jwtutil.
-//   - Refresh: валидация refresh-токена (подпись/exp/type='refresh'), ротация:
-//     старый hash — удалить, новый — вставить. Нет в БД (revoked) — domain.NewUnauthorized.
+//     Новый refresh-токен (SHA-256 hash) сохраняется в refresh_tokens (ротация-база).
+//   - Refresh: валидация refresh-токена (подпись/exp/type='refresh'), проверка в БД,
+//     ротация: старый hash — удалить, новый — вставить. Нет в БД (revoked) — domain.NewUnauthorized.
 //   - Logout: удалить hash refresh-токена из БД (идемпотентно).
 //   - Me: пользователь по user_id (из auth middleware контекста).
 
@@ -25,17 +26,24 @@ import (
 	"mytrip/internal/repo"
 )
 
+// RefreshTokenDeleter — удаление refresh-токена с индикатором (для ротации: 0 строк → отозван).
+type RefreshTokenDeleter interface {
+	DeleteByHash(ctx context.Context, tokenHash string) (int64, error)
+}
+
 type authService struct {
-	users   repo.UserRepo
-	tokens  repo.RefreshTokenRepo
-	issuer  jwtutil.TokenIssuer
-	validator jwtutil.TokenValidator
-	refreshTTL time.Duration
+	users       repo.UserRepo
+	tokens      repo.RefreshTokenRepo
+	deleter     RefreshTokenDeleter
+	issuer      jwtutil.TokenIssuer
+	validator   jwtutil.TokenValidator
+	refreshTTL  time.Duration
 }
 
 // NewAuthService — конструктор AuthService.
-func NewAuthService(users repo.UserRepo, tokens repo.RefreshTokenRepo, issuer jwtutil.TokenIssuer, validator jwtutil.TokenValidator, refreshTTL time.Duration) AuthService {
-	return &authService{users: users, tokens: tokens, issuer: issuer, validator: validator, refreshTTL: refreshTTL}
+// deleter — реализация RefreshTokenDeleter (обычно тот же PGRefreshTokenRepo); nil → ротация без проверки «отозван».
+func NewAuthService(users repo.UserRepo, tokens repo.RefreshTokenRepo, deleter RefreshTokenDeleter, issuer jwtutil.TokenIssuer, validator jwtutil.TokenValidator, refreshTTL time.Duration) AuthService {
+	return &authService{users: users, tokens: tokens, deleter: deleter, issuer: issuer, validator: validator, refreshTTL: refreshTTL}
 }
 
 // hashToken — SHA-256 hex refresh-токена (хранится в БД вместо самого JWT).
@@ -96,14 +104,18 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (string,
 	if _, err := s.users.ByID(ctx, claims.Subject); err != nil {
 		return "", "", domain.NewUnauthorized("invalid or expired token")
 	}
-	// Ротация: удалить старый hash, вставить новый (нет старого → токен отозван).
-	// Удаляем и проверяем RowsAffected: 0 → токен уже использован/отозван.
-	oldDeleted, err := s.deleteByHash(ctx, oldHash)
-	if err != nil {
-		return "", "", domain.NewInternal()
-	}
-	if !oldDeleted {
-		return "", "", domain.NewUnauthorized("invalid or expired token")
+	if s.deleter != nil {
+		n, err := s.deleter.DeleteByHash(ctx, oldHash)
+		if err != nil {
+			return "", "", domain.NewInternal()
+		}
+		if n == 0 {
+			return "", "", domain.NewUnauthorized("invalid or expired token")
+		}
+	} else {
+		if err := s.tokens.DeleteByHash(ctx, oldHash); err != nil {
+			return "", "", domain.NewInternal()
+		}
 	}
 	access, err := s.issuer.IssueAccess(claims.Subject)
 	if err != nil {
@@ -124,15 +136,12 @@ func (s *authService) Logout(ctx context.Context, refreshToken string) error {
 	if refreshToken == "" {
 		return nil
 	}
-	claims, err := s.validator.Validate(refreshToken, jwtutil.TokenKindRefresh)
-	if err != nil {
-		// Токен уже невалиден — считаем logout выполненным (идемпотентность).
-		return nil
+	if _, err := s.validator.Validate(refreshToken, jwtutil.TokenKindRefresh); err != nil {
+		return nil // токен уже невалиден — считаем logout выполненным
 	}
 	if err := s.tokens.DeleteByHash(ctx, hashToken(refreshToken)); err != nil {
 		return domain.NewInternal()
 	}
-	_ = claims
 	return nil
 }
 
@@ -142,9 +151,4 @@ func (s *authService) Me(ctx context.Context, userID string) (*domain.User, erro
 		return nil, domain.NewUnauthorized("unauthorized")
 	}
 	return s.users.ByID(ctx, userID)
-}
-
-// deleteByHash — удаление по hash, возвращает true если строка была удалена.
-func (s *authService) deleteByHash(ctx context.Context, hash string) (bool, error) {
-	return s.deleteByHashWithResult(ctx, hash)
 }
