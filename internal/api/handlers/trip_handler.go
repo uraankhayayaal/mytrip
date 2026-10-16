@@ -22,8 +22,7 @@ type tripHandler struct {
 	trips service.TripService
 }
 
-// NewTripHandler — конструктор TripHandler.
-// Контракт TripHandler зафиксирован в handlers.go — расширяем через embed.
+// TripHandler — реализация контракта из handlers.go (embed реализация).
 type TripHandler struct {
 	*tripHandler
 }
