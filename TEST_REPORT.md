@@ -1,33 +1,46 @@
-# TEST REPORT — A7-02 (TripService + TripRepo + TripHandler)
+# TEST REPORT — A7-02 (TripService + TripRepo + TripHandler), повторная приёмка
 
-Задача: A7-02, epic CHAT-07, ветка ai/task/A7-02.
+Задача: A7-02, epic CHAT-07, ветка ai/task/A7-02, HEAD d1f9dce.
 
-## Статус: PASSED (unit + build + lint, gofmt/go vet)
+## Статус: FAILED (блок: сборка пакета internal/api/handlers)
 
-## Выполнено
+## Блокирующий дефект (багрепорт BUG-A7-02-01)
 
-1. Сверка реализации с контрактами (сигнатуры 1:1):
-   - internal/service/trip_service.go — TripService List/Get/Create/Update/Delete; валидация title non-blank и end_date >= start_date → domain.NewValidation (400); чужая/нет → domain.NewNotFound (404, из репозитория). Сигнатуры 1:1 с internal/service/interfaces.go (TripService, TripPayload).
-   - internal/repo/trip_repo.go — PGTripRepo (Postgres pgx, таблица trips, 0002_trips): Insert/ListByUser/Get/Update/Delete/SetCover; нет строк → domain.NewNotFound. Сигнатуры 1:1 с internal/repo/interfaces.go.
-   - internal/api/handlers/trip_handler.go — Mount: GET/POST /trips, GET/PUT/DELETE /trips/{id} (chi-параметр {id}); JSON через middleware.WriteJSON, ошибки через middleware.WriteError; DELETE → 204; пустой список → [].
-2. Расширены автотесты краевыми кейсами:
-   - trip_service_test.go: nil payload, blank title (details.field=title), end_date == start_date (валидно), репо-ошибки Update, передача cover_photo_url в репозиторий, Delete success, пустой List.
-   - trip_handler_test.go: сервисные 500/400/404, cover_photo_url в ответе и в payload, отсутствие cover-поля → nil, битый JSON на PUT/POST, проверка зарегистрированности всех 5 маршрутов (TestTripHandler_RoutesRegistered).
+`make backend-test` не проходит: пакет internal/api/handlers не компилируется.
 
-## Проверки
+```
+# mytrip/internal/api/handlers
+internal/api/handlers/errors.go:10:6: toAppError redeclared in this block
+        internal/api/handlers/auth_handler.go:164:6: other declaration of toAppError
+FAIL	mytrip/cmd/server [build failed]
+FAIL	mytrip/internal/api/handlers [build failed]
+```
 
-- go build ./... — exit 0.
-- make backend-test (go test ./... -race -cover) — зелёные:
-  - internal/api/handlers — 97.3% coverage
-  - internal/service — 82.1% coverage
-  - internal/domain — 100%, internal/config — 96.0%
-- make backend-lint: gofmt -l . — чисто; go vet ./... — чисто.
-  golangci-lint в песочнице не установлен (exit 127 — деградация окружения, не дефект кода); в CI линт пройдёт с установленным инструментом.
+- Выход: make backend-test → Error 1 (exit 2).
+- Причина: коммит d1f9dce («wip: раунд 6», trip_handler.go + errors.go) добавил
+  internal/api/handlers/errors.go с функцией toAppError, которая уже объявлена
+  в internal/api/handlers/auth_handler.go:164-170 (идентичная сигнатура/логика).
+- go build ./... — тоже падает на том же редекларировании; make backend-lint
+  (gofmt/go vet) не запускается до зелёной сборки.
+- Из-за падения сборки unit-тесты TripHandler (trip_handler_test.go) не
+  выполняются вообще — приёмка по критериям 4 и 5 невозможна.
 
-## Runtime (degrade)
+## Что проверено (до блока)
 
-- go run ./cmd/server без БД: корректное падение на migrate — "dial tcp 127.0.0.1:5432: connection refused" (Postgres в песочнице не поднят). Живая проверка /trips против Postgres недоступна в песочнице; покрытие: unit-тесты (handler + service) + контракт репозитория, интеграция на compose — make e2e в CI.
+1. Сверка контрактов: TripService/TripPayload (service/interfaces.go), TripRepo
+   (repo/interfaces.go), маршруты TripHandler (handlers.go) — сигнатуры в
+   trip_service.go / trip_repo.go / trip_handler.go 1:1 с контрактами.
+   Валидация title non-blank и end_date >= start_date → domain.NewValidation;
+   чужие/нет → domain.NewNotFound (404); DELETE → 204; пустой список → [].
+   Расхождений с контрактами не найдено.
+2. Unit-тесты internal/service: зелёные (make backend-test, пакет ok,
+   coverage 82.1%).
+3. Runtime: Postgres в sandbox не поднят; интеграция через make e2e в CI
+   (недоступно в песочнице — degradable шаг).
 
-## Дефекты
+## Как снять блок
 
-Не обнаружено.
+Удалить дублирующий internal/api/handlers/errors.go (функция уже есть в
+auth_handler.go:164), затем: make backend-test && make backend-lint.
+
+Задача возвращена в in_progress; багрепорт: BUG-A7-02-01.
