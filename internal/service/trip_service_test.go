@@ -259,3 +259,86 @@ func TestTripService_List_Passthrough(t *testing.T) {
 		t.Fatalf("got=%v err=%v", trips, err)
 	}
 }
+
+// --- Дополнительные QA-тесты (A7-02) ---
+
+func TestTripService_Update_RepoError(t *testing.T) {
+	repoErr := errors.New("boom")
+	repo := &mockTripRepo{
+		getFn: func(context.Context, string, string) (*domain.Trip, error) {
+			return newTestTrip(t), nil
+		},
+		updateFn: func(context.Context, *domain.Trip) error { return repoErr },
+	}
+	s := NewTripService(repo)
+	start := time.Now()
+	_, err := s.Update(context.Background(), "u1", "t1", &TripPayload{Title: "x", StartDate: start, EndDate: start})
+	if !errors.Is(err, repoErr) {
+		t.Fatalf("expected repo error to propagate, got %v", err)
+	}
+}
+
+func TestTripService_Update_CoverPhotoPassedToRepo(t *testing.T) {
+	current := newTestTrip(t)
+	repo := &mockTripRepo{getFn: func(context.Context, string, string) (*domain.Trip, error) {
+		return current, nil
+	}}
+	s := NewTripService(repo)
+	cover := "https://cdn.example/cover.jpg"
+	start := time.Now()
+	_, err := s.Update(context.Background(), "u1", "t1",
+		&TripPayload{Title: "x", StartDate: start, EndDate: start, CoverPhotoURL: &cover})
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	if repo.updated == nil || repo.updated.CoverPhotoURL == nil || *repo.updated.CoverPhotoURL != cover {
+		t.Fatalf("cover url not propagated to repo: %+v", repo.updated)
+	}
+}
+
+func TestTripService_Create_NilPayload(t *testing.T) {
+	repo := &mockTripRepo{}
+	s := NewTripService(repo)
+	_, err := s.Create(context.Background(), "u1", nil)
+	var appErr *domain.AppError
+	if !errors.As(err, &appErr) || appErr.Code != domain.ErrCodeValidation {
+		t.Fatalf("expected validation error for nil payload, got %v", err)
+	}
+}
+
+func TestTripService_Delete_Success(t *testing.T) {
+	repo := &mockTripRepo{}
+	s := NewTripService(repo)
+	if err := s.Delete(context.Background(), "u1", "t1"); err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+}
+
+func TestTripService_List_Empty(t *testing.T) {
+	repo := &mockTripRepo{listFn: func(context.Context, string) ([]*domain.Trip, error) {
+		return nil, nil
+	}}
+	s := NewTripService(repo)
+	trips, err := s.List(context.Background(), "u1")
+	if err != nil || trips != nil {
+		t.Fatalf("expected nil slice, got %v err=%v", trips, err)
+	}
+}
+
+func TestValidatePayload_EndEqualsStart_OK(t *testing.T) {
+	d := time.Date(2026, 6, 1, 12, 30, 0, 0, time.UTC)
+	if err := validatePayload(&TripPayload{Title: "Day", StartDate: d, EndDate: d}); err != nil {
+		t.Fatalf("end_date == start_date must be valid, got %v", err)
+	}
+}
+
+func TestValidatePayload_OnlyFieldError(t *testing.T) {
+	err := validatePayload(&TripPayload{Title: " "})
+	var appErr *domain.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected *AppError, got %v", err)
+	}
+	if appErr.Details["field"] != "title" {
+		t.Fatalf("expected details.field=title, got %v", appErr.Details)
+	}
+}

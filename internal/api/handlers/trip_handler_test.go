@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,7 +46,9 @@ func (m *mockTripService) Create(ctx context.Context, userID string, p *service.
 	if m.createFn != nil {
 		return m.createFn(ctx, userID, p)
 	}
-	return nil, nil
+	// ВАЖНО: не (nil, nil) — хендлер не обязан гасить nil-ответ без ошибки
+	// (toTripJSON(nil) падает). Мок без createFn имитирует «поездка не найдена».
+	return nil, domain.NewNotFound("mock: create not configured")
 }
 
 func (m *mockTripService) Update(ctx context.Context, userID, tripID string, p *service.TripPayload) (*domain.Trip, error) {
@@ -122,9 +125,12 @@ func TestListTripsHandler_Empty(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
-	body := w.Body.String()
-	if body != "[]\n" && body != "[\n]\n" {
-		t.Fatalf("expected empty array, got %s", body)
+	var trips []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &trips); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if len(trips) != 0 {
+		t.Fatalf("expected empty array, got %v", trips)
 	}
 }
 
@@ -293,5 +299,171 @@ func TestDeleteTripHandler_NotFound(t *testing.T) {
 	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// --- Дополнительные QA-тесты (A7-02) ---
+
+func TestListTripsHandler_ServiceError(t *testing.T) {
+	svc := &mockTripService{listFn: func(context.Context, string) ([]*domain.Trip, error) {
+		return nil, domain.NewInternal()
+	}}
+	req := httptest.NewRequest(http.MethodGet, "/trips", nil)
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d: %s", w.Code, w.Body.String())
+	}
+	var res struct {
+		Err struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if res.Err.Code != domain.ErrCodeInternal {
+		t.Fatalf("expected internal code, got %q", res.Err.Code)
+	}
+}
+
+func TestListTripsHandler_CoverPhotoURLAndDates(t *testing.T) {
+	cover := "https://cdn.example/c.jpg"
+	tr := sampleTrip()
+	tr.CoverPhotoURL = &cover
+	req := httptest.NewRequest(http.MethodGet, "/trips", nil)
+	w := httptest.NewRecorder()
+	svc := &mockTripService{listFn: func(context.Context, string) ([]*domain.Trip, error) {
+		return []*domain.Trip{tr}, nil
+	}}
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var trips []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &trips); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if trips[0]["cover_photo_url"] != cover {
+		t.Fatalf("cover_photo_url missing: %v", trips[0])
+	}
+	if _, ok := trips[0]["start_date"]; !ok {
+		t.Fatalf("start_date missing in JSON: %v", trips[0])
+	}
+	if _, ok := trips[0]["end_date"]; !ok {
+		t.Fatalf("end_date missing in JSON: %v", trips[0])
+	}
+	if _, ok := trips[0]["created_at"]; !ok {
+		t.Fatalf("created_at missing in JSON: %v", trips[0])
+	}
+}
+
+func TestCreateTripHandler_CoverPhotoURLPassthrough(t *testing.T) {
+	svc := &mockTripService{createFn: func(_ context.Context, _ string, p *service.TripPayload) (*domain.Trip, error) {
+		if p.CoverPhotoURL == nil || *p.CoverPhotoURL != "https://cdn.example/x.jpg" {
+			t.Fatalf("cover not passed: %+v", p.CoverPhotoURL)
+		}
+		return sampleTrip(), nil
+	}}
+	body := bytes.NewBufferString(`{"title":"T","start_date":"2026-05-01T00:00:00Z","end_date":"2026-05-02T00:00:00Z","cover_photo_url":"https://cdn.example/x.jpg"}`)
+	req := httptest.NewRequest(http.MethodPost, "/trips", body)
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestCreateTripHandler_OmitCoverField(t *testing.T) {
+	var got *service.TripPayload
+	svc := &mockTripService{createFn: func(_ context.Context, _ string, p *service.TripPayload) (*domain.Trip, error) {
+		got = p
+		return sampleTrip(), nil
+	}}
+	body := bytes.NewBufferString(`{"title":"T","start_date":"2026-05-01T00:00:00Z","end_date":"2026-05-02T00:00:00Z"}`)
+	req := httptest.NewRequest(http.MethodPost, "/trips", body)
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", w.Code)
+	}
+	if got.CoverPhotoURL != nil {
+		t.Fatalf("expected nil cover, got %v", *got.CoverPhotoURL)
+	}
+}
+
+func TestUpdateTripHandler_InvalidJSON(t *testing.T) {
+	svc := &mockTripService{}
+	req := httptest.NewRequest(http.MethodPut, "/trips/t1", bytes.NewBufferString(`{"title":`))
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+	var res struct {
+		Err struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if res.Err.Code != domain.ErrCodeValidation {
+		t.Fatalf("expected validation code, got %q", res.Err.Code)
+	}
+}
+
+func TestUpdateTripHandler_ServiceValidation(t *testing.T) {
+	svc := &mockTripService{updateFn: func(context.Context, string, string, *service.TripPayload) (*domain.Trip, error) {
+		return nil, domain.NewValidation("end_date must be after start_date", nil)
+	}}
+	body := bytes.NewBufferString(`{"title":"x","start_date":"2026-05-02T00:00:00Z","end_date":"2026-05-01T00:00:00Z"}`)
+	req := httptest.NewRequest(http.MethodPut, "/trips/t1", body)
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestDeleteTripHandler_ServiceError(t *testing.T) {
+	svc := &mockTripService{deleteFn: func(context.Context, string, string) error {
+		return domain.NewInternal()
+	}}
+	req := httptest.NewRequest(http.MethodDelete, "/trips/t1", nil)
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestTripHandler_RoutesRegistered(t *testing.T) {
+	// Проверка зарегистрированности маршрутов: для каждого метода+пути
+	// хендлер ДОЛЖЕН отработать (ответ сервиса/404-от-сервиса), а не 405
+	// (метод не зарегистрирован) или 404-от-роутера (путь не зарегистрирован).
+	// Мок без fn-обработчиков возвращает NotFound для Get/Update — это
+	// доказательство, что запрос дошёл до хендлера.
+	r := newTripTestRouter(&mockTripService{}, "u1")
+	validBody := `{"title":"t","start_date":"2026-05-01T00:00:00Z","end_date":"2026-05-02T00:00:00Z"}`
+	cases := []struct {
+		method, path string
+		body         io.Reader
+		want         int
+	}{
+		{http.MethodGet, "/trips", nil, http.StatusOK},
+		{http.MethodPost, "/trips", bytes.NewBufferString(validBody), http.StatusNotFound},        // create → mock NotFound
+		{http.MethodGet, "/trips/t1", nil, http.StatusNotFound},                                  // get → mock NotFound
+		{http.MethodPut, "/trips/t1", bytes.NewBufferString(validBody), http.StatusNotFound},     // update → mock NotFound
+		{http.MethodDelete, "/trips/t1", nil, http.StatusNoContent},                              // delete → ok
+	}
+	for _, c := range cases {
+		req := httptest.NewRequest(c.method, c.path, c.body)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		if w.Code != c.want {
+			t.Fatalf("%s %s: expected %d, got %d (маршрут/метод не зарегистрированы или хендлер не отработал)",
+				c.method, c.path, c.want, w.Code)
+		}
 	}
 }
