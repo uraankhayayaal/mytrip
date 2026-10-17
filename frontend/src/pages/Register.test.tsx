@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -11,12 +11,18 @@ vi.mock('../api/auth', () => ({
   register: vi.fn(),
 }));
 
+// Мок только useNavigate; MemoryRouter остаётся реальным, чтобы роутер
+// работал как в проде. Редирект проверяем по вызову navigate('/login').
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: vi.fn() };
 });
 
+// Корректный паттерн: vi.mocked требует уже импортированный объект (не require).
 const mockRegister = vi.mocked(register);
+const mockUseNavigate = vi.mocked(
+  (await import('react-router-dom')).useNavigate,
+) as unknown as ReturnType<typeof vi.fn>;
 
 const user: User = {
   id: 'u1',
@@ -37,31 +43,24 @@ function renderRegister() {
   );
 }
 
+// react-hook-form читает значения из onChange-обработчиков, поэтому заполняем
+// поля fireEvent.change (не dispatchEvent(new Event('input'))).
 function fillAndSubmit(password: string) {
-  const nameInput = screen.getByLabelText('Имя') as HTMLInputElement;
-  const emailInput = screen.getByLabelText('Email') as HTMLInputElement;
-  const passwordInput = screen.getByLabelText('Пароль') as HTMLInputElement;
-  nameInput.value = 'Анна';
-  nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-  emailInput.value = 'a@b.c';
-  emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-  passwordInput.value = password;
-  passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+  fireEvent.change(screen.getByLabelText('Имя'), { target: { value: 'Анна' } });
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: password } });
   return screen.getByRole('button', { name: 'Зарегистрироваться' });
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  Object.defineProperty(window, 'location', {
-    value: { href: window.location.href },
-    writable: true,
-    configurable: true,
-  });
+  mockUseNavigate.mockReturnValue(vi.fn());
 });
 
 describe('Register', () => {
   it('валидная форма вызывает register, редирект на /login', async () => {
     mockRegister.mockResolvedValue(user);
+    const navigate = mockUseNavigate() as ReturnType<typeof vi.fn>;
     renderRegister();
     fillAndSubmit('password123').click();
 
@@ -72,7 +71,7 @@ describe('Register', () => {
         name: 'Анна',
       });
     });
-    expect(window.location.href).toBe('/login');
+    expect(navigate).toHaveBeenCalledWith('/login');
   });
 
   it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
@@ -91,7 +90,9 @@ describe('Register', () => {
     fillAndSubmit('password123').click();
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Пользователь с таким email уже существует');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Пользователь с таким email уже существует',
+      );
     });
   });
 });

@@ -63,37 +63,26 @@ describe('TripEdit', () => {
 
   it('should update trip and navigate on submit', async () => {
     const navigate = mockUseNavigate() as Mock;
+    // Реализуем mutateAsync как обёртку над моком updateTrip (без мока onSuccess —
+    // onSuccess живёт в компоненте, а mockReturnValue не даёт вызвать его).
     const mutateAsync = vi.fn().mockImplementation(async (p: TripPayload) => {
-      const result = await mockUpdateTrip('1', p);
-      // Имитируем onSuccess: invalidateQueries + navigate
-      const qc = (useQueryClient as unknown as Mock)() as { invalidateQueries: Mock };
-      qc.invalidateQueries();
-      navigate(`/trips/1`);
-      return result;
+      return mockUpdateTrip('1', p);
     });
     mockUseMutation.mockReturnValue({
       mutateAsync,
+      mutate: vi.fn(),
     } satisfies Partial<UseMutationResult<Trip, unknown, TripPayload, unknown>>);
 
     render(<TripEdit />);
-    // Заполняем поля формы значениями mockTrip
-    const titleInput = screen.getByLabelText(/Название поездки/i) as HTMLInputElement;
-    const descInput = screen.getByLabelText(/Описание/i) as HTMLTextAreaElement;
-    titleInput.value = 'Trip 1';
-    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-    descInput.value = 'Desc 1';
-    descInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
+    // react-hook-form: заполняем поля fireEvent.change (не dispatchEvent input).
+    fireEvent.change(screen.getByLabelText(/Название поездки/i), { target: { value: 'Trip 1' } });
+    fireEvent.change(screen.getByLabelText(/Описание/i), { target: { value: 'Desc 1' } });
 
-    const submitBtn = screen.getByText('Сохранить');
-    fireEvent.click(submitBtn);
+    fireEvent.click(screen.getByRole('button', { name: /Сохранить/ }));
 
     await waitFor(() => {
-      expect(mockUpdateTrip).toHaveBeenCalledWith(
-        '1',
-        expect.objectContaining({ title: 'Trip 1' }),
-      );
-      expect(navigate).toHaveBeenCalledWith('/trips/1');
+      expect(mockUpdateTrip).toHaveBeenCalledWith('1', expect.objectContaining({ title: 'Trip 1' }));
     });
+    expect(navigate).toHaveBeenCalledWith('/trips/1');
   });
 });
