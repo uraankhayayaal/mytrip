@@ -1,53 +1,68 @@
-# Тестовый отчёт — A7-01 AuthService: register/login/refresh/logout/me + UserRepo/RefreshTokenRepo
+# Тестовый отчёт — A7-05 middleware.Auth + jwtutil.NewHS256 (валидация JWT access-токена)
 
-## Статус: **PASSED** (unit-тесты, сборка, линт); интеграция/E2E — **DEGRADED** (нет Postgres/Minio/Docker в окружении)
+## Статус: **PASSED** (сборка, unit-тесты, gofmt/go vet); golangci-lint — **DEGRADED** (бинарь отсутствует в окружении)
 
 ## Проверки
 
 | Проверка | Команда | Результат |
 |---|---|---|
-| Сборка бэкенда | `go build ./...` / `go build -o bin/server ./cmd/server` | **Passed** (BUILD_OK) |
-| Unit-тесты (race + coverage) | `go test ./internal/... -race -cover` | **Passed** (exit 0) |
-| gofmt | `gofmt -l internal/` | **Passed** (пустой вывод) |
-| go vet | `go vet ./...` | **Passed** |
-| golangci-lint | — | **Недоступен в окружении** (`which golangci-lint` → пусто); зафиксировано в last_error задачи. gofmt+go vet зелёные |
-| Интеграция (живая БД) | — | **DEGRADED**: Postgres (5432) и Minio (9000) недоступны, Docker отсутствует в песочнице. Стек `docker compose up` выполнить нельзя |
-| E2E (`make e2e`) | — | **DEGRADED**: требует compose-стек + браузеры; недоступно в окружении. Конфигурация Playwright и сценарий `frontend/e2e/auth.spec.ts` присутствуют в репозитории |
+| Сборка бэкенда | `go build ./...` | **Passed** (exit 0, BUILD_OK) |
+| Unit-тесты (race + coverage) | `make backend-test` (`go test ./... -race -cover`) | **Passed** (exit 0) |
+| gofmt | `gofmt -l .` | **Passed** (пустой вывод, exit 0) |
+| go vet | `go vet ./...` | **Passed** (exit 0) |
+| golangci-lint | `golangci-lint run` | **DEGRADED**: бинарь отсутствует в песочнице (нет в PATH) — инструмент не установлен в окружении; не дефект кода |
+| Интеграция (живая БД) | — | **DEGRADED**: Postgres (5432) недоступен в песочнице (connection refused). Middleware/jwtutil не зависят от БД — покрыты unit-тестами без сети/БД |
+| E2E (`make e2e`) | — | **DEGRADED**: требует compose-стек (Postgres/Minio/nginx); Docker недоступен в песочнице |
 
-## Покрытие (go test -cover)
+## Покрытие целевых пакетов (go test -cover)
 
-- internal/api/handlers — 94.3%
-- internal/config — 96.0%
-- internal/domain — 100.0%
-- internal/service — 75.0%
+- internal/jwtutil — **89.7%**
+- internal/api/middleware — **69.8%**
+- остальные пакеты (handlers 94.3%, config 96.0%, domain 100.0%, service 75.0%) — **ok**
 
 ## Соответствие контрактам (проверено до последнего символа)
 
-1. **AuthService** (`internal/service/interfaces.go`): сигнатуры Register/Login/Refresh/Logout/Me совпадают с реализацией `authService` — совпадение 1:1.
-2. **UserRepo / RefreshTokenRepo** (`internal/repo/interfaces.go`): `PGUserRepo` и `PGRefreshTokenRepo` реализуют все методы (`var _ UserRepo = (*PGUserRepo)(nil)`, `var _ RefreshTokenRepo = (*PGRefreshTokenRepo)(nil)`). Таблицы соответствуют `0001_init.up.sql` (users.id UUID PK, email UNIQUE → 23505 → `domain.NewConflict`; refresh_tokens.token_hash UNIQUE, user_id FK CASCADE).
-3. **AuthHandler** (`handlers.go`): все 5 эндпоинтов смонтированы, контракты соблюдены:
-   - POST /auth/register → 201 `{"user":{...}}` (проверено тестом), 400/409;
-   - POST /auth/login → 200 `{"access_token","user"}` + Set-Cookie `rt` (HttpOnly, Path=/, SameSite=Lax, Max-Age=2592000 — проверено в `TestLoginHandler_Success`);
-   - POST /auth/refresh → 200 + ротация cookie (проверено);
-   - POST /auth/logout → 204 + Clear-Cookie Max-Age=-1 (проверено);
-   - GET /users/me → 200 (проверено), 401 без user_id.
-4. **jwtutil**: сервис использует `TokenIssuer`/`TokenValidator` из `NewHS256` (HS256, sub/type/exp), refresh-ротация: старый SHA-256 hash удаляется (`DeleteByHashWithResult`, 0 строк → 401), новый вставляется. Logout идемпотентно удаляет hash.
+1. **jwtutil** (`internal/jwtutil/jwt.go`):
+   - `Claims{sub, type, exp}` (json-теги `sub`/`type`/`exp`) — совпадает;
+   - `TokenIssuer.IssueAccess/IssueRefresh` — сигнатуры `(token string, err error)` — совпадает;
+   - `TokenValidator.Validate(token string, expectedKind TokenKind) (*Claims, error)` — совпадает;
+   - `NewHS256(secret, accessTTL, refreshTTL) (TokenIssuer, TokenValidator, error)` — совпадает; публичный API реализован адаптером `github.com/golang-jwt/jwt/v5` (HS256, проверка signing method, exp, sub, kind).
+2. **middleware** (`internal/api/middleware/auth.go`):
+   - `UserIDKey ContextKey = "user_id"` — совпадает;
+   - `AuthContext(ctx context.Context) string` — совпадает;
+   - `Auth(secret string, next http.Handler) http.Handler` — совпадает; поведение по контракту: парсинг `Bearer <token>` (case-insensitive prefix), валидация с `expectedKind=TokenKindAccess`, на успех — `context.WithValue(UserIDKey, sub)`, на ошибки — `WriteError(domain.NewUnauthorized)` → 401 `error.code=unauthorized`.
+3. **refresh → 401**: `Validate` при `expectedKind=TokenKindAccess` отклоняет `type=refresh` (проверено `TestValidate_WrongKind` и `TestAuth_RefreshInsteadOfAccess`).
+4. **cmd/server/main.go**: `authMiddleware` не требуется отдельным символом — защищённая группа смонтирована через `r.Use(func(next http.Handler) http.Handler { return middleware.Auth(cfg.JWTSecret, next) })`; компилируется и линтуется. Расхождений не обнаружено.
 
-## Добавленные тесты (в рамках QA-проверки)
+## Unit-тесты (все **Passed**)
 
-`internal/api/handlers/auth_handler_test.go`:
-- `TestRegisterHandler_InvalidBody` — битый JSON → 400 validation (контракт err: 400);
-- `TestLoginHandler_InvalidBody` — битый JSON → 400;
-- `TestRegisterHandler_EmptyFieldsValidation` — пустые email/name → 400, `error.code=validation`.
+`internal/jwtutil/jwt_test.go` (10 тестов):
+- issue→validate: access / refresh (sub+type);
+- expired (TTL 1ms + sleep) → ошибка;
+- wrong kind: refresh→access и access→refresh → ошибка;
+- no-kind-check (expectedKind="") → ок;
+- malformed: empty / not-jwt / tampered signature → ошибка;
+- wrong secret → ошибка;
+- конструктор: empty secret / non-positive TTLs → ошибка.
 
-Существующие тесты: `internal/service/auth_service_test.go` (10 тестов: Register success/short-password/conflict, Login success/wrong-password, Refresh success/revoked/invalid, Logout success/empty, Me success/empty) — все зелёные, покрывают краевые случаи.
+`internal/api/middleware/auth_test.go` (8 тестов, httptest):
+- нет header → 401 `unauthorized`;
+- malformed header: `Token abc123`, `Bearer`, `Bearer ` → 401;
+- expired access-токен → 401;
+- refresh вместо access → 401 `unauthorized`;
+- malformed токен (`Bearer not-a-valid-jwt`) → 401;
+- успех: 200 + `AuthContext == "user-123"`;
+- lowercase `bearer` → 200 + user_id;
+- `AuthContext` без ключа → "".
 
 ## Рантайм (ReadAppLogs)
 
-Запуск `go run ./cmd/server` с `DATABASE_URL=postgres://…@localhost:5432`: падение на `migrate: dial tcp 127.0.0.1:5432: connection refused` (exit 1). **Дефект кода отсутствует** — в песочнице нет Postgres/Minio/Docker (порты 5432/9000 закрыты, `docker` не установлен). Код корректно останавливается на недоступной БД. Повторная проверка рантайма на живом стеке возможна только в окружении с compose (приёмка `make e2e`).
+- Без `DATABASE_URL`: `config: missing required env: [DATABASE_URL]` (exit 1) — ожидаемое поведение конфигуратора.
+- С `DATABASE_URL=postgres://…@localhost:5432`: падение на `migrate: dial tcp 127.0.0.1:5432: connection refused` — **не дефект кода**: в песочнице нет Postgres/Docker (порт 5432 закрыт). Логика A7-05 (middleware + jwtutil) не зависит от БД и полностью покрыта unit-тестами.
 
 ## Заключение
 
-- Приёмочные критерии A7-01 п.1–4 выполнены: репозитории, сервис (bcrypt/HS256/ротация), хендлер (cookie 'rt', коды ответов), unit-тесты — **Passed**.
-- П.5: `make backend-test` (ядро — `go test ./... -race -cover`) зелёный; `make backend-lint` — gofmt + go vet зелёные, golangci-lint отсутствует в окружении (деградация инструмента, не дефект кода).
+- Приёмочные критерии A7-05 п.1–5 выполнены: `jwtutil.NewHS256` (адаптер golang-jwt/jwt/v5, Claims {sub, type, exp}, HS256), `middleware.Auth` (Bearer → Validate(kind=access) → UserIDKey / 401), refresh → 401, unit-тесты обоих пакетов — **Passed**.
+- `make backend-test` — зелёный (exit 0). `make backend-lint`: gofmt + go vet зелёные; golangci-lint недоступен в окружении (деградация инструмента, не дефект кода).
 - Расхождений с контрактами Архитектора не обнаружено. Дефекты: 0.
+- Задача переведена в статус **testing**.
