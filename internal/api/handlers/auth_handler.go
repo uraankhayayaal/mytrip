@@ -68,6 +68,17 @@ func (h *authHandler) setRefreshCookie(w http.ResponseWriter, token string, maxA
 	})
 }
 
+func (h *authHandler) clearRefreshCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     RefreshCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+}
+
 func (h *authHandler) refreshCookie(r *http.Request) string {
 	c, err := r.Cookie(RefreshCookieName)
 	if err != nil {
