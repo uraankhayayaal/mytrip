@@ -68,83 +68,85 @@ func (h *authHandler) setRefreshCookie(w http.ResponseWriter, token string, maxA
 	})
 }
 
-type authRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-}
-
-// POST /auth/register — 201 {user, access_token} + cookie rt.
-func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
-	var body authRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		middleware.WriteError(w, domain.NewValidation("invalid request body", nil))
-		return
-	}
-	user, tokens, err := h.auth.Register(r.Context(), body.Email, body.Password, body.Name)
-	if err != nil {
-		middleware.WriteError(w, toAppError(err))
-		return
-	}
-	h.setRefreshCookie(w, tokens.RefreshToken, RefreshCookieMaxAge)
-	middleware.WriteJSON(w, http.StatusCreated, map[string]any{
-		"user":         toUserJSON(user),
-		"access_token": tokens.AccessToken,
-	})
-}
-
-// POST /auth/login — 200 {user, access_token} + cookie rt.
-func (h *authHandler) login(w http.ResponseWriter, r *http.Request) {
-	var body authRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		middleware.WriteError(w, domain.NewValidation("invalid request body", nil))
-		return
-	}
-	user, tokens, err := h.auth.Login(r.Context(), body.Email, body.Password)
-	if err != nil {
-		middleware.WriteError(w, toAppError(err))
-		return
-	}
-	h.setRefreshCookie(w, tokens.RefreshToken, RefreshCookieMaxAge)
-	middleware.WriteJSON(w, http.StatusOK, map[string]any{
-		"user":         toUserJSON(user),
-		"access_token": tokens.AccessToken,
-	})
-}
-
-// POST /auth/refresh — cookie rt → 200 {access_token} + ротация cookie.
-func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(RefreshCookieName)
-	if err != nil || cookie.Value == "" {
-		middleware.WriteError(w, domain.NewUnauthorized("refresh cookie is missing"))
-		return
-	}
-	user, tokens, err := h.auth.Refresh(r.Context(), cookie.Value)
-	if err != nil {
-		middleware.WriteError(w, toAppError(err))
-		return
-	}
-	h.setRefreshCookie(w, tokens.RefreshToken, RefreshCookieMaxAge)
-	middleware.WriteJSON(w, http.StatusOK, map[string]any{
-		"user":         toUserJSON(user),
-		"access_token": tokens.AccessToken,
-	})
-}
-
-// POST /auth/logout — 204 + очистка cookie rt.
-func (h *authHandler) logout(w http.ResponseWriter, r *http.Request) {
-	if err := h.auth.Logout(r.Context()); err != nil {
-		middleware.WriteError(w, toAppError(err))
-		return
-	}
-	w.Header().Set("Set-Cookie", http.Cookie{
+func (h *authHandler) clearRefreshCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
 		Name:     RefreshCookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
-	}.String())
+	})
+}
+
+func (h *authHandler) refreshCookie(r *http.Request) string {
+	c, err := r.Cookie(RefreshCookieName)
+	if err != nil {
+		return ""
+	}
+	return c.Value
+}
+
+// POST /auth/register — {"email","password","name"} → 201 {"user":{...}}.
+func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Name     string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		middleware.WriteError(w, domain.NewValidation("invalid request body", nil))
+		return
+	}
+	u, err := h.auth.Register(r.Context(), body.Email, body.Password, body.Name)
+	if err != nil {
+		middleware.WriteError(w, toAppError(err))
+		return
+	}
+	middleware.WriteJSON(w, http.StatusCreated, map[string]any{"user": toUserJSON(u)})
+}
+
+// POST /auth/login — {"email","password"} → 200 + Set-Cookie rt.
+func (h *authHandler) login(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		middleware.WriteError(w, domain.NewValidation("invalid request body", nil))
+		return
+	}
+	u, access, refresh, err := h.auth.Login(r.Context(), body.Email, body.Password)
+	if err != nil {
+		middleware.WriteError(w, toAppError(err))
+		return
+	}
+	h.setRefreshCookie(w, refresh, RefreshCookieMaxAge)
+	middleware.WriteJSON(w, http.StatusOK, map[string]any{
+		"access_token": access,
+		"user":         toUserJSON(u),
+	})
+}
+
+// POST /auth/refresh — cookie 'rt' → 200 {"access_token"} + Set-Cookie rt (ротация).
+func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {
+	token := h.refreshCookie(r)
+	access, newRefresh, err := h.auth.Refresh(r.Context(), token)
+	if err != nil {
+		middleware.WriteError(w, toAppError(err))
+		return
+	}
+	h.setRefreshCookie(w, newRefresh, RefreshCookieMaxAge)
+	middleware.WriteJSON(w, http.StatusOK, map[string]any{"access_token": access})
+}
+
+// POST /auth/logout — cookie 'rt' → 204 + Clear-Cookie.
+func (h *authHandler) logout(w http.ResponseWriter, r *http.Request) {
+	if err := h.auth.Logout(r.Context(), h.refreshCookie(r)); err != nil {
+		middleware.WriteError(w, toAppError(err))
+		return
+	}
+	h.clearRefreshCookie(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
