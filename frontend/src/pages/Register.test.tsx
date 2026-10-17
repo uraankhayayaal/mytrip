@@ -1,8 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { register } from '../api/auth';
 import type { User } from '../lib/types';
+import { queryClient } from '../lib/queryClient';
 import { Register } from './Register';
 
 vi.mock('../api/auth', () => ({

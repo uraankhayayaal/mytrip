@@ -1,15 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, QueryClientProvider } from '@tanstack/react-query';
 import type { QueryObserverResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import { createTrip } from '../api/trips';
 import type { Trip } from '../lib/types';
 import { TripsList } from './TripsList';
+import { queryClient } from '../lib/queryClient';
 
-// Тестируемый компонент использует реальный QueryClientProvider (см. App.tsx).
-// useQueryClient() в этом провайдере возвращает реальный клиент — его мокать не нужно.
+// useQuery подменяем на управляемый mock, остальные экспорты react-query
+// (QueryClientProvider, useQueryClient) оставляем реальными.
 vi.mock('@tanstack/react-query', async () => {
   const actual = await vi.importActual<typeof import('@tanstack/react-query')>(
     '@tanstack/react-query',
@@ -50,15 +51,15 @@ function makeTrip(id: string, title: string, description: string): Trip {
   };
 }
 
-// Возврат useQuery: типизируем через Partial<QueryObserverResult<Trip[], unknown>> —
-// в mockReturnValue не нужен полный объект (остальные поля компоненты не читают).
-function queryResult(data: Trip[] | undefined): Partial<QueryObserverResult<Trip[], unknown>> {
+// Возврат useQuery типизируем через Partial<QueryObserverResult<Trip[], unknown>> —
+// компоненты читают только data/isLoading/isError/error.
+function queryResult(data: Trip[] | undefined, isLoading = false) {
   return {
     data,
-    isLoading: false,
+    isLoading,
     isError: false,
     error: null,
-  };
+  } satisfies Partial<QueryObserverResult<Trip[], unknown>>;
 }
 
 beforeEach(() => {
@@ -67,12 +68,22 @@ beforeEach(() => {
   mockUseQuery.mockReturnValue(queryResult(undefined));
 });
 
+// Рендерим внутри QueryClientProvider, как в App.tsx: TripCard внутри
+// TripsList вызывает useQueryClient() и падает без провайдера.
+function renderTripsList() {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <TripsList />
+    </QueryClientProvider>,
+  );
+}
+
 describe('TripsList', () => {
   it('should render a list of trips', () => {
     const mockTrips: Trip[] = [makeTrip('1', 'Trip 1', 'Desc 1'), makeTrip('2', 'Trip 2', 'Desc 2')];
     mockUseQuery.mockReturnValue(queryResult(mockTrips));
 
-    render(<TripsList />);
+    renderTripsList();
     expect(screen.getByText('Trip 1')).toBeInTheDocument();
     expect(screen.getByText('Trip 2')).toBeInTheDocument();
   });
@@ -80,19 +91,14 @@ describe('TripsList', () => {
   it('should render placeholder when list is empty', () => {
     mockUseQuery.mockReturnValue(queryResult([]));
 
-    render(<TripsList />);
+    renderTripsList();
     expect(screen.getByText('Пока нет поездок')).toBeInTheDocument();
   });
 
   it('should render loading spinner while query is loading', () => {
-    mockUseQuery.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      error: null,
-    });
+    mockUseQuery.mockReturnValue(queryResult(undefined, true));
 
-    const { container } = render(<TripsList />);
+    const { container } = renderTripsList();
     expect(container.querySelector('.animate-spin')).not.toBeNull();
   });
 
@@ -102,7 +108,7 @@ describe('TripsList', () => {
     const newTrip: Trip = makeTrip('new-id', 'Новая поездка', '');
     mockCreateTrip.mockResolvedValue(newTrip);
 
-    render(<TripsList />);
+    renderTripsList();
     fireEvent.click(screen.getByText('+ Новая поездка'));
 
     await waitFor(() => {
@@ -121,7 +127,7 @@ describe('TripsList', () => {
     mockUseQuery.mockReturnValue(queryResult([]));
     mockCreateTrip.mockRejectedValue(new Error('boom'));
 
-    render(<TripsList />);
+    renderTripsList();
     fireEvent.click(screen.getByText('+ Новая поездка'));
 
     await waitFor(() => {

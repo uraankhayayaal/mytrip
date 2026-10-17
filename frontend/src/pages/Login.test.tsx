@@ -1,10 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { login } from '../api/auth';
 import { setAccessToken } from '../api/client';
 import { ApiError } from '../api/errors';
 import type { LoginResponse } from '../lib/types';
+import { queryClient } from '../lib/queryClient';
 import { Login } from './Login';
 
 vi.mock('../api/auth', () => ({
@@ -15,22 +17,22 @@ vi.mock('../api/client', () => ({
   setAccessToken: vi.fn(),
 }));
 
-// Мок только того, что тестируем; MemoryRouter остаётся реальным,
-// чтобы Link/роутер работали как в проде.
+// Мок только useNavigate; MemoryRouter и Link остаются реальными,
+// чтобы роутер работал как в проде.
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: vi.fn() };
 });
 
 const mockLogin = vi.mocked(login);
+const mockSetAccessToken = vi.mocked(setAccessToken);
 
 const loginResponse: LoginResponse = {
   access_token: 'tok-123',
   user: { id: 'u1', email: 'a@b.c', name: 'A', created_at: '2024-01-01T00:00:00Z' },
 };
 
-// Рендерим внутри QueryClientProvider как в App.tsx — иначе useQueryClient()
-// в Login упадёт с "No QueryClient set".
+// Рендерим внутри QueryClientProvider как в App.tsx.
 function renderLogin() {
   return render(
     <QueryClientProvider client={queryClient}>
@@ -68,8 +70,8 @@ describe('Login', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
+      expect(mockSetAccessToken).toHaveBeenCalledWith('tok-123');
     });
-    expect(setAccessToken).toHaveBeenCalledWith('tok-123');
     expect(window.location.href).toBe('/');
   });
 
