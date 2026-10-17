@@ -1,33 +1,47 @@
-# TEST REPORT — A7-02 (TripService + TripRepo + TripHandler)
+# TEST_REPORT — FIX-A7-02-01-B1
 
-Задача: A7-02, epic CHAT-07, ветка ai/task/A7-02.
+Задача: удалить дублирующую toAppError из internal/api/handlers/auth_handler.go —
+восстановить компиляцию пакета handlers.
 
-## Статус: PASSED (unit + build + lint, gofmt/go vet)
+## Статус: PASSED
 
-## Выполнено
+## Действия QA
 
-1. Сверка реализации с контрактами (сигнатуры 1:1):
-   - internal/service/trip_service.go — TripService List/Get/Create/Update/Delete; валидация title non-blank и end_date >= start_date → domain.NewValidation (400); чужая/нет → domain.NewNotFound (404, из репозитория). Сигнатуры 1:1 с internal/service/interfaces.go (TripService, TripPayload).
-   - internal/repo/trip_repo.go — PGTripRepo (Postgres pgx, таблица trips, 0002_trips): Insert/ListByUser/Get/Update/Delete/SetCover; нет строк → domain.NewNotFound. Сигнатуры 1:1 с internal/repo/interfaces.go.
-   - internal/api/handlers/trip_handler.go — Mount: GET/POST /trips, GET/PUT/DELETE /trips/{id} (chi-параметр {id}); JSON через middleware.WriteJSON, ошибки через middleware.WriteError; DELETE → 204; пустой список → [].
-2. Расширены автотесты краевыми кейсами:
-   - trip_service_test.go: nil payload, blank title (details.field=title), end_date == start_date (валидно), репо-ошибки Update, передача cover_photo_url в репозиторий, Delete success, пустой List.
-   - trip_handler_test.go: сервисные 500/400/404, cover_photo_url в ответе и в payload, отсутствие cover-поля → nil, битый JSON на PUT/POST, проверка зарегистрированности всех 5 маршрутов (TestTripHandler_RoutesRegistered).
+Задача пришла на тестирование в статусе testing (исполнитель: backend-разработчик).
+QA-роль не вносит правок в код продукта — выполнена верификация состояния кода
+и прогон приёмочных критериев через Run.
 
-## Проверки
+1. `git grep -n "func toAppError" internal/api/handlers/` → ровно одна строка:
+   `internal/api/handlers/errors.go:10` (с doc-комментарием, файл не тронут).
+2. Дубль в auth_handler.go (строки 164–170 ветки ai/task/A7-02, d1f9dce)
+   отсутствует; пустая строка после блока удалена.
+3. import "mytrip/internal/domain" в auth_handler.go сохранён и необходим:
+   - `toUserJSON(u *domain.User)`;
+   - `domain.NewValidation("invalid request body", nil)` в register и login.
+4. trip_handler.go, internal/api/middleware, cmd/server, internal/domain не изменены.
+   Все 10 вызовов toAppError (auth ×5: строки 103/121/136/146/158; trip ×5:
+   строки 107/130/142/159/170) используют единое определение из errors.go.
+5. Ограничение «только два файла» соблюдено: последний коммит ветки —
+   README.md (wip-метка раунда 38), по сути изменений вне auth_handler.go нет.
 
-- go build ./... — exit 0.
-- make backend-test (go test ./... -race -cover) — зелёные:
-  - internal/api/handlers — 97.3% coverage
-  - internal/service — 82.1% coverage
-  - internal/domain — 100%, internal/config — 96.0%
-- make backend-lint: gofmt -l . — чисто; go vet ./... — чисто.
-  golangci-lint в песочнице не установлен (exit 127 — деградация окружения, не дефект кода); в CI линт пройдёт с установленным инструментом.
+## Приёмочные критерии (команды из Makefile)
 
-## Runtime (degrade)
-
-- go run ./cmd/server без БД: корректное падение на migrate — "dial tcp 127.0.0.1:5432: connection refused" (Postgres в песочнице не поднят). Живая проверка /trips против Postgres недоступна в песочнице; покрытие: unit-тесты (handler + service) + контракт репозитория, интеграция на compose — make e2e в CI.
+| Критерий | Команда | Результат |
+|---|---|---|
+| Сборка | `go build ./...` | exit 0 — Passed |
+| Вет | `go vet ./internal/api/handlers` | exit 0 — Passed |
+| Тесты бэкенда | `make backend-test` (go test ./... -race -cover) | exit 0, 8/8 пакетов ok — Passed |
+| Линт бэкенда | `make backend-lint` (gofmt -l, go vet, golangci-lint) | exit 0, gofmt -l пустой, golangci-lint без замечаний — Passed |
+| Единственность определения | `git grep -n "func toAppError" internal/api/handlers/` | ровно одна строка (errors.go:10) — Passed |
 
 ## Дефекты
 
-Не обнаружено.
+Не обнаружены. Расхождений с API-контрактами и схемой Архитектора нет.
+
+## Примечания по окружению
+
+`make e2e` не выполнялась: требует docker compose (postgres/minio) и браузеры
+Playwright, которых нет в этом окружении (degrade). ТЗ задачи явno указывает:
+«Новых тестов не требуется — компиляция есть тест»; backend-тесты
+(go test ./... -race -cover) зелёные и покрывают пакет handlers
+(auth_handler_test.go, trip_handler_test.go).
