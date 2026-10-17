@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { loginSchema } from './schemas';
-import { z } from 'zod';
 
 // Проверяем, как zodResolver передаёт данные: с пустыми строками и без полей.
 async function runResolver(data: Record<string, unknown>) {

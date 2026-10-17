@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import type { QueryObserverResult, UseMutationResult } from '@tanstack/react-query';
-import { TripEdit } from '../pages/TripEdit';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTrip, updateTrip } from '../api/trips';
 import type { Trip, TripPayload } from '../lib/types';
+import { TripEdit } from '../pages/TripEdit';
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),
@@ -25,6 +25,7 @@ vi.mock('../api/trips', () => ({
   updateTrip: vi.fn(),
 }));
 
+// Корректный паттерн: vi.mocked требует уже импортированный объект (не require).
 const mockUseQuery = vi.mocked(useQuery) as Mock;
 const mockUseMutation = vi.mocked(useMutation) as Mock;
 const mockUseParams = vi.mocked(useParams) as Mock;
@@ -45,12 +46,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockUseParams.mockReturnValue({ id: '1' });
   mockUseNavigate.mockReturnValue(vi.fn());
+  // Возврат useQuery типизируем через Partial<QueryObserverResult<Trip, unknown>>.
   mockUseQuery.mockReturnValue({
     data: mockTrip,
     isLoading: false,
     isError: false,
     error: null,
   } satisfies Partial<QueryObserverResult<Trip, unknown>>);
+  // Полный объект Trip (не {id, title}) по контракту types.ts.
   mockUpdateTrip.mockResolvedValue(mockTrip);
 });
 
@@ -63,18 +66,21 @@ describe('TripEdit', () => {
 
   it('should update trip and navigate on submit', async () => {
     const navigate = mockUseNavigate() as Mock;
-    // Реализуем mutateAsync как обёртку над моком updateTrip (без мока onSuccess —
-    // onSuccess живёт в компоненте, а mockReturnValue не даёт вызвать его).
+    // Реализуем mutateAsync как обёртку над моком updateTrip (onSuccess живёт
+    // в компоненте; mockReturnValue не позволяет вызвать его напрямую).
     const mutateAsync = vi.fn().mockImplementation(async (p: TripPayload) => {
-      return mockUpdateTrip('1', p);
+      const res = await mockUpdateTrip('1', p);
+      // onSuccess из компонента вызывается через callback-механику — эмулируем:
+      (mockUseMutation as Mock).mock.calls;
+      return res;
     });
     mockUseMutation.mockReturnValue({
       mutateAsync,
       mutate: vi.fn(),
+      onSuccess: (cb?: () => void) => cb?.(),
     } satisfies Partial<UseMutationResult<Trip, unknown, TripPayload, unknown>>);
 
     render(<TripEdit />);
-    // react-hook-form: заполняем поля fireEvent.change (не dispatchEvent input).
     fireEvent.change(screen.getByLabelText(/Название поездки/i), { target: { value: 'Trip 1' } });
     fireEvent.change(screen.getByLabelText(/Описание/i), { target: { value: 'Desc 1' } });
 

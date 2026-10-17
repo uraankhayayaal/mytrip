@@ -1,6 +1,6 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { register } from '../api/auth';
 import { ApiError } from '../api/errors';
@@ -11,8 +11,6 @@ vi.mock('../api/auth', () => ({
   register: vi.fn(),
 }));
 
-// Мок только useNavigate; MemoryRouter остаётся реальным, чтобы роутер
-// работал как в проде. Редирект проверяем по вызову navigate('/login').
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: vi.fn() };
@@ -31,7 +29,6 @@ const user: User = {
   created_at: '2024-01-01T00:00:00Z',
 };
 
-// QueryClientProvider как в App.tsx — единый паттерн для всех страниц.
 function renderRegister() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -43,8 +40,6 @@ function renderRegister() {
   );
 }
 
-// react-hook-form читает значения из onChange-обработчиков, поэтому заполняем
-// поля fireEvent.change (не dispatchEvent(new Event('input'))).
 function fillAndSubmit(password: string) {
   fireEvent.change(screen.getByLabelText('Имя'), { target: { value: 'Анна' } });
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
