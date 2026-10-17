@@ -438,6 +438,36 @@ func TestDeleteTripHandler_ServiceError(t *testing.T) {
 	}
 }
 
+func TestUpdateTripHandler_SuccessWithCover(t *testing.T) {
+	cover := "https://cdn.example/c2.jpg"
+	svc := &mockTripService{updateFn: func(_ context.Context, userID, id string, p *service.TripPayload) (*domain.Trip, error) {
+		if userID != "u1" || id != "t1" {
+			t.Fatalf("wrong args: %q %q", userID, id)
+		}
+		if p.CoverPhotoURL == nil || *p.CoverPhotoURL != cover {
+			t.Fatalf("cover not passed: %+v", p.CoverPhotoURL)
+		}
+		tr := sampleTrip()
+		tr.Title = p.Title
+		tr.CoverPhotoURL = p.CoverPhotoURL
+		return tr, nil
+	}}
+	body := bytes.NewBufferString(`{"title":"With Cover","start_date":"2026-05-01T00:00:00Z","end_date":"2026-05-10T00:00:00Z","cover_photo_url":"https://cdn.example/c2.jpg"}`)
+	req := httptest.NewRequest(http.MethodPut, "/trips/t1", body)
+	w := httptest.NewRecorder()
+	newTripTestRouter(svc, "u1").ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var res map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if res["cover_photo_url"] != cover {
+		t.Fatalf("cover missing in response: %v", res)
+	}
+}
+
 func TestTripHandler_RoutesRegistered(t *testing.T) {
 	// Проверка зарегистрированности маршрутов: для каждого метода+пути
 	// хендлер ДОЛЖЕН отработать (ответ сервиса/404-от-сервиса), а не 405
