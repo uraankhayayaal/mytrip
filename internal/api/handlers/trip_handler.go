@@ -17,13 +17,16 @@ import (
 	"mytrip/internal/service"
 )
 
-// tripHandler — приватная реализация TripHandler (контракт — в handlers.go).
+// tripHandler — реализация TripHandler. Контрактный TripHandler в handlers.go
+// — пустой struct; состояние храним в tripHandler и связываем с публичным
+// объектом через identity-реестр (TripHandler не может получать поля).
 type tripHandler struct {
 	trips service.TripService
 }
 
-// tripHandlers — реестр созданных экземпляров (TripHandler — пустой struct из контракта,
-// состояние храним здесь и ищем экземпляр по identity в Mount).
+// tripHandlers — реестр созданных экземпляров: ключ *TripHandler (identity),
+// значение — внутренняя реализация. Mount вызывается на *TripHandler и
+// ищет свою реализацию в реестре.
 var tripHandlers = make(map[*TripHandler]*tripHandler)
 
 // NewTripHandler — конструктор TripHandler.
@@ -32,8 +35,6 @@ func NewTripHandler(trips service.TripService) *TripHandler {
 	tripHandlers[h] = &tripHandler{trips: trips}
 	return h
 }
-
-func (h *TripHandler) impl() *tripHandler { return tripHandlers[h] }
 
 // Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
 // Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
@@ -44,6 +45,16 @@ func (h *TripHandler) Mount(r chi.Router) {
 	r.Get("/trips/{id}", impl.get)
 	r.Put("/trips/{id}", impl.update)
 	r.Delete("/trips/{id}", impl.delete)
+}
+
+// impl — приватный доступ к реализации по identity-ключу.
+func (h *TripHandler) impl() *tripHandler {
+	if impl, ok := tripHandlers[h]; ok {
+		return impl
+	}
+	// Страховка (не должно произойти при нормальном использовании):
+	// Mount на *TripHandler, созданную не через NewTripHandler.
+	return &tripHandler{trips: nil}
 }
 
 type tripJSON struct {

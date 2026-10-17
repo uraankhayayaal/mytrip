@@ -452,10 +452,10 @@ func TestTripHandler_RoutesRegistered(t *testing.T) {
 		want         int
 	}{
 		{http.MethodGet, "/trips", nil, http.StatusOK},
-		{http.MethodPost, "/trips", bytes.NewBufferString(validBody), http.StatusNotFound},        // create → mock NotFound
-		{http.MethodGet, "/trips/t1", nil, http.StatusNotFound},                                  // get → mock NotFound
-		{http.MethodPut, "/trips/t1", bytes.NewBufferString(validBody), http.StatusNotFound},     // update → mock NotFound
-		{http.MethodDelete, "/trips/t1", nil, http.StatusNoContent},                              // delete → ok
+		{http.MethodPost, "/trips", bytes.NewBufferString(validBody), http.StatusNotFound},   // create → mock NotFound
+		{http.MethodGet, "/trips/t1", nil, http.StatusNotFound},                              // get → mock NotFound
+		{http.MethodPut, "/trips/t1", bytes.NewBufferString(validBody), http.StatusNotFound}, // update → mock NotFound
+		{http.MethodDelete, "/trips/t1", nil, http.StatusNoContent},                          // delete → ok
 	}
 	for _, c := range cases {
 		req := httptest.NewRequest(c.method, c.path, c.body)
