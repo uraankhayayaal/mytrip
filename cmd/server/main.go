@@ -48,25 +48,6 @@ func newAuthDeps(cfg *config.Config, pool *pgxpool.Pool) (*authDeps, error) {
 	return &authDeps{auth: auth, validator: validator}, nil
 }
 
-// authMiddleware — валидация Bearer JWT access-токена (CHAT-07: A7-01/A7-05).
-func authMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		header := r.Header.Get("Authorization")
-		const prefix = "Bearer "
-		if len(header) <= len(prefix) || header[:len(prefix)] != prefix {
-			middleware.WriteError(w, domain.NewUnauthorized("missing or malformed Authorization header"))
-			return
-		}
-		claims, err := deps.validator.Validate(header[len(prefix):], jwtutil.TokenKindAccess)
-		if err != nil {
-			middleware.WriteError(w, domain.NewUnauthorized("invalid or expired token"))
-			return
-		}
-		ctx := context.WithValue(r.Context(), middleware.UserIDKey, claims.Subject)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -107,6 +88,12 @@ func main() {
 	r.Get("/healthz", healthHandler)
 	r.Route("/api/v1", func(r chi.Router) {
 		handlers.NewAuthHandler(deps.auth).Mount(r)
+		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05).
+		// Трип/стоп/фото/экспорт-хендлеры смонтируются следующими задачами (A7-02..A7-04).
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Auth(cfg.JWTSecret))
+			// TODO(A7-02..A7-04): r.With(middleware.Auth(cfg.JWTSecret)) для trips/stops/photos.
+		})
 	})
 
 	srv := &http.Server{
