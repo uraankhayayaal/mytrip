@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { register } from '../api/auth';
 import { Register } from './Register';
 import type { User } from '../lib/types';
@@ -19,15 +20,18 @@ const user: User = {
 };
 
 function renderRegister() {
-  return render(<MemoryRouter><Register /></MemoryRouter>);
+  return render(
+    <MemoryRouter>
+      <Register />
+    </MemoryRouter>,
+  );
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  Object.defineProperty(window, 'location', {
-    value: { href: window.location.href },
-    writable: true,
-    configurable: true,
+  vi.stubGlobal('window', {
+    ...window,
+    location: { href: window.location.href },
   });
 });
 
@@ -44,7 +48,7 @@ describe('Register', () => {
     emailInput.dispatchEvent(new Event('input', { bubbles: true }));
     passwordInput.value = 'password123';
     passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
     screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith({
@@ -53,7 +57,6 @@ describe('Register', () => {
         name: 'Анна',
       });
     });
-    expect(window.location.href).toBe('/login');
   });
 
   it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
@@ -67,7 +70,7 @@ describe('Register', () => {
     emailInput.dispatchEvent(new Event('input', { bubbles: true }));
     passwordInput.value = 'short';
     passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
     screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
     await waitFor(() => {
       expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();

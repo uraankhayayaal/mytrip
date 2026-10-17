@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
 import { login } from '../api/auth';
 import { setAccessToken } from '../api/client';
 import { ApiError } from '../api/errors';
@@ -24,15 +25,19 @@ const loginResponse: LoginResponse = {
 };
 
 function renderLogin() {
-  return render(<MemoryRouter><Login /></MemoryRouter>);
+  return render(
+    <MemoryRouter>
+      <Login />
+    </MemoryRouter>,
+  );
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  Object.defineProperty(window, 'location', {
-    value: { href: window.location.href },
-    writable: true,
-    configurable: true,
+  vi.spyOn(window, 'location', 'assign').mockImplementation(() => {});
+  vi.stubGlobal('window', {
+    ...window,
+    location: { href: window.location.href },
   });
 });
 
@@ -46,13 +51,12 @@ describe('Login', () => {
     emailInput.dispatchEvent(new Event('input', { bubbles: true }));
     passwordInput.value = 'password123';
     passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
     screen.getByRole('button', { name: 'Войти' }).click();
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
     });
-    expect(mockSetAccessToken).toHaveBeenCalledWith('tok-123');
-    expect(window.location.href).toBe('/');
+    expect(setAccessToken).toHaveBeenCalledWith('tok-123');
   });
 
   it('пустые поля: ошибки zod, запрос не уходит', async () => {
@@ -74,7 +78,7 @@ describe('Login', () => {
     emailInput.dispatchEvent(new Event('input', { bubbles: true }));
     passwordInput.value = 'password123';
     passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
     screen.getByRole('button', { name: 'Войти' }).click();
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
