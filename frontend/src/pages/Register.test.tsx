@@ -1,15 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { register } from '../api/auth';
+import { ApiError } from '../api/errors';
 import type { User } from '../lib/types';
-import { queryClient } from '../lib/queryClient';
 import { Register } from './Register';
 
 vi.mock('../api/auth', () => ({
   register: vi.fn(),
 }));
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return { ...actual, useNavigate: vi.fn() };
+});
 
 const mockRegister = vi.mocked(register);
 
@@ -20,9 +25,11 @@ const user: User = {
   created_at: '2024-01-01T00:00:00Z',
 };
 
+// QueryClientProvider как в App.tsx — единый паттерн для всех страниц.
 function renderRegister() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={qc}>
       <MemoryRouter>
         <Register />
       </MemoryRouter>
