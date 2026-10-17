@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -16,9 +16,8 @@ vi.mock('../api/client', () => ({
   setAccessToken: vi.fn(),
 }));
 
-// Мок только useNavigate; MemoryRouter остаётся реальным, чтобы роутер
-// работал как в проде. useNavigate возвращаем vi.fn() и проверяем вызовы
-// на него (не через window.location.href — MemoryRouter не меняет href).
+// Мок только useNavigate; MemoryRouter/Link остаются реальными,
+// чтобы роутер работал как в проде.
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: vi.fn() };
@@ -27,9 +26,6 @@ vi.mock('react-router-dom', async () => {
 // Корректный паттерн: vi.mocked требует уже импортированный объект (не require).
 const mockLogin = vi.mocked(login);
 const mockSetAccessToken = vi.mocked(setAccessToken);
-const mockUseNavigate = vi.mocked(
-  (await import('react-router-dom')).useNavigate,
-) as unknown as ReturnType<typeof vi.fn>;
 
 const loginResponse: LoginResponse = {
   access_token: 'tok-123',
@@ -49,31 +45,49 @@ function renderLogin() {
   );
 }
 
+// react-hook-form читает значения из onChange-обработчиков, поэтому заполняем
+// поля fireEvent.change (не dispatchEvent(new Event('input'))).
+function fillAndSubmit() {
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'password123' } });
+  return screen.getByRole('button', { name: 'Войти' });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseNavigate.mockReturnValue(vi.fn());
+  Object.defineProperty(window, 'location', {
+    value: { href: window.location.href },
+    writable: true,
+    configurable: true,
+  });
 });
 
 describe('Login', () => {
   it('валидная форма вызывает login и setAccessToken, редирект на /', async () => {
     mockLogin.mockResolvedValue(loginResponse);
-    const navigate = mockUseNavigate() as ReturnType<typeof vi.fn>;
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
-    fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
+    const emailInput = screen.getByLabelText('Email');
+    const passwordInput = screen.getByLabelText('Пароль');
+    fireEvent.change(emailInput, { target: { value: 'a@b.c' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+
+    // DEBUG: что видит React после fireEvent.change
+    console.log('EMAIL VALUE AFTER CHANGE:', (emailInput as HTMLInputElement).value);
+    console.log('EMAIL ATTR:', (emailInput as HTMLInputElement).getAttribute('value'));
+
+    screen.getByRole('button', { name: 'Войти' }).click();
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
     });
     expect(mockSetAccessToken).toHaveBeenCalledWith('tok-123');
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(window.location.href).toBe('/');
   });
 
   it('пустые поля: ошибки zod, запрос не уходит', async () => {
     renderLogin();
-    fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
+    screen.getByRole('button', { name: 'Войти' }).click();
 
     await waitFor(() => {
       expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
@@ -88,7 +102,7 @@ describe('Login', () => {
 
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
     fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
+    screen.getByRole('button', { name: 'Войти' }).click();
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
