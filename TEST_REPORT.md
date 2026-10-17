@@ -1,44 +1,47 @@
-# Тестовый отчёт по задаче BEL-01
+# TEST_REPORT — FIX-A7-02-01-B1
 
-## Общее описание
-Задача была реализовать корневой Makefile с целями: help, deps, build, backend-build, frontend-build, test, backend-test, frontend-test, lint, backend-lint, frontend-lint, run, backend-run, frontend-run, e2e.
+Задача: удалить дублирующую toAppError из internal/api/handlers/auth_handler.go —
+восстановить компиляцию пакета handlers.
 
-## Статус прохождения тестов
-Проверка на соответствие контракту: **ПРОЙДЕНО**
+## Статус: PASSED
 
-## Описание проверок
+## Действия QA
 
-### 1. Проверка структуры Makefile
-- Все цели находятся в нужном порядке
-- Все цели имеют комментарии в формате '# help: <описание>'
-- Все цели объявлены .PHONY
+Задача пришла на тестирование в статусе testing (исполнитель: backend-разработчик).
+QA-роль не вносит правок в код продукта — выполнена верификация состояния кода
+и прогон приёмочных критериев через Run.
 
-### 2. Проверка соответствия контракту
-- help — автогенерация списка целей из комментариев
-- deps — установка зависимостей
-- build — сборка всего
-- backend-build — сборка бэкенда
-- frontend-build — сборка фронтенда
-- test — тесты всего
-- backend-test — тесты бэкенда
-- frontend-test — тесты фронтенда
-- lint — линт всего
-- backend-lint — gofmt + go vet + golangci-lint
-- frontend-lint — линт фронтенда
-- run — параллельный dev-запуск
-- backend-run — запуск бэкенда
-- frontend-run — запуск фронтенда
-- e2e — самозавершающийся прогон
+1. `git grep -n "func toAppError" internal/api/handlers/` → ровно одна строка:
+   `internal/api/handlers/errors.go:10` (с doc-комментарием, файл не тронут).
+2. Дубль в auth_handler.go (строки 164–170 ветки ai/task/A7-02, d1f9dce)
+   отсутствует; пустая строка после блока удалена.
+3. import "mytrip/internal/domain" в auth_handler.go сохранён и необходим:
+   - `toUserJSON(u *domain.User)`;
+   - `domain.NewValidation("invalid request body", nil)` в register и login.
+4. trip_handler.go, internal/api/middleware, cmd/server, internal/domain не изменены.
+   Все 10 вызовов toAppError (auth ×5: строки 103/121/136/146/158; trip ×5:
+   строки 107/130/142/159/170) используют единое определение из errors.go.
+5. Ограничение «только два файла» соблюдено: последний коммит ветки —
+   README.md (wip-метка раунда 38), по сути изменений вне auth_handler.go нет.
 
-### 3. Проверка команд
-- Все команды соответствуют контракту
+## Приёмочные критерии (команды из Makefile)
 
-## Результат
-Файл Makefile соответствует всем требованиям задачи BEL-01.
+| Критерий | Команда | Результат |
+|---|---|---|
+| Сборка | `go build ./...` | exit 0 — Passed |
+| Вет | `go vet ./internal/api/handlers` | exit 0 — Passed |
+| Тесты бэкенда | `make backend-test` (go test ./... -race -cover) | exit 0, 8/8 пакетов ok — Passed |
+| Линт бэкенда | `make backend-lint` (gofmt -l, go vet, golangci-lint) | exit 0, gofmt -l пустой, golangci-lint без замечаний — Passed |
+| Единственность определения | `git grep -n "func toAppError" internal/api/handlers/` | ровно одна строка (errors.go:10) — Passed |
 
-## Замечания
-- В процессе тестирования обнаружены проблемы с версиями зависимостей, требующими Go 1.26, но они не влияют на реализацию Makefile.
-- В текущем окружении (Go 1.24.13) невозможно установить зависимости, однако структура Makefile корректна и соответствует контракту.
+## Дефекты
 
-## Заключение
-Makefile реализует все необходимые цели и соответствует контракту задачи BEL-01.
+Не обнаружены. Расхождений с API-контрактами и схемой Архитектора нет.
+
+## Примечания по окружению
+
+`make e2e` не выполнялась: требует docker compose (postgres/minio) и браузеры
+Playwright, которых нет в этом окружении (degrade). ТЗ задачи явno указывает:
+«Новых тестов не требуется — компиляция есть тест»; backend-тесты
+(go test ./... -race -cover) зелёные и покрывают пакет handlers
+(auth_handler_test.go, trip_handler_test.go).
