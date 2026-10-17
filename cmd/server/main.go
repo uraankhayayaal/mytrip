@@ -35,7 +35,13 @@ type authDeps struct {
 	validator jwtutil.TokenValidator
 }
 
+// tripDeps — зависимости CRUD поездок (CHAT-07: A7-02).
+type tripDeps struct {
+	trips service.TripService
+}
+
 var deps *authDeps
+var trips *tripDeps
 
 func newAuthDeps(cfg *config.Config, pool *pgxpool.Pool) (*authDeps, error) {
 	userRepo := repo.NewPGUserRepo(pool)
@@ -82,6 +88,9 @@ func main() {
 		log.Fatalf("auth: %v", err)
 	}
 
+	// Trips (CHAT-07: A7-02): TripRepo + TripService + TripHandler под auth-middleware.
+	trips = &tripDeps{trips: service.NewTripService(repo.NewPGTripRepo(pool))}
+
 	// chi router
 	r := chi.NewRouter()
 	r.Use(middleware.ErrorHandler)
@@ -89,10 +98,13 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		handlers.NewAuthHandler(deps.auth).Mount(r)
 		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05).
-		// Трип/стоп/фото/экспорт-хендлеры смонтируются следующими задачами (A7-02..A7-04).
-		r.Group(func(r chi.Router) {
-			r.Use(func(next http.Handler) http.Handler { return middleware.Auth(cfg.JWTSecret, next) })
-			// TODO(A7-02..A7-04): r.With(middleware.Auth(cfg.JWTSecret)) для trips/stops/photos.
+		// /trips* — только для авторизованных (A7-02); стоп/фото/экспорт-хендлеры
+		// смонтируются следующими задачами (A7-03..A7-06).
+		r.With(func(next http.Handler) http.Handler {
+			return middleware.Auth(cfg.JWTSecret, next)
+		}).Group(func(r chi.Router) {
+			handlers.NewTripHandler(trips.trips).Mount(r)
+			// TODO(A7-03..A7-04): stops/photos под тем же auth-middleware.
 		})
 	})
 

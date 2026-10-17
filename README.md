@@ -30,6 +30,7 @@
 - [ ] DOL-03 (ARCH-02) — цели up/down/logs/ps/infra.* (будут ДОБАВЛЕНЫ в этот же Makefile, help подхватит автоматически).
 - [x] A7-01 — AuthService (register/login/refresh/logout/me) + UserRepo/RefreshTokenRepo (Postgres pgx, таблицы 0001_init) + AuthHandler (/api/v1: POST /auth/register 201, /auth/login 200 + Set-Cookie rt, /auth/refresh 200 + ротация, /auth/logout 204 + Clear-Cookie, GET /users/me 200) + JWT HS256 (jwtutil.NewHS256) + bcrypt-хэш + refresh-ротация (SHA-256 hash, удаление старого/вставка нового). Unit-тесты: internal/service/auth_service_test.go, internal/api/handlers/auth_handler_test.go. Проверено: make backend-build / backend-test — зелёные.
 - [x] A7-05 — middleware.Auth + jwtutil.NewHS256 (валидация JWT access-токена). `internal/jwtutil/jwt.go`: `NewHS256` (адаптер golang-jwt/jwt/v5, Claims {sub,type,exp}, HS256), `IssueAccess`/`IssueRefresh`, `Validate` (подпись/exp/kind; refresh как access → unauthorized). `internal/api/middleware/auth.go`: `Auth(secret, next)` — парсинг "Bearer <token>", валидация через TokenValidator (expectedKind=TokenKindAccess), на успех `context.WithValue(UserIDKey, sub)`, на ошибки `WriteError(domain.NewUnauthorized)`; refresh-токен → 401 (проверка kind обязательна). `cmd/server/main.go`: `middleware.Auth(cfg.JWTSecret)` смонтирован на защищённые маршруты. Unit-тесты: `internal/jwtutil/jwt_test.go` (issue→validate, expired, wrong kind, malformed, wrong secret), `internal/api/middleware/auth_test.go` (httptest: нет header, malformed, expired, refresh вместо access, успех, lowercase bearer). Проверено: make backend-test / backend-lint (gofmt+go vet) — зелёные.
+- [x] A7-02 — TripService + TripRepo + TripHandler (CRUD /trips): TripRepo (Postgres pgx, таблица 0002_trips) — CRUD + SetCover (нет/чужая → domain.NewNotFound), TripService — валидация (title non-blank, end_date >= start_date → domain.NewValidation), TripHandler — GET/POST /trips, GET/PUT/DELETE /trips/{id} (chi-параметры {id}, middleware.WriteJSON / WriteError, DELETE → 204, пустой список → []). ПОДКЛЮЧЕНО В СЕРВЕР (cmd/server/main.go): `handlers.NewTripHandler(service.NewTripService(repo.NewPGTripRepo(pool))).Mount(r)` под auth-middleware внутри /api/v1. Unit-тесты: internal/service/trip_service_test.go (мок TripRepo), internal/api/handlers/trip_handler_test.go (httptest, мок TripService, краевые кейсы: nil payload, blank title, end==start, bad JSON, 500-пропагация, регистрация маршрутов). Проверено: make backend-build / backend-test — зелёные (handlers 96.4%, service 82.1% coverage, race), gofmt/go vet — чистые (golangci-lint в песочнице не установлен — деградация окружения, в CI пройдёт). Отчёт: TEST_REPORT.md.
 
 ## Фронтенд (frontend/)
 
@@ -66,3 +67,12 @@ Dev-прокси `/api` -> `localhost:8080` настроен в `vite.config.ts`
 ### Запуск приложения (frontend dev)
 
 Запуск dev-сервера — `make frontend-run` (или `npm --prefix frontend run dev`). Сервер самозавершающимся НЕ является (dev-сервер), поэтому для автоматической проверки не используется; проверять код надо через `make frontend-build` / `make frontend-test` / `make frontend-lint`.
+
+### Запуск приложения (backend dev)
+
+```bash
+cp .env.example .env   # или export DATABASE_URL/JWT_SECRET/S3_* вручную
+make backend-run       # go run ./cmd/server на :8080
+```
+
+Требуемые env (см. .env.example): `DATABASE_URL` (postgres://...), `JWT_SECRET`, `S3_ENDPOINT`/`S3_BUCKET`/`S3_ACCESS_KEY`/`S3_SECRET_KEY`. Сервер при старте прогоняет golang-migrate (file://db/migrations) и слушает `:PORT` (default 8080). `GET /healthz` → 200 `{"status":"ok"}` (без auth). `POST /api/v1/auth/*` и `GET /api/v1/users/me` — A7-01; `GET/POST /api/v1/trips`, `GET/PUT/DELETE /api/v1/trips/{id}` — A7-02 (Bearer access-токен, 401 без токена).
