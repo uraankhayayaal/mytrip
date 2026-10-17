@@ -26,12 +26,14 @@ func (f *fakeRow) Scan(dest ...any) error {
 		return errors.New("fakeRow: scan arity mismatch")
 	}
 	for i, v := range f.vals {
-		if s, ok := dest[i].(*string); ok {
-			*s, _ = v.(string)
-		} else if s, ok := dest[i].(*time.Time); ok {
-			*s, _ = v.(time.Time)
-		} else if s, ok := dest[i].(*string); ok {
-			*s, _ = v.(string)
+		switch d := dest[i].(type) {
+		case *string:
+			*d, _ = v.(string)
+		case **string:
+			s, _ := v.(*string)
+			*d = s
+		case *time.Time:
+			*d, _ = v.(time.Time)
 		}
 	}
 	return nil
