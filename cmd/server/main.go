@@ -91,7 +91,7 @@ func main() {
 		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05).
 		// Трип/стоп/фото/экспорт-хендлеры смонтируются следующими задачами (A7-02..A7-04).
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Auth(cfg.JWTSecret))
+			r.Use(func(next http.Handler) http.Handler { return middleware.Auth(cfg.JWTSecret, next) })
 			// TODO(A7-02..A7-04): r.With(middleware.Auth(cfg.JWTSecret)) для trips/stops/photos.
 		})
 	})
