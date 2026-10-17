@@ -63,7 +63,8 @@ func NewHS256(secret string, accessTTL, refreshTTL time.Duration) (TokenIssuer, 
 	if refreshTTL <= 0 {
 		return nil, nil, errors.New("jwtutil: refreshTTL must be positive")
 	}
-	return &hs256{secret: []byte(secret), accessTTL: accessTTL, refreshTTL: refreshTTL}, nil, nil
+	h := &hs256{secret: []byte(secret), accessTTL: accessTTL, refreshTTL: refreshTTL}
+	return h, h, nil
 }
 
 func (h *hs256) sign(userID string, kind TokenKind, ttl time.Duration) (string, error) {
