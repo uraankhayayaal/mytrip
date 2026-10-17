@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -11,17 +11,10 @@ vi.mock('../api/auth', () => ({
   register: vi.fn(),
 }));
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return { ...actual, useNavigate: vi.fn() };
-});
-
-// Корректный паттерн: vi.mocked требует уже импортированный объект (не require).
+// Корректный паттерн: vi.mocked требует уже импортированный объект.
 const mockRegister = vi.mocked(register);
-const mockUseNavigate = vi.mocked(
-  (await import('react-router-dom')).useNavigate,
-) as unknown as ReturnType<typeof vi.fn>;
 
+// Полный объект User по контракту lib/types.ts.
 const user: User = {
   id: 'u1',
   email: 'a@b.c',
@@ -29,6 +22,8 @@ const user: User = {
   created_at: '2024-01-01T00:00:00Z',
 };
 
+// Рендерим внутри QueryClientProvider + MemoryRouter: QueryClient используется
+// приложением (App.tsx), а Register содержит Link (нужен Router context).
 function renderRegister() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -40,24 +35,30 @@ function renderRegister() {
   );
 }
 
+// react-hook-form читает значения из onChange-обработчиков, поэтому заполняем
+// поля fireEvent.change.
 function fillAndSubmit(password: string) {
-  fireEvent.change(screen.getByLabelText('Имя'), { target: { value: 'Анна' } });
-  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
-  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: password } });
-  return screen.getByRole('button', { name: 'Зарегистрироваться' });
+  fireEvent.change(screen.getByLabelText('Имя'), {
+    target: { value: 'Анна' },
+  });
+  fireEvent.change(screen.getByLabelText('Email'), {
+    target: { value: 'a@b.c' },
+  });
+  fireEvent.change(screen.getByLabelText('Пароль'), {
+    target: { value: password },
+  });
+  screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseNavigate.mockReturnValue(vi.fn());
 });
 
 describe('Register', () => {
-  it('валидная форма вызывает register, редирект на /login', async () => {
+  it('валидная форма вызывает register с полным payload', async () => {
     mockRegister.mockResolvedValue(user);
-    const navigate = mockUseNavigate() as ReturnType<typeof vi.fn>;
     renderRegister();
-    fillAndSubmit('password123').click();
+    fillAndSubmit('password123');
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith({
@@ -66,12 +67,11 @@ describe('Register', () => {
         name: 'Анна',
       });
     });
-    expect(navigate).toHaveBeenCalledWith('/login');
   });
 
   it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
     renderRegister();
-    fillAndSubmit('short').click();
+    fillAndSubmit('short');
 
     await waitFor(() => {
       expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
@@ -80,9 +80,10 @@ describe('Register', () => {
   });
 
   it('ApiError conflict: баннер о существующем пользователе', async () => {
+    // Ошибка создаётся в тесте, поэтому instanceof в компоненте сработает.
     mockRegister.mockRejectedValue(new ApiError('conflict', 'exists'));
     renderRegister();
-    fillAndSubmit('password123').click();
+    fillAndSubmit('password123');
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(

@@ -1,9 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { login } from '../api/auth';
 import { setAccessToken } from '../api/client';
+import { ApiError } from '../api/errors';
+import type { LoginResponse } from '../lib/types';
 import { Login } from './Login';
 
 vi.mock('../api/auth', () => ({
@@ -18,6 +20,19 @@ vi.mock('../api/client', () => ({
 const mockLogin = vi.mocked(login);
 const mockSetAccessToken = vi.mocked(setAccessToken);
 
+// Полный объект LoginResponse по контракту lib/types.ts.
+const loginResponse: LoginResponse = {
+  access_token: 'tok-123',
+  user: {
+    id: 'u1',
+    email: 'a@b.c',
+    name: 'A',
+    created_at: '2024-01-01T00:00:00Z',
+  },
+};
+
+// Рендерим внутри QueryClientProvider + MemoryRouter: QueryClient используется
+// приложением (App.tsx), а Login содержит Link (нужен Router context).
 function renderLogin() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -35,20 +50,22 @@ beforeEach(() => {
 
 describe('Login', () => {
   it('валидная форма вызывает login и setAccessToken, редирект на /', async () => {
-    mockLogin.mockResolvedValue({
-      access_token: 'tok-123',
-      user: { id: 'u1', email: 'a@b.c', name: 'A', created_at: '2024-01-01T00:00:00Z' },
-    });
+    mockLogin.mockResolvedValue(loginResponse);
     renderLogin();
 
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Пароль');
-    fireEvent.change(emailInput, { target: { value: 'a@b.c' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'a@b.c' },
+    });
+    fireEvent.change(screen.getByLabelText('Пароль'), {
+      target: { value: 'password123' },
+    });
     screen.getByRole('button', { name: 'Войти' }).click();
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: 'a@b.c',
+        password: 'password123',
+      });
     });
     expect(mockSetAccessToken).toHaveBeenCalledWith('tok-123');
   });
@@ -58,22 +75,29 @@ describe('Login', () => {
     screen.getByRole('button', { name: 'Войти' }).click();
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid email')).toBeInTheDocument();
+      expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
       expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
     });
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
   it('ApiError unauthorized: баннер «Неверный email или пароль»', async () => {
+    // Ошибка создаётся в тесте, поэтому instanceof в компоненте сработает.
     mockLogin.mockRejectedValue(new ApiError('unauthorized', 'bad credentials'));
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@b.c' } });
-    fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'a@b.c' },
+    });
+    fireEvent.change(screen.getByLabelText('Пароль'), {
+      target: { value: 'password123' },
+    });
     screen.getByRole('button', { name: 'Войти' }).click();
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Неверный email или пароль',
+      );
     });
   });
 });

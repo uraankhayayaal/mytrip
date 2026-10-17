@@ -1,26 +1,33 @@
 import { describe, it, expect } from 'vitest';
 import { loginSchema } from './schemas';
 
-// Проверяем, как zodResolver передаёт данные: с пустыми строками и без полей.
-async function runResolver(data: Record<string, unknown>) {
-  const res = await loginSchema.safeParse(data as never);
-  return { success: res.success, error: res.error?.issues ?? null };
-}
-
 describe('loginSchema', () => {
   it('valid values pass', async () => {
-    const r = await runResolver({ email: 'a@b.c', password: 'password123' });
+    const r = await loginSchema.safeParseAsync({
+      email: 'a@b.c',
+      password: 'password123',
+    });
     expect(r.success).toBe(true);
   });
 
-  it('empty strings fail with which fields', async () => {
-    const r = await runResolver({});
+  it('empty payload fails with issues for email and password', async () => {
+    const r = await loginSchema.safeParseAsync({});
     expect(r.success).toBe(false);
-    expect(r.error?.map((i) => i.path.join('.'))).toEqual(expect.arrayContaining(['email', 'password']));
+    if (!r.success) {
+      const paths = r.error.issues.map((i) => i.path.join('.'));
+      expect(paths).toEqual(expect.arrayContaining(['email', 'password']));
+    }
   });
 
-  it('zod version has .error issues', async () => {
-    const r = await runResolver({});
-    expect(r.error?.length).toBeGreaterThan(0);
+  it('short password fails with min-8 message', async () => {
+    const r = await loginSchema.safeParseAsync({
+      email: 'a@b.c',
+      password: 'short',
+    });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      const pw = r.error.issues.find((i) => i.path[0] === 'password');
+      expect(pw?.message).toBe('Минимум 8 символов');
+    }
   });
 });
