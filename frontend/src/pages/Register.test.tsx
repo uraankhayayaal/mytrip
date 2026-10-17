@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { register } from '../api/auth';
 import { Register } from './Register';
 import type { User } from '../lib/types';
@@ -10,7 +10,7 @@ vi.mock('../api/auth', () => ({
   register: vi.fn(),
 }));
 
-const mockRegister = vi.mocked(register) as Mock;
+const mockRegister = vi.mocked(register);
 
 const user: User = {
   id: 'u1',
@@ -40,17 +40,13 @@ describe('Register', () => {
   it('валидная форма вызывает register, редирект на /login', async () => {
     mockRegister.mockResolvedValue(user);
     renderRegister();
-    const nameInput = screen.getByLabelText('Имя') as HTMLInputElement;
-    const emailInput = screen.getByLabelText('Email') as HTMLInputElement;
-    const passwordInput = screen.getByLabelText('Пароль') as HTMLInputElement;
-    nameInput.value = 'Анна';
-    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-    emailInput.value = 'a@b.c';
-    emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-    passwordInput.value = 'password123';
-    passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
-    screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Имя'), 'Анна');
+    await user.type(screen.getByLabelText('Email'), 'a@b.c');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
+
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith({
         email: 'a@b.c',
@@ -63,17 +59,13 @@ describe('Register', () => {
 
   it('password < 8 символов: ошибка zod, запрос не уходит', async () => {
     renderRegister();
-    const nameInput = screen.getByLabelText('Имя') as HTMLInputElement;
-    const emailInput = screen.getByLabelText('Email') as HTMLInputElement;
-    const passwordInput = screen.getByLabelText('Пароль') as HTMLInputElement;
-    nameInput.value = 'Анна';
-    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-    emailInput.value = 'a@b.c';
-    emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-    passwordInput.value = 'short';
-    passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(r => setTimeout(r, 100));
-    screen.getByRole('button', { name: 'Зарегистрироваться' }).click();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Имя'), 'Анна');
+    await user.type(screen.getByLabelText('Email'), 'a@b.c');
+    await user.type(screen.getByLabelText('Пароль'), 'short');
+    await user.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
+
     await waitFor(() => {
       expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
     });
