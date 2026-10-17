@@ -107,7 +107,7 @@ func main() {
 		log.Fatalf("auth: %v", err)
 	}
 
-	// Trips (CHAT-07: A7-02)
+	// Trips (CHAT-07: A7-02): TripRepo + TripService + TripHandler под auth-middleware.
 	trips = &tripDeps{trips: service.NewTripService(repo.NewPGTripRepo(pool))}
 
 	// chi router
@@ -116,6 +116,7 @@ func main() {
 	r.Get("/healthz", healthHandler)
 	r.Route("/api/v1", func(r chi.Router) {
 		handlers.NewAuthHandler(deps.auth).Mount(r)
+		// /trips* — только для авторизованных (A7-02).
 		r.Use(authMiddleware)
 		handlers.NewTripHandler(trips.trips).Mount(r)
 	})
