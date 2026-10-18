@@ -17,4 +17,6 @@ func mountPhotoRoutes(r chi.Router, impl *photoHandler) {
 	r.Delete("/trips/{id}/photos/{photoId}", impl.delete)
 	r.Get("/trips/{id}/photos", impl.list)
 	r.Post("/trips/{id}/photos", impl.create)
+	r.Get("/trips/{id}/photos/{tail...}", impl.list)
+	r.Post("/trips/{id}/photos/{tail...}", impl.create)
 }
