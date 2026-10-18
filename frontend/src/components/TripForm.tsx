@@ -17,7 +17,8 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const data = new FormData(form);
     const values = Object.fromEntries(data.entries()) as unknown as TripInput;
     try {
       await onSubmit(values as TripPayload);
@@ -26,7 +27,6 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
       throw err;
     }
   };
-
   return (
     <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
       <div className="grid grid-cols-1 gap-4">
