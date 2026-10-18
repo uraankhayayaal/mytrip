@@ -63,7 +63,7 @@ export function StopForm({ tripId, initial, onSaved, onCancel }: StopFormProps):
     };
     try {
       if (initial) {
-        await updateStop(initial.id, payload);
+        await updateStop(tripId, initial.id, payload);
       } else {
         await createStop(tripId, payload);
       }

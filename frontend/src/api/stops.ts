@@ -13,13 +13,13 @@ export async function createStop(tripId: string, p: StopPayload): Promise<Stop> 
   return r.data;
 }
 
-// PUT /stops/{stopId}
-export async function updateStop(stopId: string, p: StopPayload): Promise<Stop> {
-  const r = await api.put<Stop>(`/stops/${stopId}`, p);
+// PUT /trips/{tripId}/stops/{stopId} -> 200
+export async function updateStop(tripId: string, stopId: string, p: StopPayload): Promise<Stop> {
+  const r = await api.put<Stop>(`/trips/${tripId}/stops/${stopId}`, p);
   return r.data;
 }
 
-// DELETE /stops/{stopId} -> 204
-export async function deleteStop(stopId: string): Promise<void> {
-  await api.delete(`/stops/${stopId}`);
+// DELETE /trips/{tripId}/stops/{stopId} -> 204
+export async function deleteStop(tripId: string, stopId: string): Promise<void> {
+  await api.delete(`/trips/${tripId}/stops/${stopId}`);
 }
