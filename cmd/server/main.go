@@ -93,7 +93,9 @@ func main() {
 		authHandler.Mount(r)
 
 		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05)
-		r.With(middleware.Auth(cfg.JWTSecret)).Group(func(r chi.Router) {
+		r.With(func(next http.Handler) http.Handler {
+			return middleware.Auth(cfg.JWTSecret, next)
+		}).Group(func(r chi.Router) {
 			tripHandler.Mount(r)
 			stopHandler.Mount(r)
 			photoHandler.Mount(r)
