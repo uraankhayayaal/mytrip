@@ -1,126 +1,58 @@
-# Тестовый отчёт — A7-05 middleware.Auth + jwtutil.NewHS256 (валидация JWT access-токена)
+# TEST REPORT — A7-04 (PhotoService + PhotoRepo + StoragePort + PhotoHandler)
 
-## Статус: **PASSED** (сборка, unit-тесты, gofmt/go vet); golangci-lint — **DEGRADED** (бинарь отсутствует в окружении)
+Ветка: `ai/task/A7-04`, HEAD `b0d9c9a`.
+Раунд: повторное QA-прохождение после эскалации (attempts=6).
 
-## Статус: PASSED (повторная верификация)
+## Статус: Passed
 
-| Проверка | Команда | Результат |
+## 1. Сверка с контрактами (1:1, до последнего символа)
+
+| Контракт | Реализация | Результат |
 |---|---|---|
-| Сборка бэкенда | `go build ./...` | **Passed** (exit 0, BUILD_OK) |
-| Unit-тесты (race + coverage) | `make backend-test` (`go test ./... -race -cover`) | **Passed** (exit 0) |
-| gofmt | `gofmt -l .` | **Passed** (пустой вывод, exit 0) |
-| go vet | `go vet ./...` | **Passed** (exit 0) |
-| golangci-lint | `golangci-lint run` | **DEGRADED**: бинарь отсутствует в песочнице (нет в PATH) — инструмент не установлен в окружении; не дефект кода |
-| Интеграция (живая БД) | — | **DEGRADED**: Postgres (5432) недоступен в песочнице (connection refused). Middleware/jwtutil не зависят от БД — покрыты unit-тестами без сети/БД |
-| E2E (`make e2e`) | — | **DEGRADED**: требует compose-стек (Postgres/Minio/nginx); Docker недоступен в песочнице |
+| `PhotoRepo` (internal/repo/interfaces.go:67-73) | `PGPhotoRepo` (internal/repo/photo_repo.go): pgx, таблица `trip_photos` (0004_photos), Insert/ListByTrip(ORDER BY created_at ASC)/Delete(NotFound при 0 строк) | OK |
+| `PhotoService` (internal/service/interfaces.go:110-118) | `photoService` (internal/service/photo_service.go): владение trip через `TripRepo.Get` во всех 3 методах; `cover=true` → `TripRepo.SetCover` ДО Insert; при Delete объект из хранилища, ошибка DeleteObject не блокирует удаление записи | OK |
+| `StoragePort` (internal/service/interfaces.go:120-128) | `S3Storage` (internal/storage/s3_storage.go): `PresignPut` через `s3.NewPresignClient`, TTL 15 мин; `DeleteObject` идемпотентен (NoSuchKey/NotFound → nil) | OK |
+| `PhotoHandler` (internal/api/handlers/handlers.go:123-145) | `photoHandler` + `mountPhotoRoutes` (photo_handler.go, photo_handler_mount.go): GET/POST `/trips/{id}/photos`, DELETE `/trips/{id}/photos/{photoId}` → 204, POST `/trips/{id}/photos/presign`; body `{object_key, url, cover?}`; presign-ответ `{url, expires_at}` = frontend `PhotoUrlResponse` | OK |
+| Wire | cmd/server/main.go:96-113: `PGPhotoRepo` + `S3Storage` + `NewPhotoService` + `NewPhotoHandler(...).Mount(r)` под auth-middleware | OK |
 
-## Покрытие целевых пакетов (go test -cover)
+Расхождения: 0. Блокирующих дефектов: 0.
 
-- internal/jwtutil — **89.7%**
-- internal/api/middleware — **69.8%**
-- остальные пакеты (handlers 94.3%, config 96.0%, domain 100.0%, service 75.0%) — **ok**
+## 2. Автоматические проверки (make backend-test / backend-lint)
 
-## Проверки (запущены в этом раунде, все зелёные)
+Команда: `make backend-test` (`go test ./... -race -cover`) — exit 0, все пакеты ok:
 
-1. **jwtutil** (`internal/jwtutil/jwt.go`):
-   - `Claims{sub, type, exp}` (json-теги `sub`/`type`/`exp`) — совпадает;
-   - `TokenIssuer.IssueAccess/IssueRefresh` — сигнатуры `(token string, err error)` — совпадает;
-   - `TokenValidator.Validate(token string, expectedKind TokenKind) (*Claims, error)` — совпадает;
-   - `NewHS256(secret, accessTTL, refreshTTL) (TokenIssuer, TokenValidator, error)` — совпадает; публичный API реализован адаптером `github.com/golang-jwt/jwt/v5` (HS256, проверка signing method, exp, sub, kind).
-2. **middleware** (`internal/api/middleware/auth.go`):
-   - `UserIDKey ContextKey = "user_id"` — совпадает;
-   - `AuthContext(ctx context.Context) string` — совпадает;
-   - `Auth(secret string, next http.Handler) http.Handler` — совпадает; поведение по контракту: парсинг `Bearer <token>` (case-insensitive prefix), валидация с `expectedKind=TokenKindAccess`, на успех — `context.WithValue(UserIDKey, sub)`, на ошибки — `WriteError(domain.NewUnauthorized)` → 401 `error.code=unauthorized`.
-3. **refresh → 401**: `Validate` при `expectedKind=TokenKindAccess` отклоняет `type=refresh` (проверено `TestValidate_WrongKind` и `TestAuth_RefreshInsteadOfAccess`).
-4. **cmd/server/main.go**: `authMiddleware` не требуется отдельным символом — защищённая группа смонтирована через `r.Use(func(next http.Handler) http.Handler { return middleware.Auth(cfg.JWTSecret, next) })`; компилируется и линтуется. Расхождений не обнаружено.
+```
+ok  mytrip/internal/api/handlers    1.020s  coverage: 95.1%
+ok  mytrip/internal/api/middleware  1.017s  coverage: 69.8%
+ok  mytrip/internal/config          1.020s  coverage: 96.0%
+ok  mytrip/internal/domain          1.012s  coverage: 100.0%
+ok  mytrip/internal/jwtutil         1.019s  coverage: 89.7%
+ok  mytrip/internal/repo            1.019s  coverage: 4.6%   (требует live-Postgres — покрывается e2e в CI)
+ok  mytrip/internal/service         3.166s  coverage: 85.5%  (photo_service_test.go — мок PhotoRepo/TripRepo/StoragePort)
+ok  mytrip/internal/storage         1.012s  coverage: 91.7%
+```
 
-## Unit-тесты (все **Passed**)
+`make backend-lint` (degrade-шаги отмечены):
+- `gofmt -l .` — чисто (exit 0);
+- `go vet ./...` — exit 0;
+- `golangci-lint run` — **не выполнен**: golangci-lint не установлен в песочнице (command not found) — degrade окружения. По явному решению пользователя (комментарий 2026-10-18T10:01Z: «если golangci-lint недоступен — пропустить, считать что все ок») шаг пропущен и засчитан как OK. В CI (.github/workflows/ci.yml) golangci-lint установлен и прогоняется.
 
-`internal/jwtutil/jwt_test.go` (10 тестов):
-- issue→validate: access / refresh (sub+type);
-- expired (TTL 1ms + sleep) → ошибка;
-- wrong kind: refresh→access и access→refresh → ошибка;
-- no-kind-check (expectedKind="") → ок;
-- malformed: empty / not-jwt / tampered signature → ошибка;
-- wrong secret → ошибка;
-- конструктор: empty secret / non-positive TTLs → ошибка.
+## 3. Рантайм (ReadAppLogs, local)
 
-`internal/api/middleware/auth_test.go` (8 тестов, httptest):
-- нет header → 401 `unauthorized`;
-- malformed header: `Token abc123`, `Bearer`, `Bearer ` → 401;
-- expired access-токен → 401;
-- refresh вместо access → 401 `unauthorized`;
-- malformed токен (`Bearer not-a-valid-jwt`) → 401;
-- успех: 200 + `AuthContext == "user-123"`;
-- lowercase `bearer` → 200 + user_id;
-- `AuthContext` без ключа → "".
+- Без env: корректное падение `config.Load` (missing DATABASE_URL/JWT_SECRET) — ожидаемое поведение.
+- С env (`DATABASE_URL=...:59999`): `migrate: dial tcp 127.0.0.1:59999: connect: connection refused` — Postgres недоступен в sandbox, Docker-стек не поднимается. Это **degrade окружения, не дефект кода**: стартовый код корректно логирует ошибку миграции и выходит с кодом 1 вместо паники. Интеграционная проверка живого API покрывается самозавершающейся целью `make e2e` (up → healthcheck → Playwright → down) в CI.
 
-## Рантайм (ReadAppLogs)
+## 4. Автотесты (состав по ТЗ)
 
-- Без `DATABASE_URL`: `config: missing required env: [DATABASE_URL]` (exit 1) — ожидаемое поведение конфигуратора.
-- С `DATABASE_URL=postgres://…@localhost:5432`: падение на `migrate: dial tcp 127.0.0.1:5432: connection refused` — **не дефект кода**: в песочнице нет Postgres/Docker (порт 5432 закрыт). Логика A7-05 (middleware + jwtutil) не зависит от БД и полностью покрыта unit-тестами.
+- unit: `internal/service/photo_service_test.go` — мок PhotoRepo/TripRepo/StoragePort: List (success/trip-not-found), Create (success/cover=true→SetCover/cover=false/insert-error), Delete (success/missing/not-found/объект-сирота при ошибке хранилища).
+- unit: `internal/api/handlers/photo_handler_test.go` — httptest + chi: GET 200/404, POST 201/400 (validation пустых полей, invalid JSON)/404, DELETE 204/404, presign 200 `{url,expires_at}`/404/400.
+- unit: `internal/storage/s3_storage_test.go` — PresignPut (реальный s3.Client, подпись без сети), DeleteObject (мок s3ClientAPI: success/NoSuchKey/NotFound/другие ошибки).
+- интеграционные/E2E: live-Postgres и полный HTTP-сценарий требуют Docker-стека (Postgres/MinIO) — недоступны в sandbox; покрываются `make e2e` в CI (Playwright: frontend/e2e, frontend/src/components/PhotoUploader.test.tsx).
 
-## Заключение
+## 5. Дефекты
 
-- Приёмочные критерии A7-05 п.1–5 выполнены: `jwtutil.NewHS256` (адаптер golang-jwt/jwt/v5, Claims {sub, type, exp}, HS256), `middleware.Auth` (Bearer → Validate(kind=access) → UserIDKey / 401), refresh → 401, unit-тесты обоих пакетов — **Passed**.
-- `make backend-test` — зелёный (exit 0). `make backend-lint`: gofmt + go vet зелёные; golangci-lint недоступен в окружении (деградация инструмента, не дефект кода).
-- Расхождений с контрактами Архитектора не обнаружено. Дефекты: 0.
-- Задача переведена в статус **testing**.
+Обнаружено: 0. Багрепортов создано: 0.
 
----
+## 6. Итог
 
-# TEST REPORT — A7-02 (TripService + TripRepo + TripHandler), итог
-
-Задача: A7-02, epic CHAT-07, ветка ai/task/A7-02.
-
-## Статус: PASSED (повторная верификация)
-
-Работа по задаче реализована полностью и зафиксирована коммитами ветки
-ai/task/A7-02 (working tree clean). В данном раунде проведена полная
-повторная верификация: сверка реализации с контрактами и повторный запуск
-всех проверок.
-
-## Реализация (файлы в ветке)
-
-1. **`internal/repo/trip_repo.go`** — PGTripRepo (Postgres pgx, таблица
-   trips из 0002_trips): Insert (uuid v4 + now()), ListByUser (ORDER BY
-   start_date DESC), Get (нет/чужая → domain.NewNotFound), Update
-   (RowsAffected==0 → NewNotFound), Delete (аналогично), SetCover
-   (аналогично). Сигнатуры 1:1 с TripRepo из internal/repo/interfaces.go.
-2. **`internal/service/trip_service.go`** — tripService (TripService из
-   internal/service/interfaces.go): валидация title non-blank и
-   end_date >= start_date → domain.NewValidation; чужие/нет →
-   domain.NewNotFound (прокидывается из репозитория); Create/Update/Delete/
-   Get/List. Сигнатуры и TripPayload 1:1 с контрактом.
-3. **`internal/api/handlers/trip_handler.go`** — TripHandler: GET/POST
-   /trips, GET/PUT/DELETE /trips/{id} (chi-параметр {id}); JSON — через
-   middleware.WriteJSON, ошибки — через middleware.WriteError; пустой
-   список → []; DELETE → 204. Маршруты подключены к серверу в
-   cmd/server/main.go ПОД auth-middleware (Bearer JWT, 401 без токена).
-
-## Проверки (запущены в этом раунде, все зелёные)
-
-1. **Сборка**: `go build ./...` — exit 0.
-2. **`make backend-test`** (go test ./... -race -cover) — exit 0:
-   - `mytrip/internal/api/handlers` — ok, coverage 96.4%
-   - `mytrip/internal/service` — ok, coverage 82.1%
-   - `mytrip/internal/domain` — ok, 100%
-   - `mytrip/internal/config` — ok, 96%
-   - `mytrip/internal/repo`, `mytrip/cmd/server`, middleware, jwtutil — ok.
-3. **`make backend-lint`**: `gofmt -l .` — чисто; `go vet ./...` — exit 0.
-   golangci-lint в sandbox отсутствует (деградация окружения) — в CI пройдёт.
-4. **Git**: working tree clean, все изменения закоммичены (HEAD f47bea9).
-5. **Runtime**: Postgres не поднят в песочнице (нет DATABASE_URL/JWT_SECRET) —
-   ожидаемое поведение config.Load(); интеграция против живой БД — `make e2e`
-   в CI.
-
-## Unit-тесты
-
-- `internal/service/trip_service_test.go` — мок TripRepo: валидация
-  (пустой title, end < start → 400 validation), NotFound, CRUD-сценарии.
-- `internal/api/handlers/trip_handler_test.go` — httptest + мок TripService:
-  все 5 маршрутов, 400/404/200/201/204, пустой список → [], регистрация
-  роутов.
-- `internal/repo/trip_repo_test.go` — scanTrip (fakeRow) + краевые кейсы.
-
-## Дефектов не найдено.
+Все применимые в sandbox проверки зелёные; недоступные шаги — только degrade окружения (golangci-lint, Postgres/Docker), зафиксированы выше и покрываются CI. Задача переводится в done.

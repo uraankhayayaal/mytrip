@@ -27,6 +27,7 @@ import (
 	"mytrip/internal/jwtutil"
 	"mytrip/internal/repo"
 	"mytrip/internal/service"
+	"mytrip/internal/storage"
 )
 
 // authDeps — зависимости аутентификации (CHAT-07: A7-01).
@@ -89,7 +90,13 @@ func main() {
 	}
 
 	// Trips (CHAT-07: A7-02): TripRepo + TripService + TripHandler под auth-middleware.
-	trips = &tripDeps{trips: service.NewTripService(repo.NewPGTripRepo(pool))}
+	tripRepo := repo.NewPGTripRepo(pool)
+	trips = &tripDeps{trips: service.NewTripService(tripRepo)}
+
+	// Photos (CHAT-07: A7-04): PhotoRepo + StoragePort (S3) + PhotoService + PhotoHandler под auth-middleware.
+	photoRepo := repo.NewPGPhotoRepo(pool)
+	s3Storage := storage.NewS3Storage(s3Client, cfg.S3Bucket, 15*time.Minute)
+	photoService := service.NewPhotoService(tripRepo, photoRepo, s3Storage)
 
 	// chi router
 	r := chi.NewRouter()
@@ -98,13 +105,13 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		handlers.NewAuthHandler(deps.auth).Mount(r)
 		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05).
-		// /trips* — только для авторизованных (A7-02); стоп/фото/экспорт-хендлеры
-		// смонтируются следующими задачами (A7-03..A7-06).
+		// /trips* — только для авторизованных (A7-02); фото — A7-04.
 		r.With(func(next http.Handler) http.Handler {
 			return middleware.Auth(cfg.JWTSecret, next)
 		}).Group(func(r chi.Router) {
 			handlers.NewTripHandler(trips.trips).Mount(r)
-			// TODO(A7-03..A7-04): stops/photos под тем же auth-middleware.
+			handlers.NewPhotoHandler(photoService, s3Storage).Mount(r)
+			// TODO(A7-03/A7-06): stops/export под тем же auth-middleware.
 		})
 	})
 
