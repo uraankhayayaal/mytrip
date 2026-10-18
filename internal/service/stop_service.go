@@ -131,3 +131,5 @@ func (s *stopService) Delete(ctx context.Context, userID, tripID, stopID string)
 	}
 	return s.stops.Delete(ctx, tripID, stopID)
 }
+// newStopID — UUID v4 без внешних зависимостей (аналог photoID).
+func newStopID() string { return photoID() }
