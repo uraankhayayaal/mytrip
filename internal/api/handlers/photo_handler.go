@@ -53,6 +53,13 @@ func (c *compositePhotoService) PresignPut(ctx context.Context, objectKey string
 	return c.Storage.PresignPut(ctx, objectKey)
 }
 
+// Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
+// Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
+// Паттерны — см. photo_handler_mount.go (mountPhotoRoutes).
+func (h *PhotoHandler) Mount(r chi.Router) {
+	mountPhotoRoutes(r, h.impl())
+}
+
 // photoJSON — JSON-представление фото на границе API (frontend Photo).
 type photoJSON struct {
 	ID        string    `json:"id"`
