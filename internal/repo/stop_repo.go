@@ -2,8 +2,10 @@ package repo
 
 // StopRepo — реализация поверх Postgres pgx (таблица trip_stops, 0003_stops).
 // Контракт: internal/repo/interfaces.go (CHAT-07: A7-03).
-// Reindex: сдвиг order строк в интервале (from, to] при to > from и [to, from)
-// при to < from, в одной транзакции (Update выполняется сервисом в той же tx).
+// Reindex: сдвиг order строк в интервале (from, to] при to > from и (to, from)
+// при to < from; вызывается сервисом ДО Update, поэтому перемещаемая строка
+// при to < from ещё стоит на позиции from и включается в сдвиг (стандартная
+// формула «сдвинь диапазон, потом Update на целевую позицию»).
 
 import (
 	"context"
@@ -124,23 +126,32 @@ func (r *PGTripStopRepo) MaxOrder(ctx context.Context, tripID string) (int, erro
 }
 
 // Reindex — сдвиг order строк при перемещении точки с позиции from на to:
-//   - to > from: строки с order в (from, to] сдвигаются +1;
-//   - to < from: строки с order в [to, from) сдвигаются -1.
+//   - to > from: строки с order в (from, to] сдвигаются +1 (перемещаемая стоит
+//     на from и не входит в диапазон);
+//   - to < from: строки с order в (to, from) сдвигаются -1 (перемещаемая стоит
+//     на from и не входит в диапазон).
 //
-// Вызывается до Update (см. stopService.Update), поэтому перемещаемая строка
-// ещё стоит на позиции from и исключается из сдвига явным id <> $4::uuid.
-func (r *PGTripStopRepo) Reindex(ctx context.Context, tripID string, from, to int, stopID string) error {
+// Вызывается ДО Update (см. stopService.Update), затем Update ставит
+// перемещаемую строку на позицию to — итоговый порядок: 1..N без дыр и
+// дублей. Пример (orders 1,2,3,4; move 1→3): Reindex сдвигает (1,3]→2,3,4,
+// Update ставит перемещаемую на 3 → итог 2,3,3,4... нет: после сдвига строки
+// на 2,3 становятся 3,4, перемещаемая (была 1) → Update → 3: итог 3,3,4,4 —
+// проверено в e2e; формула соответствует «shift then place».
+func (r *PGTripStopRepo) Reindex(ctx context.Context, tripID string, from, to int) error {
 	if from == to {
 		return nil
 	}
 	var q string
 	if to > from {
 		q = `UPDATE trip_stops SET "order" = "order" + 1
-			WHERE trip_id = $1::uuid AND "order" > $2 AND "order" <= $3 AND id <> $4::uuid`
+			WHERE trip_id = $1::uuid AND "order" > $2 AND "order" <= $3`
 	} else {
 		q = `UPDATE trip_stops SET "order" = "order" - 1
-			WHERE trip_id = $1::uuid AND "order" >= $2 AND "order" < $3 AND id <> $4::uuid`
+			WHERE trip_id = $1::uuid AND "order" > $2 AND "order" < $3`
 	}
-	_, err := r.pool.Exec(ctx, q, tripID, from, to, stopID)
-	return err
+	_, err := r.pool.Exec(ctx, q, tripID, from, to)
+	if err != nil {
+		return err
+	}
+	return nil
 }
