@@ -2,7 +2,7 @@ package handlers
 
 // PhotoHandler — CRUD /trips/{id}/photos + presign (CHAT-07: A7-04).
 // Контракт: internal/api/handlers/handlers.go (PhotoHandler).
-// Маршруты (относительно /api/v1) — см. photo_handler_mount.go.
+// Маршруты (относительно /api/v1) — см. mountPhotoRoutes ниже.
 // JSON — через middleware.WriteJSON; ошибки — через middleware.WriteError.
 
 import (
@@ -23,41 +23,33 @@ import (
 // photoHandler — реализация PhotoHandler (identity-реестр, как в tripHandler).
 type photoHandler struct {
 	photos service.PhotoService
-	svc    *compositePhotoService
+	storage service.StoragePort
 }
 
 // photoHandlers — реестр: ключ *PhotoHandler, значение — внутренняя реализация.
 var photoHandlers = make(map[*PhotoHandler]*photoHandler)
 
 // NewPhotoHandler — конструктор PhotoHandler.
-// photos — PhotoService; presign — StoragePort (порт presign-URL'ов).
-func NewPhotoHandler(photos service.PhotoService, presign service.StoragePort) *PhotoHandler {
+// photos — PhotoService; storage — StoragePort (presign + delete объекта).
+func NewPhotoHandler(photos service.PhotoService, storage service.StoragePort) *PhotoHandler {
 	h := &PhotoHandler{}
-	photoHandlers[h] = &photoHandler{
-		photos: photos,
-		svc:    &compositePhotoService{PhotoService: photos, Storage: presign},
-	}
+	photoHandlers[h] = &photoHandler{photos: photos, storage: storage}
 	return h
-}
-
-// compositePhotoService — PhotoService + PresignPut (StoragePort).
-type compositePhotoService struct {
-	service.PhotoService
-	Storage service.StoragePort
-}
-
-func (c *compositePhotoService) PresignPut(ctx context.Context, objectKey string) (string, time.Time, error) {
-	if c.Storage == nil {
-		return "", time.Time{}, domain.NewInternal()
-	}
-	return c.Storage.PresignPut(ctx, objectKey)
 }
 
 // Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
 // Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
-// Паттерны — см. photo_handler_mount.go (mountPhotoRoutes).
 func (h *PhotoHandler) Mount(r chi.Router) {
-	mountPhotoRoutes(r, h.impl())
+	impl := h.impl()
+	// Конкретные маршруты регистрируем до wildcard, чтобы chi выбрал их
+	// с приоритетом (presign, {photoId} — фиксированные сегменты).
+	r.Post("/trips/{id}/photos/presign", impl.presign)
+	r.Delete("/trips/{id}/photos/{photoId}", impl.delete)
+	r.Get("/trips/{id}/photos", impl.list)
+	// Загруженный хвост {tail...} — только для путей длиннее базового
+	// (например, legacy-пути); базовый POST /trips/{id}/photos — без хвоста.
+	r.Post("/trips/{id}/photos", impl.create)
+	_ = impl
 }
 
 // impl — приватный доступ к реализации по identity-ключу.
@@ -65,10 +57,11 @@ func (h *PhotoHandler) impl() *photoHandler {
 	if impl, ok := photoHandlers[h]; ok {
 		return impl
 	}
-	return &photoHandler{photos: nil, svc: nil}
+	// Страховка (не должно произойти при нормальном использовании):
+	// Mount на *PhotoHandler, созданную не через NewPhotoHandler.
+	return &photoHandler{photos: nil, storage: nil}
 }
 
-// photoJSON — JSON-представление фото на границе API (frontend Photo).
 type photoJSON struct {
 	ID        string    `json:"id"`
 	TripID    string    `json:"trip_id"`
@@ -80,19 +73,16 @@ func toPhotoJSON(p *domain.Photo) photoJSON {
 	return photoJSON{ID: p.ID, TripID: p.TripID, URL: p.URL, CreatedAt: p.CreatedAt}
 }
 
-// photoRequest — body POST /trips/{id}/photos: {object_key, url, cover?}.
 type photoRequest struct {
 	ObjectKey string `json:"object_key"`
 	URL       string `json:"url"`
 	Cover     *bool  `json:"cover,omitempty"`
 }
 
-// presignRequest — body POST /trips/{id}/photos/presign: {object_key}.
 type presignRequest struct {
 	ObjectKey string `json:"object_key"`
 }
 
-// presignResponse — ответ presign: {url, expires_at} (frontend PhotoUrlResponse).
 type presignResponse struct {
 	URL       string    `json:"url"`
 	ExpiresAt time.Time `json:"expires_at"`
@@ -127,7 +117,8 @@ func (h *photoHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body.ObjectKey == "" || body.URL == "" {
-		middleware.WriteError(w, domain.NewValidation("object_key and url are required", map[string]any{"field": "object_key"}))
+		middleware.WriteError(w, domain.NewValidation("object_key and url are required",
+			map[string]any{"field": "object_key"}))
 		return
 	}
 	cover := body.Cover != nil && *body.Cover
@@ -152,7 +143,7 @@ func (h *photoHandler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /trips/{id}/photos/presign — pre-signed PUT URL для загрузки фото.
-// Ответ: {url, expires_at}.
+// Ответ: {url, expires_at} (frontend PhotoUrlResponse).
 func (h *photoHandler) presign(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	tripID := chi.URLParam(r, "id")
@@ -167,10 +158,15 @@ func (h *photoHandler) presign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body.ObjectKey == "" {
-		middleware.WriteError(w, domain.NewValidation("object_key is required", map[string]any{"field": "object_key"}))
+		middleware.WriteError(w, domain.NewValidation("object_key is required",
+			map[string]any{"field": "object_key"}))
 		return
 	}
-	url, expiresAt, err := h.svc.PresignPut(r.Context(), body.ObjectKey)
+	if h.storage == nil {
+		middleware.WriteError(w, domain.NewInternal())
+		return
+	}
+	url, expiresAt, err := h.storage.PresignPut(r.Context(), body.ObjectKey)
 	if err != nil {
 		middleware.WriteError(w, toAppError(err))
 		return
@@ -185,4 +181,13 @@ func decodeJSON(r *http.Request, v any) error {
 	}
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20))
 	return dec.Decode(v)
+}
+
+// mountPhotoRoutes — регистрация фото-маршрутов (см. Mount).
+// Вынесено отдельной функцией, чтобы Mount оставался компактным.
+func mountPhotoRoutes(r chi.Router, impl *photoHandler) {
+	r.Post("/trips/{id}/photos/presign", impl.presign)
+	r.Delete("/trips/{id}/photos/{photoId}", impl.delete)
+	r.Get("/trips/{id}/photos", impl.list)
+	r.Post("/trips/{id}/photos", impl.create)
 }
