@@ -76,14 +76,18 @@ func (m *mockStopService) Delete(ctx context.Context, userID, tripID, stopID str
 	return m.deleteErr
 }
 
-// authCtx — контекст с userID (как middleware.Auth).
-func authCtx() context.Context {
-	return middleware.WithAuthContext(context.Background(), "u1")
-}
+var _ service.StopService = (*mockStopService)(nil)
 
-func newTestRouter(m *mockStopService) *chi.Mux {
+// newStopTestRouter — роутер с маршрутами StopHandler и user_id в контексте.
+func newStopTestRouter(svc *mockStopService, userID string) chi.Router {
 	r := chi.NewRouter()
-	NewStopHandler(m).Mount(r)
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+			next.ServeHTTP(w, req.WithContext(ctx))
+		})
+	})
+	NewStopHandler(svc).Mount(r)
 	return r
 }
 
@@ -92,10 +96,9 @@ func TestStopHandler_List_OK(t *testing.T) {
 		ID: "s1", TripID: "t1", Title: "a", Lat: 1.5, Lng: 2.5, Order: 1,
 		CreatedAt: time.Now().UTC().Truncate(time.Second),
 	}}}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
 	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil)
-	req = req.WithContext(authCtx())
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -113,9 +116,9 @@ func TestStopHandler_List_OK(t *testing.T) {
 
 func TestStopHandler_List_Empty(t *testing.T) {
 	m := &mockStopService{listResult: nil}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -130,9 +133,9 @@ func TestStopHandler_List_Empty(t *testing.T) {
 
 func TestStopHandler_List_NotFound(t *testing.T) {
 	m := &mockStopService{listErr: domain.NewNotFound("trip not found")}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -143,10 +146,10 @@ func TestStopHandler_List_NotFound(t *testing.T) {
 
 func TestStopHandler_Create_OK(t *testing.T) {
 	m := &mockStopService{createStop: &domain.Stop{ID: "s1", TripID: "t1", Title: "a", Lat: 1, Lng: 2, Order: 1}}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
 	body := `{"title":"a","description":"d","location":{"lat":1,"lng":2},"visit_date":"2026-01-01T00:00:00Z","order":1}`
-	req := httptest.NewRequest(http.MethodPost, "/trips/t1/stops", strings.NewReader(body)).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodPost, "/trips/t1/stops", strings.NewReader(body))
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -164,10 +167,10 @@ func TestStopHandler_Create_OK(t *testing.T) {
 
 func TestStopHandler_Create_ValidationErr(t *testing.T) {
 	m := &mockStopService{createErr: domain.NewValidation("bad", nil)}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
 	body := `{"title":"","location":{"lat":0,"lng":0}}`
-	req := httptest.NewRequest(http.MethodPost, "/trips/t1/stops", strings.NewReader(body)).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodPost, "/trips/t1/stops", strings.NewReader(body))
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -178,9 +181,9 @@ func TestStopHandler_Create_ValidationErr(t *testing.T) {
 
 func TestStopHandler_Create_InvalidJSON(t *testing.T) {
 	m := &mockStopService{}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodPost, "/trips/t1/stops", strings.NewReader("{invalid")).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodPost, "/trips/t1/stops", strings.NewReader("{invalid"))
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -191,9 +194,9 @@ func TestStopHandler_Create_InvalidJSON(t *testing.T) {
 
 func TestStopHandler_Get_OK(t *testing.T) {
 	m := &mockStopService{getStop: &domain.Stop{ID: "s1", TripID: "t1", Title: "a", Lat: 1, Lng: 2, Order: 1}}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops/s1", nil).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops/s1", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -211,10 +214,10 @@ func TestStopHandler_Get_OK(t *testing.T) {
 
 func TestStopHandler_Update_OK(t *testing.T) {
 	m := &mockStopService{updateStop: &domain.Stop{ID: "s1", TripID: "t1", Title: "new", Lat: 1, Lng: 2, Order: 3}}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
 	body := `{"title":"new","location":{"lat":1,"lng":2},"order":3}`
-	req := httptest.NewRequest(http.MethodPut, "/trips/t1/stops/s1", strings.NewReader(body)).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodPut, "/trips/t1/stops/s1", strings.NewReader(body))
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -232,9 +235,9 @@ func TestStopHandler_Update_OK(t *testing.T) {
 
 func TestStopHandler_Delete_OK(t *testing.T) {
 	m := &mockStopService{deleteErr: nil}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodDelete, "/trips/t1/stops/s1", nil).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodDelete, "/trips/t1/stops/s1", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -245,9 +248,9 @@ func TestStopHandler_Delete_OK(t *testing.T) {
 
 func TestStopHandler_Delete_NotFound(t *testing.T) {
 	m := &mockStopService{deleteErr: domain.NewNotFound("stop not found")}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodDelete, "/trips/t1/stops/missing", nil).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodDelete, "/trips/t1/stops/missing", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -256,13 +259,13 @@ func TestStopHandler_Delete_NotFound(t *testing.T) {
 	}
 }
 
-// toAppError — приватный хелпер handlers; здесь только проверка, что мок-ошибки
-// (не *AppError) не поднимаются через middleware (страховка).
+// TestStopHandler_InternalError — мок возвращает ошибку не из *AppError;
+// handler конвертирует её в 500.
 func TestStopHandler_InternalError(t *testing.T) {
 	m := &mockStopService{listErr: errors.New("boom")}
-	r := newTestRouter(m)
+	r := newStopTestRouter(m, "u1")
 
-	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil).WithContext(authCtx())
+	req := httptest.NewRequest(http.MethodGet, "/trips/t1/stops", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
