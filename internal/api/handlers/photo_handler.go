@@ -12,10 +12,12 @@ package handlers
 // JSON — через middleware.WriteJSON; ошибки — через middleware.WriteError.
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -32,10 +34,6 @@ type photoServiceWithPresign interface {
 	Delete(ctx context.Context, userID, tripID, photoID string) error
 	PresignPut(ctx context.Context, objectKey string) (string, time.Time, error)
 }
-
-import "context"
-
-import "time"
 
 // photoHandler — реализация PhotoHandler (identity-реестр, как в tripHandler).
 type photoHandler struct {
