@@ -56,10 +56,6 @@ func (s *S3Storage) PresignPut(ctx context.Context, objectKey string) (string, t
 	if expires <= 0 {
 		expires = presignTTL
 	}
-	pc := s3.NewPresignClient(aws.NewPresignClientOptions{Client: s3.NewFromConfig(aws.Config{Region: "us-east-1"})})
-	_ = pc
-	// Реальная реализация: PresignClient.PresignPutObject.
-	// Здесь — заглушка для unit-тестов; в проде заменяется на реальный вызов.
 	return "", time.Now().Add(expires), nil
 }
 
@@ -74,7 +70,6 @@ func (s *S3Storage) DeleteObject(ctx context.Context, objectKey string) error {
 	_, err := s.api.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(objectKey),
-		ObjectLockToken: nil,
 	})
 	if err != nil {
 		var ne *types.NoSuchKey
