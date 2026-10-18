@@ -38,7 +38,7 @@ type photoServiceWithPresign interface {
 // photoHandler — реализация PhotoHandler (identity-реестр, как в tripHandler).
 type photoHandler struct {
 	photos service.PhotoService
-	svc    photoServiceWithPresign
+	svc    *compositePhotoService
 }
 
 // photoHandlers — реестр: ключ *PhotoHandler, значение — внутренняя реализация.
@@ -87,7 +87,6 @@ func (h *PhotoHandler) impl() *photoHandler {
 	}
 	return &photoHandler{photos: nil, svc: nil}
 }
-
 // photoJSON — JSON-представление фото на границе API (frontend Photo).
 type photoJSON struct {
 	ID        string    `json:"id"`
