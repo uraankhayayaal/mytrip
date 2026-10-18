@@ -13,12 +13,12 @@
 | gofmt | `gofmt -l .` | **Passed** (пустой вывод) |
 | go vet | `go vet ./...` | **Passed** (exit 0) |
 | golangci-lint | `golangci-lint run` | **DEGRADED**: бинарь отсутствует в песочнице (`command not found`) — не дефект кода |
-| Runtime (`make run` → /healthz 200) | `ReadAppLogs` (go run ./cmd/server) | **DEGRADED**: в песочнице нет DATABASE_URL/JWT_SECRET (config: missing required env, exit 1) и нет Postgres 5432 (connection refused при наличии env) — инфраструктурное ограничение, не дефект кода; покрывается `make e2e` в CI |
-| E2E (`make e2e`) | — | **DEGRADED**: Docker недоступен в песочнице (`docker: not found`) — compose-стек (Postgres/MinIO/nginx) поднять нельзя |
+| Runtime (`make run` → /healthz 200) | `ReadAppLogs` (go run ./cmd/server) | **DEGRADED**: в песочнице нет Postgres и Docker (`docker: not found`, apt-get без прав root); сервер падает на `migrate: dial tcp 127.0.0.1:5432: connect: connection refused` — миграции запускаются до старта HTTP-сервера. Не дефект кода; покрывается `make e2e` в CI |
+| E2E (`make e2e`) | — | **DEGRADED**: Docker недоступен в песочнице — compose-стек (Postgres/MinIO/nginx) поднять нельзя |
 
 ## Сверка с контрактом (комментарии-контракты в коде)
 
-1. **DI-композиция в cmd/server/main.go** — выполнена (коммит bf2d548):
+1. **DI-композиция в cmd/server/main.go** — выполнена:
    - `pgxpool.New(ctx, cfg.DatabaseURL)` → `pool`;
    - репозитории: `repo.NewPGUserRepo/NewPGRefreshTokenRepo/NewPGTripRepo/NewPGStopRepo/NewPGPhotoRepo`;
    - `s3.NewFromConfig` (endpoint `cfg.S3Endpoint`, static credentials) → `storage.NewS3Storage` (StoragePort);
@@ -30,7 +30,7 @@
 3. **Маршруты**: `authHandler.Mount` — POST /auth/register, /auth/login, /auth/refresh, /auth/logout, GET /users/me (публичные). Trip: GET/POST /trips, GET/PUT/DELETE /trips/{id}. Stop: GET/POST /trips/{id}/stops, GET/PUT/DELETE /trips/{id}/stops/{stopId}. Photo: GET/POST /trips/{id}/photos, DELETE /trips/{id}/photos/{photoId}, POST /trips/{id}/photos/presign. Export: GET /trips/{id}/export (под auth). Соответствие контрактам в handlers.go — полное.
 4. **ExportHandler** (`internal/api/handlers/export.go`): CSV header `order,title,description,lat,lng,visit_date`, разделитель `,`, `Content-Disposition: attachment; filename="<slug>.csv"` (slug из title, пусто → trip.csv), visit_date RFC3339, координаты 6 знаков, CSV-экранирование (`,` `\n` `\r` `"`), 404/500 через `middleware.WriteError`.
 
-## Новые unit-тесты (этот раунд)
+## Unit-тесты
 
 `internal/api/handlers/export_test.go` — 6 тестов, все **Passed**:
 - `TestExport_Success` — 200, text/csv, `attachment; filename="trip-title.csv"`, полный CSV-тело (header + 2 строки, RFC3339, 6 знаков); пробел в description → поле в кавычках (поведение csvQuote, зафиксировано в тесте);
@@ -44,17 +44,17 @@
 
 ## Покрытие (go test -cover)
 
-- internal/api/handlers — 55.2% (до раунда 36.1% → +export-тесты)
+- internal/api/handlers — 55.2% (handlers +export-тесты)
 - остальные пакеты: middleware 69.8%, config 96.0%, domain 100.0%, jwtutil 89.7%, service 46.5%, repo 3.2% — ok
 
 ## Runtime
 
 - `go run ./cmd/server` без env: `config: missing required env: [DATABASE_URL JWT_SECRET]` (exit 1) — ожидаемо (контракт config.Load).
-- `go run ./cmd/server` с DATABASE_URL → 127.0.0.1:5432: падение на `migrate: dial tcp 127.0.0.1:5432: connect: connection refused` (exit 1) — **не дефект кода**: в песочнице нет Postgres и Docker (`docker: not found`), миграции запускаются до старта HTTP-сервера. Поведение в CI покрывается `make e2e` (compose up → healthcheck → e2e → down).
+- `go run ./cmd/server` с DATABASE_URL → 127.0.0.1:5432: падение на `migrate: dial tcp 127.0.0.1:5432: connect: connection refused` (exit 1) — **не дефект кода**: в песочнице нет Postgres и Docker (`docker: not found`; установка postgres через apt невозможна — нет прав root), миграции запускаются до старта HTTP-сервера. Поведение в CI покрывается `make e2e` (compose up → healthcheck → e2e → down).
 
 ## Локальный запуск
 
-- Добавлен `.env` (по образцу `.env.example`): POSTGRES_USER/PASSWORD/DB, JWT_SECRET, S3_ENDPOINT/BUCKET/keys, PORT=8080. DATABASE_URL формируется из этих значений (postgres://mytrip:mytrip@localhost:5432/mytrip) — файл используется при `docker compose up` и локальном `make run`; сам файл в git не коммитится (.gitignore).
+- `.env` (по образцу `.env.example`): POSTGRES_USER/PASSWORD/DB, JWT_SECRET, S3_ENDPOINT/BUCKET/keys, PORT=8080. DATABASE_URL формируется из этих значений (postgres://mytrip:mytrip@localhost:5432/mytrip) — файл используется при `docker compose up` и локальном `make run`; сам файл в git не коммитится (.gitignore).
 
 ## Дефекты по контракту
 
