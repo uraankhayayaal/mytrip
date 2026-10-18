@@ -183,7 +183,7 @@ func TestCreatePhotoHandler_Success(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
 		t.Fatalf("json: %v", err)
 	}
-	if res["id"] != "p1" || res["url"] != "https://s3/p1.jpg" || res["trip_id"] != "t1" {
+	if res["id"] != "p1" || res["url"] != "https://s3.example/t1/p1.jpg" || res["trip_id"] != "t1" {
 		t.Fatalf("wrong response: %v", res)
 	}
 }
@@ -242,13 +242,27 @@ func TestCreatePhotoHandler_BadJSON(t *testing.T) {
 }
 
 func TestCreatePhotoHandler_UnknownField(t *testing.T) {
-	svc := &mockPhotoService{}
+	svc := &mockPhotoService{createFn: func(context.Context, string, string, string, string, bool) (*domain.Photo, error) {
+		t.Fatal("service must not be called when body has unknown fields")
+		return nil, nil
+	}}
 	body := bytes.NewBufferString(`{"object_key":"k","url":"u","bogus":1}`)
 	req := httptest.NewRequest(http.MethodPost, "/trips/t1/photos", body)
 	w := httptest.NewRecorder()
 	newPhotoTestRouter(svc, nil, "u1").ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for unknown field, got %d: %s", w.Code, w.Body.String())
+	}
+	var res struct {
+		Err struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+		t.Fatalf("json: %v", err)
+	}
+	if res.Err.Code != domain.ErrCodeValidation {
+		t.Fatalf("expected validation, got %q", res.Err.Code)
 	}
 }
 
