@@ -1,44 +1,50 @@
-# Тестовый отчёт по задаче BEL-01
+# Тест-отчёт — FIX-A7-03-01 (контракт A7-03: updateStop/deleteStop + callers)
 
-## Общее описание
-Задача была реализовать корневой Makefile с целями: help, deps, build, backend-build, frontend-build, test, backend-test, frontend-test, lint, backend-lint, frontend-lint, run, backend-run, frontend-run, e2e.
+## Вердикт: PASS
 
-## Статус прохождения тестов
-Проверка на соответствие контракту: **ПРОЙДЕНО**
+Все 4 пункта объёма задачи выполнены в рабочей ветке `ai/task/FIX-A7-03-01`
+и зафиксированы коммитами: `updateStop(tripId, stopId, p)` →
+`PUT /trips/{tripId}/stops/{stopId}`, `deleteStop(tripId, stopId)` →
+`DELETE /trips/{tripId}/stops/{stopId}`, callers TripDetail/StopForm передают
+tripId, комментарии над функциями актуальны. Бэкенд не тронут.
 
-## Описание проверок
+Контрактные автотесты QA: `frontend/src/api/stops.test.ts` (5 тестов, реальный
+axios с подменённым адаптером — проверяются метод/URL/тело запроса, уходящего в сеть).
 
-### 1. Проверка структуры Makefile
-- Все цели находятся в нужном порядке
-- Все цели имеют комментарии в формате '# help: <описание>'
-- Все цели объявлены .PHONY
+## Пройденные проверки (перепрогнаны в раунде 46, 2026-10-18)
 
-### 2. Проверка соответствия контракту
-- help — автогенерация списка целей из комментариев
-- deps — установка зависимостей
-- build — сборка всего
-- backend-build — сборка бэкенда
-- frontend-build — сборка фронтенда
-- test — тесты всего
-- backend-test — тесты бэкенда
-- frontend-test — тесты фронтенда
-- lint — линт всего
-- backend-lint — gofmt + go vet + golangci-lint
-- frontend-lint — линт фронтенда
-- run — параллельный dev-запуск
-- backend-run — запуск бэкенда
-- frontend-run — запуск фронтенда
-- e2e — самозавершающийся прогон
+| Проверка | Команда | Результат |
+|---|---|---|
+| Сборка frontend | `make frontend-build` | **PASS** (exit 0, vite build ~6.5s) |
+| Линт frontend | `make frontend-lint` (prettier+eslint) | **PASS** (exit 0) |
+| Контрактные тесты A7-03 | `npm --prefix frontend test -- --run src/api/stops.test.ts` | **PASS** 5/5 |
 
-### 3. Проверка команд
-- Все команды соответствуют контракту
+### Детали контрактных тестов (все 5 зелёные)
+- `listStops` → `GET /trips/{tripId}/stops` 200 Stop[] (не тронута)
+- `createStop` → `POST /trips/{tripId}/stops` 201 Stop (не тронута)
+- `updateStop` → `PUT /trips/{tripId}/stops/{stopId}` 200 Stop, тело = StopPayload — **НЕ** `/stops/{stopId}` (старый путь → гарантированный 404)
+- `updateStop('t-2','s-2',p)` → URL `/trips/t-2/stops/s-2` — фиксация сигнатуры (tripId первым)
+- `deleteStop` → `DELETE /trips/{tripId}/stops/{stopId}` 204, возвращает void
 
-## Результат
-Файл Makefile соответствует всем требованиям задачи BEL-01.
+## Ожидаемые падения (по постановке задачи — не блокируют)
 
-## Замечания
-- В процессе тестирования обнаружены проблемы с версиями зависимостей, требующими Go 1.26, но они не влияют на реализацию Makefile.
-- В текущем окружении (Go 1.24.13) невозможно установить зависимости, однако структура Makefile корректна и соответствует контракту.
+`TripDetail.test.tsx` (4) и `StopForm.test.tsx` (1, «вызывает updateStop при
+редактировании») упали на изменении сигнатур — **ожидаемо**, эти тесты
+перепишет задача FIX-A7-03-02; в рамках FIX-A7-03-01 тесты не правились (запрещено ТЗ).
 
-## Заключение
-Makefile реализует все необходимые цели и соответствует контракту задачи BEL-01.
+## Падения вне объёма задачи (не вызваны FIX-A7-03-01)
+
+1. `e2e/auth.spec.ts`, `e2e/trips.spec.ts` — vitest пытается собрать Playwright-e2e
+   (нужен отдельный runner/браузеры + поднятый стек `make e2e`); в sandbox degrades.
+2. Остальные unit-тесты (TripCard/TripsList/Login/TripEdit/Register) падают
+   с `useNavigate() may be used only in the context of a <Router> component` —
+   рендер без MemoryRouter: предсуществующий дефект тестовой обвязки, не зависит от
+   правок A7-03. Не входит в объём FIX-A7-03-01.
+3. backend (`make run`): `go: updates to go.mod needed; go mod tidy` — degrade
+   окружения, не объём задачи (бэкенд не трогать).
+
+## Итог
+
+Критерии приёмки задачи выполнены: `make frontend-build && make frontend-lint` — зелёно;
+клиентские функции updateStop/deleteStop соответствуют контракту A7-03 до последнего
+символа (проверено автотестами). Дефект 404 устранён. Задача переведена в `testing`.
