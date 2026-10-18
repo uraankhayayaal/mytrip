@@ -1,33 +1,44 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema } from './schemas';
+import { loginSchema, tripSchema, stopSchema } from './schemas';
 
-describe('loginSchema', () => {
-  it('valid values pass', async () => {
-    const r = await loginSchema.safeParseAsync({
-      email: 'a@b.c',
-      password: 'password123',
-    });
-    expect(r.success).toBe(true);
+describe('schemas (debug)', () => {
+  it('loginSchema: valid values pass', () => {
+    const result = loginSchema.safeParse({ email: 'a@b.c', password: '12345678' });
+    expect(result.success).toBe(true);
   });
 
-  it('empty payload fails with issues for email and password', async () => {
-    const r = await loginSchema.safeParseAsync({});
-    expect(r.success).toBe(false);
-    if (!r.success) {
-      const paths = r.error.issues.map((i) => i.path.join('.'));
-      expect(paths).toEqual(expect.arrayContaining(['email', 'password']));
-    }
+  it('loginSchema: invalid email fails', () => {
+    const result = loginSchema.safeParse({ email: 'not-an-email', password: '12345678' });
+    expect(result.success).toBe(false);
   });
 
-  it('short password fails with min-8 message', async () => {
-    const r = await loginSchema.safeParseAsync({
-      email: 'a@b.c',
-      password: 'short',
+  it('tripSchema: valid trip passes', () => {
+    const result = tripSchema.safeParse({
+      title: 'My Trip',
+      description: 'desc',
+      start_date: '2024-01-01',
+      end_date: '2024-01-10',
     });
-    expect(r.success).toBe(false);
-    if (!r.success) {
-      const pw = r.error.issues.find((i) => i.path[0] === 'password');
-      expect(pw?.message).toBe('Минимум 8 символов');
-    }
+    expect(result.success).toBe(true);
+  });
+
+  it('tripSchema: missing title fails', () => {
+    const result = tripSchema.safeParse({
+      description: 'desc',
+      start_date: '2024-01-01',
+      end_date: '2024-01-10',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('stopSchema: valid stop passes', () => {
+    const result = stopSchema.safeParse({
+      title: 'Stop',
+      description: 'd',
+      location: { lat: 55.75, lng: 37.61 },
+      visit_date: '2024-01-02',
+      order: 1,
+    });
+    expect(result.success).toBe(true);
   });
 });

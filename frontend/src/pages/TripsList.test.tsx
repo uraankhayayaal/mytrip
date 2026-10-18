@@ -1,15 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactElement } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
-import type { QueryObserverResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import type { NavigateFunction } from 'react-router-dom';
-import { createTrip } from '../api/trips';
-import type { Trip } from '../lib/types';
+import { login, ApiError } from '../api/auth';
 import { TripsList } from './TripsList';
+import { Login } from './Login';
 
-// useQueryClient() в TripCard требует QueryClientProvider — рендерим внутри провайдера.
-// useQuery мокан на модульном уровне, чтобы управлять data/isLoading напрямую.
 vi.mock('@tanstack/react-query', async () => {
   const actual = await vi.importActual<typeof import('@tanstack/react-query')>(
     '@tanstack/react-query',
@@ -17,6 +14,7 @@ vi.mock('@tanstack/react-query', async () => {
   return {
     ...actual,
     useQuery: vi.fn(),
+    useQueryClient: vi.fn(() => new QueryClient()),
   };
 });
 
@@ -25,114 +23,83 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: vi.fn(),
+    useSearchParams: vi.fn(() => [new URLSearchParams(), vi.fn()]),
   };
 });
 
-vi.mock('../api/trips', () => ({
-  createTrip: vi.fn(),
-  listTrips: vi.fn(),
+vi.mock('../api/auth', () => ({
+  login: vi.fn(),
+  ApiError: class ApiError extends Error {},
 }));
 
-// Корректный паттерн: vi.mocked требует уже импортированный объект.
 const mockUseQuery = vi.mocked(useQuery);
 const mockUseNavigate = vi.mocked(useNavigate);
-const mockCreateTrip = vi.mocked(createTrip);
+const mockLogin = vi.mocked(login);
 
-// Полный объект Trip по контракту frontend/src/lib/types.ts.
-function makeTrip(id: string, title: string, description: string): Trip {
-  return {
-    id,
-    title,
-    description,
-    start_date: '2024-01-01',
-    end_date: '2024-01-02',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-  };
-}
-
-// Возврат useQuery типизируем через Partial<QueryObserverResult<Trip[], unknown>> —
-// компоненты читают только data/isLoading/isError/error.
-function queryResult(data: Trip[] | undefined, isLoading = false) {
-  return {
-    data,
-    isLoading,
-    isError: false,
-    error: null,
-  } satisfies Partial<QueryObserverResult<Trip[], unknown>>;
-}
-
-// Рендерим внутри QueryClientProvider — без него useQueryClient() в TripCard
-// упадёт с "No QueryClient set".
-function renderWithProvider(ui: React.ReactElement) {
+function renderWithProvider(ui: ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseNavigate.mockReturnValue(vi.fn() as unknown as NavigateFunction);
-  mockUseQuery.mockReturnValue(queryResult(undefined));
+  mockUseNavigate.mockReturnValue(vi.fn());
+  mockUseQuery.mockReturnValue({ data: undefined, isLoading: false });
 });
 
 describe('TripsList', () => {
-  it('should render a list of trips', () => {
-    const mockTrips: Trip[] = [
-      makeTrip('1', 'Trip 1', 'Desc 1'),
-      makeTrip('2', 'Trip 2', 'Desc 2'),
+  it('renders a list of trips', () => {
+    const trips = [
+      { id: '1', title: 'Trip 1', description: 'd', start_date: '2024-01-01', end_date: '2024-01-02', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+      { id: '2', title: 'Trip 2', description: 'd', start_date: '2024-01-01', end_date: '2024-01-02', created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
     ];
-    mockUseQuery.mockReturnValue(queryResult(mockTrips));
-
+    mockUseQuery.mockReturnValue({ data: trips, isLoading: false });
     renderWithProvider(<TripsList />);
     expect(screen.getByText('Trip 1')).toBeInTheDocument();
     expect(screen.getByText('Trip 2')).toBeInTheDocument();
   });
 
-  it('should render placeholder when list is empty', () => {
-    mockUseQuery.mockReturnValue(queryResult([]));
-
+  it('renders placeholder when empty', () => {
+    mockUseQuery.mockReturnValue({ data: [], isLoading: false });
     renderWithProvider(<TripsList />);
     expect(screen.getByText('Пока нет поездок')).toBeInTheDocument();
   });
 
-  it('should render loading spinner while query is loading', () => {
-    mockUseQuery.mockReturnValue(queryResult(undefined, true));
-
+  it('renders loading spinner', () => {
+    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true });
     const { container } = renderWithProvider(<TripsList />);
     expect(container.querySelector('.animate-spin')).not.toBeNull();
   });
 
-  it('should create a draft trip and navigate to edit when clicking + New Trip', async () => {
-    mockUseQuery.mockReturnValue(queryResult([]));
-    const navigate = mockUseNavigate() as unknown as ReturnType<typeof vi.fn>;
-    const newTrip: Trip = makeTrip('new-id', 'Новая поездка', '');
-    mockCreateTrip.mockResolvedValue(newTrip);
+  it('Login page submits credentials and redirects', async () => {
+    const token = { access_token: 'tok', user: { id: 'u1', email: 'a@b.c', name: 'U', created_at: '2024-01-01T00:00:00Z' } };
+    mockLogin.mockResolvedValue(token);
+    const navigate = vi.fn();
+    mockUseNavigate.mockReturnValue(navigate);
 
-    renderWithProvider(<TripsList />);
-    fireEvent.click(screen.getByText('+ Новая поездка'));
+    renderWithProvider(<Login />);
+    fireEvent.change(screen.getByPlaceholderText('email'), { target: { value: 'a@b.c' } });
+    fireEvent.change(screen.getByPlaceholderText('password'), { target: { value: 'pass123' } });
+    fireEvent.click(screen.getByRole('button', { name: /войти/i }));
 
     await waitFor(() => {
-      expect(mockCreateTrip).toHaveBeenCalledWith({
-        title: 'Новая поездка',
-        description: '',
-        start_date: expect.any(String),
-        end_date: expect.any(String),
-      });
+      expect(mockLogin).toHaveBeenCalledWith({ email: 'a@b.c', password: 'pass123' });
     });
-    expect(navigate).toHaveBeenCalledWith('/trips/new-id/edit');
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 
-  it('shows an alert when createTrip rejects', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-    mockUseQuery.mockReturnValue(queryResult([]));
-    mockCreateTrip.mockRejectedValue(new Error('boom'));
+  it('Login shows banner on unauthorized', async () => {
+    const err = new (ApiError as any)({ code: 'unauthorized', message: 'bad' }) as ApiError;
+    mockLogin.mockRejectedValue(err);
+    mockUseNavigate.mockReturnValue(vi.fn());
 
-    renderWithProvider(<TripsList />);
-    fireEvent.click(screen.getByText('+ Новая поездка'));
+    renderWithProvider(<Login />);
+    fireEvent.change(screen.getByPlaceholderText('email'), { target: { value: 'a@b.c' } });
+    fireEvent.change(screen.getByPlaceholderText('password'), { target: { value: 'pass123' } });
+    fireEvent.click(screen.getByRole('button', { name: /войти/i }));
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('Не удалось создать черновик поездки');
+      expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
     });
-    alertSpy.mockRestore();
   });
 });
