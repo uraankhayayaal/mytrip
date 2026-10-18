@@ -20,18 +20,3 @@ func mountPhotoRoutes(r chi.Router, impl *photoHandler) {
 	r.Get("/trips/{id}/photos/{tail...}", impl.list)
 	r.Post("/trips/{id}/photos/{tail...}", impl.create)
 }
-
-
-// Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
-// Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
-func (h *PhotoHandler) Mount(r chi.Router) {
-	mountPhotoRoutes(r, h.impl())
-}
-
-// impl — приватный доступ к реализации по identity-ключу.
-func (h *PhotoHandler) impl() *photoHandler {
-	if impl, ok := photoHandlers[h]; ok {
-		return impl
-	}
-	return &photoHandler{photos: nil, svc: nil}
-}
