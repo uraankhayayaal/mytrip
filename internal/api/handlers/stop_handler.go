@@ -73,11 +73,11 @@ func toStopJSON(s *domain.Stop) StopJSON {
 
 // stopRequest — DTO запроса на границе API (location:{lat,lng}).
 type stopRequest struct {
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Location    StopLoc `json:"location"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Location    StopLoc   `json:"location"`
 	VisitDate   time.Time `json:"visit_date"`
-	Order       int `json:"order"`
+	Order       int       `json:"order"`
 }
 
 func (b stopRequest) payload() *service.StopPayload {
