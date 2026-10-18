@@ -130,6 +130,18 @@ func (h *tripHandler) create(w http.ResponseWriter, r *http.Request) {
 		middleware.WriteError(w, toAppError(err))
 		return
 	}
+	middleware.WriteJSON(w, http.StatusCreated, toTripJSON(t))
+}
+
+// GET /trips/{id} — поездка по id.
+func (h *tripHandler) get(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.AuthContext(r.Context())
+	tripID := chi.URLParam(r, "id")
+	t, err := h.trips.Get(r.Context(), userID, tripID)
+	if err != nil {
+		middleware.WriteError(w, toAppError(err))
+		return
+	}
 	middleware.WriteJSON(w, http.StatusOK, toTripJSON(t))
 }
 
