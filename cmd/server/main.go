@@ -104,7 +104,8 @@ func main() {
 			return middleware.Auth(cfg.JWTSecret, next)
 		}).Group(func(r chi.Router) {
 			handlers.NewTripHandler(trips.trips).Mount(r)
-			// TODO(A7-03..A7-04): stops/photos под тем же auth-middleware.
+			handlers.NewStopHandler(stops.stops).Mount(r)
+			// TODO(A7-04): photos под тем же auth-middleware.
 		})
 	})
 
