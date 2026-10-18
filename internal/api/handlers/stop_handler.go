@@ -12,6 +12,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -66,7 +67,7 @@ func toStopJSON(s *domain.Stop) StopJSON {
 		VisitDate:   s.VisitDate,
 		Order:       s.Order,
 		CreatedAt:   s.CreatedAt,
-		UpdatedAt:   s.UpdatedAt,
+		UpdatedAt:   s.CreatedAt, // domain.Stop не имеет UpdatedAt — используем CreatedAt как fallback
 	}
 }
 
