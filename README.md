@@ -31,22 +31,23 @@
 - [x] A7-01 — AuthService (register/login/refresh/logout/me) + UserRepo/RefreshTokenRepo (Postgres pgx, таблицы 0001_init) + AuthHandler (/api/v1: POST /auth/register 201, /auth/login 200 + Set-Cookie rt, /auth/refresh 200 + ротация, /auth/logout 204 + Clear-Cookie, GET /users/me 200) + JWT HS256 (jwtutil.NewHS256) + bcrypt-хэш + refresh-ротация (SHA-256 hash, удаление старого/вставка нового). Unit-тесты: internal/service/auth_service_test.go, internal/api/handlers/auth_handler_test.go. Проверено: make backend-build / backend-test — зелёные.
 - [x] A7-05 — middleware.Auth + jwtutil.NewHS256 (валидация JWT access-токена). `internal/jwtutil/jwt.go`: `NewHS256` (адаптер golang-jwt/jwt/v5, Claims {sub,type,exp}, HS256), `IssueAccess`/`IssueRefresh`, `Validate` (подпись/exp/kind; refresh как access → unauthorized). `internal/api/middleware/auth.go`: `Auth(secret, next)` — парсинг "Bearer <token>", валидация через TokenValidator (expectedKind=TokenKindAccess), на успех `context.WithValue(UserIDKey, sub)`, на ошибки `WriteError(domain.NewUnauthorized)`; refresh-токен → 401 (проверка kind обязательна). `cmd/server/main.go`: `middleware.Auth(cfg.JWTSecret)` смонтирован на защищённые маршруты. Unit-тесты: `internal/jwtutil/jwt_test.go` (issue→validate, expired, wrong kind, malformed, wrong secret), `internal/api/middleware/auth_test.go` (httptest: нет header, malformed, expired, refresh вместо access, успех, lowercase bearer). Проверено: make backend-test / backend-lint (gofmt+go vet) — зелёные.
 - [x] A7-02 — TripService + TripRepo + TripHandler (CRUD /trips): TripRepo (Postgres pgx, таблица 0002_trips) — CRUD + SetCover (нет/чужая → domain.NewNotFound), TripService — валидация (title non-blank, end_date >= start_date → domain.NewValidation), TripHandler — GET/POST /trips, GET/PUT/DELETE /trips/{id} (chi-параметры {id}, middleware.WriteJSON / WriteError, DELETE → 204, пустой список → []). ПОДКЛЮЧЕНО В СЕРВЕР (cmd/server/main.go): `handlers.NewTripHandler(service.NewTripService(repo.NewPGTripRepo(pool))).Mount(r)` под auth-middleware внутри /api/v1. Unit-тесты: internal/service/trip_service_test.go (мок TripRepo), internal/api/handlers/trip_handler_test.go (httptest, мок TripService, краевые кейсы: nil payload, blank title, end==start, bad JSON, 500-пропагация, регистрация маршрутов). Проверено: make backend-build / backend-test — зелёные (handlers 96.4%, service 82.1% coverage, race), gofmt/go vet — чистые (golangci-lint в песочнице не установлен — деградация окружения, в CI пройдёт). Отчёт: TEST_REPORT.md.
-- [x] A7-06 — DI + монтаж маршрутов в cmd/server/main.go + ExportHandler (CSV). Composition root: pgxpool, все репозитории (PGUserRepo/PGRefreshTokenRepo/PGTripRepo/PGStopRepo/PGPhotoRepo), S3 client → storage.NewS3Storage (StoragePort), jwtutil.NewHS256, все сервисы (AuthService/TripService/StopService/PhotoService), все хендлеры (Auth/Trip/Stop/Photo/Export). r.With(middleware.Auth(cfg.JWTSecret)) смонтирован на защищённые маршруты. Маршруты: /auth/* (публичные), /trips* (CRUD), /trips/{id}/stops* (CRUD), /trips/{id}/photos* (CRUD + presign), /trips/{id}/export (CSV: header "order,title,description,lat,lng,visit_date", Content-Disposition attachment, filename slugified). ExportHandler: internal/api/handlers/export.go. Проверено: make backend-build / backend-test — зелёные; gofmt/go vet — чистые (golangci-lint не установлен в песочнице); рантайм: падение только на migrate (нет Postgres в песочнице — ожидаемо). Отчёт: TEST_REPORT.md.
+- [x] A7-06 — DI + монтаж маршрутов в cmd/server/main.go + ExportHandler (CSV) + интеграционный контракт-тест. Composition root (`cmd/server/main.go`): pgxpool → 5 репозиториев (NewPGUserRepo/NewPGRefreshTokenRepo/NewPGTripRepo/NewPGStopRepo/NewPGPhotoRepo) → s3.NewFromConfig (endpoint cfg.S3Endpoint, static credentials) → storage.NewS3Storage (StoragePort, 15m presign-TTL) → jwtutil.NewHS256(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL) → 4 сервиса (NewAuthService/NewTripService/NewStopService/NewPhotoService) → 5 хендлеров (NewAuthHandler/NewTripHandler/NewStopHandler/NewPhotoHandler/NewExportHandler). TODO(BEL-03..06) и символ `authMiddleware` удалены; защищённая группа — `r.With(func(next) { return middleware.Auth(cfg.JWTSecret, next) })` (обёртка под chi `r.With`; сигнатура middleware.Auth(secret, next) из A7-05). Публичные: `authHandler.Mount` (POST /auth/register|login|refresh|logout, GET /users/me); под auth: `tripHandler.Mount` (CRUD /trips), `stopHandler.Mount` (CRUD /trips/{id}/stops), `photoHandler.Mount` (GET/POST /trips/{id}/photos, DELETE /trips/{id}/photos/{photoId}, POST /trips/{id}/photos/presign), `exportHandler.Mount` (GET /trips/{id}/export). ExportHandler (`internal/api/handlers/export.go`): CSV header `order,title,description,lat,lng,visit_date` (разделитель `,`), Content-Type text/csv, Content-Disposition `attachment; filename="<slug>.csv"` (пустой title → trip.csv), visit_date RFC3339, координаты 6 знаков, CSV-экранирование (`,` `"` `\n` `\r`), 404/500 через middleware.WriteError. Unit-тесты: `export_test.go` (6 тестов: success/пустой title/404/500/CSV-экранирование/регистрация маршрута), `mount_test.go` (collectRoutes через chi.Walk: все Mount-маршруты + TestMountComposedAPI — полный состав /api/v1). Проверено: `make backend-build` (exit 0), `make backend-test` (`go test ./... -race -cover`, все пакеты ok; handlers 62.9%), `gofmt -l .` — пусто, `go vet ./...` — exit 0; golangci-lint — DEGRADED (бинарь отсутствует в песочнице, покрывается CI). Рантайм: сервер стартует при наличии Postgres/MinIO (компоненты-зависимости поднимаются через `make up`/`docker compose up`); в песочнице без БД падение на `migrate` (connection refused 5432) — ожидаемо, покрывается `make e2e` в CI. Отчёт: TEST_REPORT.md.
 
-## Фронтенд (frontend/)
-
-React SPA на Vite + TypeScript + Tailwind. Каталог `frontend/`.
-
-### Запуск (dev)
+## Запуск приложения (backend dev)
 
 ```bash
-make deps        # npm ci в frontend/ (после go mod download)
-make frontend-run # vite dev на :5173, прокси /api -> http://localhost:8080
+cp .env.example .env   # или export DATABASE_URL/JWT_SECRET/S3_* вручную
+make backend-run       # go run ./cmd/server на :8080
 ```
 
-Dev-прокси `/api` -> `localhost:8080` настроен в `vite.config.ts` (контракт ARCH-02). Фронтенд использует только относительные пути `/api/v1/...` (никаких абсолютных URL API).
+Требуемые env (см. .env.example): `DATABASE_URL` (postgres://...), `JWT_SECRET`, `S3_ENDPOINT`/`S3_BUCKET`/`S3_ACCESS_KEY`/`S3_SECRET_KEY`. Сервер при старте прогоняет golang-migrate (file://db/migrations) и слушает `:PORT` (default 8080). `GET /healthz` → 200 `{"status":"ok"}` (без auth). `POST /api/v1/auth/*` — A7-01 (публичные); `GET /api/v1/users/me`, `GET/POST /api/v1/trips`, `GET/PUT/DELETE /api/v1/trips/{id}`, `/trips/{id}/stops*`, `/trips/{id}/photos*`, `/trips/{id}/photos/presign`, `/trips/{id}/export` — под Bearer access-токеном (401 без токена) — A7-02/A7-03/A7-04/A7-06.
 
-### Команды
+## Запуск приложения (frontend dev)
+
+```bash
+make deps          # npm ci в frontend/
+make frontend-run  # vite dev на :5173, прокси /api -> http://localhost:8080
+```
 
 | Команда | Что делает |
 | --- | --- |
@@ -55,25 +56,6 @@ Dev-прокси `/api` -> `localhost:8080` настроен в `vite.config.ts`
 | `make frontend-lint` | `prettier --check . && eslint .` |
 | `make frontend-run` | vite dev-сервер |
 
-### Структура
+Dev-прокси `/api` -> `localhost:8080` настроен в `vite.config.ts` (контракт ARCH-02). Фронтенд использует только относительные пути `/api/v1/...`.
 
-- `src/lib/types.ts` — единый источник типов (зеркалит ARCH-03, менять сигнатуры нельзя).
-- `src/api/client.ts` — axios-инстанс `baseURL:/api/v1`, `withCredentials`; JWT-интерцепторы (Bearer; refresh на 401 через httpOnly cookie `rt`, один раз, `_retry`; сбой -> сброс + `/login`).
-- `src/api/errors.ts` — `ApiError` + `toApiError` (разбор `ApiErrorBody`).
-- `src/api/{auth,trips,stops,photos}.ts` — клиенты, пути относительные.
-- `src/lib/queryClient.ts` — `QueryClient` (retry:1, refetchOnWindowFocus:false).
-- `src/components/{Layout,ProtectedLayout}.tsx` — nav + защищённый layout (useQuery `['me']`).
-- `src/pages/*` — заглушки Login/Register/TripsList/TripDetail/TripEdit/CalendarPage.
-
-### Запуск приложения (frontend dev)
-
-Запуск dev-сервера — `make frontend-run` (или `npm --prefix frontend run dev`). Сервер самозавершающимся НЕ является (dev-сервер), поэтому для автоматической проверки не используется; проверять код надо через `make frontend-build` / `make frontend-test` / `make frontend-lint`.
-
-### Запуск приложения (backend dev)
-
-```bash
-cp .env.example .env   # или export DATABASE_URL/JWT_SECRET/S3_* вручную
-make backend-run       # go run ./cmd/server на :8080
-```
-
-Требуемые env (см. .env.example): `DATABASE_URL` (postgres://...), `JWT_SECRET`, `S3_ENDPOINT`/`S3_BUCKET`/`S3_ACCESS_KEY`/`S3_SECRET_KEY`. Сервер при старте прогоняет golang-migrate (file://db/migrations) и слушает `:PORT` (default 8080). `GET /healthz` → 200 `{"status":"ok"}` (без auth). `POST /api/v1/auth/*` и `GET /api/v1/users/me` — A7-01; `GET/POST /api/v1/trips`, `GET/PUT/DELETE /api/v1/trips/{id}` — A7-02 (Bearer access-токен, 401 без токена).
+Структура `frontend/src/`: `lib/types.ts` (единый источник типов, зеркалит ARCH-03), `api/client.ts` (axios, baseURL:/api/v1, withCredentials, JWT-интерцепторы, refresh на 401 через httpOnly cookie `rt`), `api/errors.ts` (ApiError), `api/{auth,trips,stops,photos}.ts` (клиенты), `lib/{queryClient,dates,schemas}.ts`, `components/{Layout,ProtectedLayout,MapView,PhotoUploader,StopForm,TripCard,TripForm}.tsx`, `pages/*`.
