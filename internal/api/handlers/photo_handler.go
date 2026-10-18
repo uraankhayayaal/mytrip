@@ -6,6 +6,7 @@ package handlers
 // JSON — через middleware.WriteJSON; ошибки — через middleware.WriteError.
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
