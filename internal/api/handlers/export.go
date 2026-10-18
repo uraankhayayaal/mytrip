@@ -14,28 +14,22 @@ package handlers
 import (
 	"bytes"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 
 	"mytrip/internal/api/middleware"
-	"mytrip/internal/domain"
 	"mytrip/internal/service"
 )
 
-// ExportHeader — заголовочная строка CSV (фиксированный контракт).
-const ExportHeader = "order,title,description,lat,lng,visit_date"
+// exportHeader — заголовочная строка CSV (фиксированный контракт).
+const exportHeader = "order,title,description,lat,lng,visit_date"
 
-// DefaultExportFilename — имя файла по умолчанию, если title пуст/невозможно slug-изировать.
-const DefaultExportFilename = "trip.csv"
+// defaultExportFilename — имя файла по умолчанию, если title пуст/невозможно slug-изировать.
+const defaultExportFilename = "trip.csv"
 
-// ExportHandler — реализация контракта из handlers.go.
-type ExportHandler struct {
-	trips service.TripService
-	stops service.StopService
-}
-
-// NewExportHandler — конструктор ExportHandler.
+// NewExportHandler — конструктор ExportHandler (реализация контракта из handlers.go).
 func NewExportHandler(trips service.TripService, stops service.StopService) *ExportHandler {
 	return &ExportHandler{trips: trips, stops: stops}
 }
@@ -64,18 +58,18 @@ func (h *ExportHandler) export(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(ExportHeader)
+	buf.WriteString(exportHeader)
 	buf.WriteByte('\n')
 	for _, s := range stops {
-		buf.WriteString(csvField(s.Order))
+		buf.WriteString(strconv.Itoa(s.Order))
 		buf.WriteByte(',')
 		buf.WriteString(csvQuote(s.Title))
 		buf.WriteByte(',')
 		buf.WriteString(csvQuote(s.Description))
 		buf.WriteByte(',')
-		buf.WriteString(floatField(s.Location.Lat))
+		buf.WriteString(formatFloat(s.Lat))
 		buf.WriteByte(',')
-		buf.WriteString(floatField(s.Location.Lng))
+		buf.WriteString(formatFloat(s.Lng))
 		buf.WriteByte(',')
 		buf.WriteString(s.VisitDate.Format("2006-01-02T15:04:05Z07:00"))
 		buf.WriteByte('\n')
@@ -87,19 +81,19 @@ func (h *ExportHandler) export(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(buf.Bytes())
 }
 
-// exportFilename — имя файла: slug-изированный title + ".csv"; если пуст — DefaultExportFilename.
+// exportFilename — имя файла: slug-изированный title + ".csv"; если пуст — defaultExportFilename.
 func exportFilename(title string) string {
 	slug := slugify(title)
 	if slug == "" {
-		return DefaultExportFilename
+		return defaultExportFilename
 	}
 	return slug + ".csv"
 }
 
-// slugify — транслитерация ASCII-совместимого slug'а: заглавные в нижние, пробелы/не-alnum → "-",
-// последовательные дефисы схлопываются, края обрезаются. Пустой ввод → "".
+// slugify — ASCII-slug: заглавные → строчные, non-alnum → "-", последовательные
+// дефисы схлопываются, края обрезаются. Пустой ввод → "".
 func slugify(s string) string {
-	run := strings.Builder{}
+	var run strings.Builder
 	dash := true
 	for _, r := range s {
 		switch {
@@ -116,105 +110,20 @@ func slugify(s string) string {
 			}
 		}
 	}
-	out := strings.TrimRight(run.String(), "-")
-	return out
+	return strings.TrimRight(run.String(), "-")
 }
 
-// csvField — int → строка (без кавычек).
-func csvField(n int) string {
-	b := make([]byte, 0, 12)
-	if n == 0 {
-		return "0"
-	}
-	neg := n < 0
-	if neg {
-		n = -n
-	}
-	for n > 0 {
-		b = append([]byte{byte('0' + n%10)}, b...)
-		n /= 10
-	}
-	if neg {
-		b = append([]byte{'-'}, b...)
-	}
-	return string(b)
+// formatFloat — float64 → строка без экспоненты (strconv.FormatFloat 'g' может дать 1e-07;
+// используем 'f' с precision 6 — для координат достаточно, без хвостовых нулей).
+func formatFloat(f float64) string {
+	return strconv.FormatFloat(f, 'f', 6, 64)
 }
 
-// floatField — float64 → строка в минимальном каноническом виде (без экспоненты, без хвостового ".0").
-func floatField(f float64) string {
-	b := make([]byte, 0, 24)
-	neg := f < 0
-	if neg {
-		f = -f
-	}
-	ip := int64(f)
-	fr := f - float64(ip)
-	// Округляем дробную часть до 12 знаков.
-	const digits = 12
-	frac := make([]byte, 0, digits)
-	for i := 0; i < digits; i++ {
-		fr *= 10
-		d := int64(fr)
-		if d < 0 {
-			d = 0
-		}
-		frac = append(frac, byte('0'+d))
-		fr -= float64(d)
-		if fr < 1e-9 {
-			break
-		}
-	}
-	// Сокращаем хвостовые нули.
-	end := len(frac)
-	for end > 0 && frac[end-1] == '0' {
-		end--
-	}
-	if neg {
-		b = append(b, '-')
-	}
-	for _, c := range strconvItoa(ip) {
-		b = append(b, c)
-	}
-	if end > 0 {
-		b = append(b, '.')
-		b = append(b, frac[:end]...)
-	}
-	return string(b)
-}
-
-// strconvItoa — int64 → []byte (без импорта strconv ради компактности).
-func strconvItoa(n int64) []byte {
-	if n == 0 {
-		return []byte("0")
-	}
-	neg := n < 0
-	if neg {
-		n = -n
-	}
-	b := make([]byte, 0, 20)
-	for n > 0 {
-		b = append([]byte{byte('0' + n%10)}, b...)
-		n /= 10
-	}
-	if neg {
-		b = append([]byte{'-'}, b...)
-	}
-	return b
-}
-
-// csvQuote — экранирует строку для CSV: кавычки удваиваются, само поле
-// обёрнуто в кавычки если содержит "," "\n" "\r" или "\""; иначе возвращается как есть.
+// csvQuote — экранирует строку для CSV: кавычки удваиваются, само поле обёрнуто
+// в кавычки, если содержит "," "\n" "\r" или "\""; иначе возвращается как есть.
 func csvQuote(s string) string {
 	if !strings.ContainsAny(s, `,\"\n\r`) {
 		return s
 	}
 	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
-}
-
-// toAppError — оборачивает произвольную ошибку в *domain.AppError (500 при не-AppError).
-func toAppError(err error) *domain.AppError {
-	if ae, ok := err.(*domain.AppError); ok {
-		return ae
-	}
-	return domain.NewInternal()
 }
