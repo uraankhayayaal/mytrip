@@ -110,6 +110,7 @@ func main() {
 			return middleware.Auth(cfg.JWTSecret, next)
 		}).Group(func(r chi.Router) {
 			handlers.NewTripHandler(trips.trips).Mount(r)
+			handlers.NewPhotoHandler(photoService, s3Storage).Mount(r)
 			// TODO(A7-03/A7-06): stops/export под тем же auth-middleware.
 		})
 	})
