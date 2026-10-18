@@ -9,6 +9,8 @@ package handlers
 //	DELETE /trips/{id}/photos/{photoId} → 204
 //	POST   /trips/{id}/photos/presign   → 200 {url, expires_at} (frontend PhotoUrlResponse)
 
+import "github.com/go-chi/chi/v5"
+
 // mountPhotoRoutes — регистрация фото-маршрутов на chi router.
 func mountPhotoRoutes(r chi.Router, impl *photoHandler) {
 	r.Post("/trips/{id}/photos/presign", impl.presign)
