@@ -10,6 +10,8 @@ package handlers
 //   err: 404 (чужая/нет), 500 — через middleware.WriteError.
 //
 // Реализация: CSV формируется поверх StopService.List (ORDER BY order ASC).
+// Конструктор NewExportHandler регистрирует приватную реализацию в identity-реестре
+// (аналогично TripHandler, т.к. контрактный ExportHandler — пустой struct).
 
 import (
 	"bytes"
@@ -29,19 +31,39 @@ const exportHeader = "order,title,description,lat,lng,visit_date"
 // defaultExportFilename — имя файла по умолчанию, если title пуст/невозможно slug-изировать.
 const defaultExportFilename = "trip.csv"
 
-// NewExportHandler — конструктор ExportHandler (реализация контракта из handlers.go).
+// exportHandlerImpl — приватная реализация с зависимостями.
+type exportHandlerImpl struct {
+	trips service.TripService
+	stops service.StopService
+}
+
+// exportHandlers — identity-реестр: ключ *ExportHandler → реализация.
+var exportHandlers = make(map[*ExportHandler]*exportHandlerImpl)
+
+// NewExportHandler — конструктор ExportHandler.
 func NewExportHandler(trips service.TripService, stops service.StopService) *ExportHandler {
-	return &ExportHandler{trips: trips, stops: stops}
+	h := &ExportHandler{}
+	exportHandlers[h] = &exportHandlerImpl{trips: trips, stops: stops}
+	return h
 }
 
 // Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
 // Роут вешается ПОД auth-middleware (см. cmd/server/main.go).
 func (h *ExportHandler) Mount(r chi.Router) {
-	r.Get("/trips/{id}/export", h.export)
+	impl := h.impl()
+	r.Get("/trips/{id}/export", impl.export)
+}
+
+// impl — приватный доступ к реализации по identity-ключу.
+func (h *ExportHandler) impl() *exportHandlerImpl {
+	if impl, ok := exportHandlers[h]; ok {
+		return impl
+	}
+	return &exportHandlerImpl{}
 }
 
 // export — GET /trips/{id}/export.
-func (h *ExportHandler) export(w http.ResponseWriter, r *http.Request) {
+func (h *exportHandlerImpl) export(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	tripID := chi.URLParam(r, "id")
 
@@ -113,8 +135,7 @@ func slugify(s string) string {
 	return strings.TrimRight(run.String(), "-")
 }
 
-// formatFloat — float64 → строка без экспоненты (strconv.FormatFloat 'g' может дать 1e-07;
-// используем 'f' с precision 6 — для координат достаточно, без хвостовых нулей).
+// formatFloat — float64 → строка без экспоненты, precision 6 (достаточно для координат).
 func formatFloat(f float64) string {
 	return strconv.FormatFloat(f, 'f', 6, 64)
 }
