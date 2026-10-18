@@ -1,5 +1,4 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';import { zodResolver } from '@hookform/resolvers/zod';
 import type { TripPayload } from '../lib/types';
 import { tripSchema, type TripInput } from '../lib/schemas';
 import { useNavigate } from 'react-router-dom';
@@ -16,10 +15,12 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
     defaultValues: initial,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const values = Object.fromEntries(data.entries()) as unknown as TripInput;
     try {
-      await onSubmit(data as TripPayload);
+      await onSubmit(values as TripPayload);
     } catch (err) {
       // Ошибка перехватывается в вызывающем компоненте’s mutation.onSettled или через try-catch
       throw err;
