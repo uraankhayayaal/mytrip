@@ -23,9 +23,9 @@ const presignTTL = 15 * time.Minute
 
 // S3Storage — реализация StoragePort поверх s3.Client.
 type S3Storage struct {
-	client  *s3.Client
-	bucket  string
-	ttl     time.Duration
+	client *s3.Client
+	bucket string
+	ttl    time.Duration
 }
 
 var _ service.StoragePort = (*S3Storage)(nil)

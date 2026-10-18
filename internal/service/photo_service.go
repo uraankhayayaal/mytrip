@@ -108,4 +108,3 @@ func (s *photoService) Delete(ctx context.Context, userID, tripID, photoID strin
 	}
 	return nil
 }
-

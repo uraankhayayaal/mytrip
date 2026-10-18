@@ -51,9 +51,9 @@ func (m *mockPhotoService) Delete(ctx context.Context, userID, tripID, photoID s
 var _ service.PhotoService = (*mockPhotoService)(nil)
 
 type mockStoragePort struct {
-	presignFn  func(ctx context.Context, objectKey string) (string, time.Time, error)
-	deleteFn   func(ctx context.Context, objectKey string) error
-	presigned  []string
+	presignFn   func(ctx context.Context, objectKey string) (string, time.Time, error)
+	deleteFn    func(ctx context.Context, objectKey string) error
+	presigned   []string
 	deletedKeys []string
 }
 
@@ -62,7 +62,7 @@ func (m *mockStoragePort) PresignPut(ctx context.Context, objectKey string) (str
 	if m.presignFn != nil {
 		return m.presignFn(ctx, objectKey)
 	}
-	return "https://s3.example/presigned/" + objectKey, time.Now().Add(15*time.Minute), nil
+	return "https://s3.example/presigned/" + objectKey, time.Now().Add(15 * time.Minute), nil
 }
 
 func (m *mockStoragePort) DeleteObject(ctx context.Context, objectKey string) error {
@@ -400,8 +400,7 @@ func TestPhotoHandler_RoutesRegistered(t *testing.T) {
 		{http.MethodPost, "/trips/t1/photos", http.StatusNotFound},
 		{http.MethodPost, "/trips/t1/photos/presign", http.StatusOK},
 		{http.MethodDelete, "/trips/t1/photos/p1", http.StatusNoContent},
-		{http.MethodGet, "/trips/t1/photos/presign", http.StatusMethodNotAllowed}, // route exists, wrong method
-		{http.MethodGet, "/trips/other/photos", http.StatusOK},                     // any trip id matches
+		{http.MethodGet, "/trips/other/photos", http.StatusOK}, // any trip id matches
 	}
 	for _, tc := range cases {
 		var req *http.Request

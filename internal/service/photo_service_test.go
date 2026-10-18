@@ -55,7 +55,7 @@ func (m *mockStorage) PresignPut(ctx context.Context, objectKey string) (string,
 	if m.presignFn != nil {
 		return m.presignFn(ctx, objectKey)
 	}
-	return "https://s3.example/presigned/" + objectKey, time.Now().Add(15*time.Minute), nil
+	return "https://s3.example/presigned/" + objectKey, time.Now().Add(15 * time.Minute), nil
 }
 
 func (m *mockStorage) DeleteObject(ctx context.Context, objectKey string) error {
