@@ -90,12 +90,13 @@ func main() {
 	}
 
 	// Trips (CHAT-07: A7-02): TripRepo + TripService + TripHandler под auth-middleware.
-	trips = &tripDeps{trips: service.NewTripService(repo.NewPGTripRepo(pool))}
+	tripRepo := repo.NewPGTripRepo(pool)
+	trips = &tripDeps{trips: service.NewTripService(tripRepo)}
 
 	// Photos (CHAT-07: A7-04): PhotoRepo + StoragePort (S3) + PhotoService + PhotoHandler под auth-middleware.
 	photoRepo := repo.NewPGPhotoRepo(pool)
 	s3Storage := storage.NewS3Storage(s3Client, cfg.S3Bucket, 15*time.Minute)
-	photoService := service.NewPhotoService(trips.trips, photoRepo, s3Storage)
+	photoService := service.NewPhotoService(tripRepo, photoRepo, s3Storage)
 
 	// chi router
 	r := chi.NewRouter()
@@ -109,7 +110,6 @@ func main() {
 			return middleware.Auth(cfg.JWTSecret, next)
 		}).Group(func(r chi.Router) {
 			handlers.NewTripHandler(trips.trips).Mount(r)
-			handlers.NewPhotoHandler(photoService, s3Storage).Mount(r)
 			// TODO(A7-03/A7-06): stops/export под тем же auth-middleware.
 		})
 	})
