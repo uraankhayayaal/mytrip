@@ -1,50 +1,40 @@
-# Тест-отчёт — FIX-A7-03-01 (контракт A7-03: updateStop/deleteStop + callers)
+# TEST_REPORT.md — FIX-A7-03-01
 
-## Вердикт: PASS
+## Статус: PASS (приёмка повторного раунда)
 
-Все 4 пункта объёма задачи выполнены в рабочей ветке `ai/task/FIX-A7-03-01`
-и зафиксированы коммитами: `updateStop(tripId, stopId, p)` →
-`PUT /trips/{tripId}/stops/{stopId}`, `deleteStop(tripId, stopId)` →
-`DELETE /trips/{tripId}/stops/{stopId}`, callers TripDetail/StopForm передают
-tripId, комментарии над функциями актуальны. Бэкенд не тронут.
+Задача: привести клиентские функции updateStop/deleteStop в frontend к бэкенд-контракту A7-03 (PUT/DELETE `/trips/{tripId}/stops/{stopId}`), устранить гарантированный 404. Бэкенд не трогать.
 
-Контрактные автотесты QA: `frontend/src/api/stops.test.ts` (5 тестов, реальный
-axios с подменённым адаптером — проверяются метод/URL/тело запроса, уходящего в сеть).
+## Верификация по объёму (сверено с кодом)
 
-## Пройденные проверки (перепрогнаны в раунде 46, 2026-10-18)
+1. `frontend/src/api/stops.ts` — PASS
+   - `updateStop(tripId, stopId, p)`: `api.put<Stop>(`/trips/${tripId}/stops/${stopId}`, p)` → `Promise<Stop>` (200). Соответствует контракту.
+   - `deleteStop(tripId, stopId)`: `api.delete(`/trips/${tripId}/stops/${stopId}`)` → `Promise<void>` (204). Соответствует контракту.
+   - Комментарии актуальны: `// PUT /trips/{tripId}/stops/{stopId} -> 200 Stop (контракт A7-03)` / `// DELETE ... -> 204`.
+   - `listStops`/`createStop` не тронуты.
+2. `frontend/src/pages/TripDetail.tsx` — PASS
+   - `updateStopMut.mutationFn`: `updateStop(id!, stopId, payload)`.
+   - `deleteStopMut.mutationFn`: `deleteStop(id!, stopId)`.
+   - `onSuccess`: invalidateStops по ключу `['stops', id]` — сохранён.
+3. `frontend/src/components/StopForm.tsx` — PASS
+   - Режим редактирования: `await updateStop(tripId, initial.id, payload)`; `tripId` приходит через `StopFormProps`.
+   - `createStop` не тронут.
+4. `frontend/src/lib/types.ts` — `StopPayload` не тронут, совпадает со `StopJSON`.
+
+## Результаты приёмки (повторный раунд)
 
 | Проверка | Команда | Результат |
 |---|---|---|
-| Сборка frontend | `make frontend-build` | **PASS** (exit 0, vite build ~6.5s) |
-| Линт frontend | `make frontend-lint` (prettier+eslint) | **PASS** (exit 0) |
-| Контрактные тесты A7-03 | `npm --prefix frontend test -- --run src/api/stops.test.ts` | **PASS** 5/5 |
+| Сборка | `make frontend-build` | PASS (exit 0, vite build ✓, 211 modules) |
+| Стиль | `make frontend-lint` (prettier+eslint) | PASS (exit 0) |
+| Контрактные тесты A7-03 | `npx vitest run src/api/stops.test.ts` | PASS 5/5 (PUT/DELETE пути, 200/204, StopPayload-тело, сигнатуры) |
 
-### Детали контрактных тестов (все 5 зелёные)
-- `listStops` → `GET /trips/{tripId}/stops` 200 Stop[] (не тронута)
-- `createStop` → `POST /trips/{tripId}/stops` 201 Stop (не тронута)
-- `updateStop` → `PUT /trips/{tripId}/stops/{stopId}` 200 Stop, тело = StopPayload — **НЕ** `/stops/{stopId}` (старый путь → гарантированный 404)
-- `updateStop('t-2','s-2',p)` → URL `/trips/t-2/stops/s-2` — фиксация сигнатуры (tripId первым)
-- `deleteStop` → `DELETE /trips/{tripId}/stops/{stopId}` 204, возвращает void
+Git: рабочее дерево чистое (`git status --porcelain` пусто), правки закоммичены (HEAD fba398a).
 
-## Ожидаемые падения (по постановке задачи — не блокируют)
+## Ожидаемые падения (не блокируют приёмку задачи, по ТЗ не трогать)
 
-`TripDetail.test.tsx` (4) и `StopForm.test.tsx` (1, «вызывает updateStop при
-редактировании») упали на изменении сигнатур — **ожидаемо**, эти тесты
-перепишет задача FIX-A7-03-02; в рамках FIX-A7-03-01 тесты не правились (запрещено ТЗ).
+- `TripDetail.test.tsx` / `StopForm.test.tsx` (тест «updateStop при редактировании») — сигнатуры `updateStop/deleteStop` изменились; тесты перепишет задача FIX-A7-03-02. В финале эпика весь пакет должен быть зелёным.
+- Деградации окружения вне объёма задачи (зафиксированы ранее): e2e-спеки собираются vitest'ом вместо playwright-runner (покрывается `make e2e` в CI); backend `go mod tidy` (go.mod degrade, бэкенд не в объёме задачи).
 
-## Падения вне объёма задачи (не вызваны FIX-A7-03-01)
+## Вывод
 
-1. `e2e/auth.spec.ts`, `e2e/trips.spec.ts` — vitest пытается собрать Playwright-e2e
-   (нужен отдельный runner/браузеры + поднятый стек `make e2e`); в sandbox degrades.
-2. Остальные unit-тесты (TripCard/TripsList/Login/TripEdit/Register) падают
-   с `useNavigate() may be used only in the context of a <Router> component` —
-   рендер без MemoryRouter: предсуществующий дефект тестовой обвязки, не зависит от
-   правок A7-03. Не входит в объём FIX-A7-03-01.
-3. backend (`make run`): `go: updates to go.mod needed; go mod tidy` — degrade
-   окружения, не объём задачи (бэкенд не трогать).
-
-## Итог
-
-Критерии приёмки задачи выполнены: `make frontend-build && make frontend-lint` — зелёно;
-клиентские функции updateStop/deleteStop соответствуют контракту A7-03 до последнего
-символа (проверено автотестами). Дефект 404 устранён. Задача переведена в `testing`.
+Код по объёму задачи соответствует контракту A7-03 посимвольно (пути, статус-коды, типы, комментарии). make frontend-build && make frontend-lint — зелёно. Задача переводится в testing.
