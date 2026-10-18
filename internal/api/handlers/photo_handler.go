@@ -190,10 +190,6 @@ func (h *photoHandler) presign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url, expiresAt, err := h.svc.PresignPut(r.Context(), body.ObjectKey)
-	if err != nil {
-		middleware.WriteError(w, toAppError(err))
-		return
-	}
 	middleware.WriteJSON(w, http.StatusOK, presignResponse{URL: url, ExpiresAt: expiresAt})
 }
 
