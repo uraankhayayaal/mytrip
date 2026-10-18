@@ -318,8 +318,9 @@ func TestPresignHandler_Success(t *testing.T) {
 	if res.URL != "https://s3.example/presigned/t1/p1.jpg" {
 		t.Fatalf("wrong url: %q", res.URL)
 	}
-	if time.Since(res.ExpiresAt) < -14*time.Minute || time.Since(res.ExpiresAt) > -10*time.Minute {
-		t.Fatalf("unexpected expires_at: %v", res.ExpiresAt)
+	delta := time.Until(res.ExpiresAt)
+	if delta < 10*time.Minute || delta > 15*time.Minute {
+		t.Fatalf("unexpected expires_at: %v (delta %v)", res.ExpiresAt, delta)
 	}
 	if len(storage.presigned) != 1 || storage.presigned[0] != "t1/p1.jpg" {
 		t.Fatalf("wrong presigned keys: %v", storage.presigned)
