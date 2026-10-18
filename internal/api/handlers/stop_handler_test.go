@@ -33,7 +33,7 @@ type mockStopService struct {
 	updateStop *domain.Stop
 	updateErr  error
 	deleteErr  error
-	calls       []string
+	calls      []string
 }
 
 func (m *mockStopService) List(ctx context.Context, userID, tripID string) ([]*domain.Stop, error) {

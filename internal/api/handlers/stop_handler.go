@@ -77,7 +77,7 @@ type stopRequest struct {
 	Description string  `json:"description"`
 	Location    StopLoc `json:"location"`
 	VisitDate   time.Time
-	Order       int     `json:"order"`
+	Order       int `json:"order"`
 }
 
 func (b stopRequest) payload() *service.StopPayload {
