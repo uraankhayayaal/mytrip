@@ -221,7 +221,8 @@ func TestPhotoService_Delete_Success(t *testing.T) {
 	if err := s.Delete(context.Background(), "u1", "t1", "p1"); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if len(photos.deletedIDs) != 1 || photos.deletedIDs[0] != (][2]string{"t1", "p1"}) {
+	var expected [2]string = [2]string{"t1", "p1"}
+	if len(photos.deletedIDs) != 1 || photos.deletedIDs[0] != expected {
 		t.Fatalf("wrong delete calls: %v", photos.deletedIDs)
 	}
 	if len(storage.deletedKeys) != 1 || storage.deletedKeys[0] != "t1/p1.jpg" {
