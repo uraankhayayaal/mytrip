@@ -1,48 +1,58 @@
-# Тестовый отчёт — A7-04 PhotoService + PhotoRepo + StoragePort + PhotoHandler (обновлён)
+# TEST REPORT — A7-04 (PhotoService + PhotoRepo + StoragePort + PhotoHandler)
 
-Задача: A7-04, epic CHAT-07, ветка ai/task/A7-04. Раунд 5: реализация завершена, тесты зелёные.
+Ветка: `ai/task/A7-04`, HEAD `b0d9c9a`.
+Раунд: повторное QA-прохождение после эскалации (attempts=6).
 
-## Статус: **PASSED** (сборка, unit-тесты, gofmt/go vet — зелёные)
+## Статус: Passed
 
-| Проверка | Команда | Результат |
+## 1. Сверка с контрактами (1:1, до последнего символа)
+
+| Контракт | Реализация | Результат |
 |---|---|---|
-| Сборка бэкенда | `go build ./...` | **Passed** (exit 0) |
-| Unit-тесты | `go test ./... -count=1` | **Passed** (exit 0, все пакеты ok) |
-| gofmt | `gofmt -l .` | **Passed** (пустой вывод) |
-| go vet | `go vet ./...` | **Passed** (exit 0) |
-| golangci-lint | `golangci-lint run` | **DEGRADED**: бинарь отсутствует в песочнице (NO_GOLANGCI) — не дефект кода |
-| Интеграция (живая БД) | — | **DEGRADED**: Postgres недоступен в песочнице; покрывается `make e2e` в CI |
-| E2E (`make e2e`) | — | **DEGRADED**: Docker недоступен в песочнице |
+| `PhotoRepo` (internal/repo/interfaces.go:67-73) | `PGPhotoRepo` (internal/repo/photo_repo.go): pgx, таблица `trip_photos` (0004_photos), Insert/ListByTrip(ORDER BY created_at ASC)/Delete(NotFound при 0 строк) | OK |
+| `PhotoService` (internal/service/interfaces.go:110-118) | `photoService` (internal/service/photo_service.go): владение trip через `TripRepo.Get` во всех 3 методах; `cover=true` → `TripRepo.SetCover` ДО Insert; при Delete объект из хранилища, ошибка DeleteObject не блокирует удаление записи | OK |
+| `StoragePort` (internal/service/interfaces.go:120-128) | `S3Storage` (internal/storage/s3_storage.go): `PresignPut` через `s3.NewPresignClient`, TTL 15 мин; `DeleteObject` идемпотентен (NoSuchKey/NotFound → nil) | OK |
+| `PhotoHandler` (internal/api/handlers/handlers.go:123-145) | `photoHandler` + `mountPhotoRoutes` (photo_handler.go, photo_handler_mount.go): GET/POST `/trips/{id}/photos`, DELETE `/trips/{id}/photos/{photoId}` → 204, POST `/trips/{id}/photos/presign`; body `{object_key, url, cover?}`; presign-ответ `{url, expires_at}` = frontend `PhotoUrlResponse` | OK |
+| Wire | cmd/server/main.go:96-113: `PGPhotoRepo` + `S3Storage` + `NewPhotoService` + `NewPhotoHandler(...).Mount(r)` под auth-middleware | OK |
 
-## Реализация (файлы ветки ai/task/A7-04)
+Расхождения: 0. Блокирующих дефектов: 0.
 
-1. **PhotoRepo** — `internal/repo/photo_repo.go` (PGPhotoRepo поверх pgx, таблица `trip_photos`, миграция 0004_photos):
-   - `Insert` (RETURNING id, генерация UUID при пустом id), `ListByTrip` (ORDER BY created_at ASC), `Delete` (RowsAffected==0 → `domain.NewNotFound`).
-2. **StoragePort** — `internal/storage/s3_storage.go` (S3Storage над aws-sdk-go-v2 `s3.Client`):
-   - `PresignPut` через `s3.NewPresignClient`/`PresignPutObject`, `PresignOptions.Expires=ttl`, возврат `(url, expiresAt, err)`;
-   - `DeleteObject` — `s3.DeleteObject`, идемпотентен для NoSuchKey/NotFound (smithy APIError).
-3. **PhotoService** — `internal/service/photo_service.go`:
-   - владение trip проверяется через `TripRepo.Get` во всех трёх методах (чужая/нет → NotFound);
-   - `cover=true` → `TripRepo.SetCover(userID, tripID, url)` ДО `PhotoRepo.Insert` (ошибка SetCover блокирует вставку);
-   - `Delete`: URL объекта берётся из БД до удаления записи; ошибка `StoragePort.DeleteObject` не блокирует удаление записи.
-4. **PhotoHandler** — `internal/api/handlers/photo_handler.go` + `photo_handler_mount.go`:
-   - `GET /trips/{id}/photos` → 200 `[PhotoJSON]` (пусто → `[]`);
-   - `POST /trips/{id}/photos` — body `{object_key, url, cover?}` → 201 PhotoJSON; 400 validation;
-   - `DELETE /trips/{id}/photos/{photoId}` → 204; 404 not_found;
-   - `POST /trips/{id}/photos/presign` — body `{object_key}`, ответ `{url, expires_at}` (frontend-тип `PhotoUrlResponse`); владение проверяется до обращения к storage.
-5. **Wire** — `cmd/server/main.go`: `PGPhotoRepo` + `storage.NewS3Storage(s3Client, cfg.S3Bucket, 15m)` + `NewPhotoService(tripRepo, photoRepo, s3Storage)` + `NewPhotoHandler(photoService, s3Storage).Mount(r)` ПОД auth-middleware. Зависимость A7-02 (`TripRepo.SetCover`) закрыта.
+## 2. Автоматические проверки (make backend-test / backend-lint)
 
-## Unit-тесты (все Passed, `go test ./... -count=1`, race+cover в make backend-test)
+Команда: `make backend-test` (`go test ./... -race -cover`) — exit 0, все пакеты ok:
 
-- `internal/service/photo_service_test.go` — моки PhotoRepo/TripRepo/StoragePort: List (200/404), Create (success; cover→SetCover с проверкой аргументов и URL; cover=false → SetCover не вызывается; SetCover error → конфликт + Insert не вызывается; 404 → Insert не вызывается; insert error propagation), Delete (success → repo.Delete + storage.DeleteObject(url); фото нет → 404; trip нет → 404, Delete не вызывается; storage error не блокирует; repo error propagation).
-- `internal/api/handlers/photo_handler_test.go` — httptest + мок PhotoService/StoragePort: list (200/пустой/404), create (201 + JSON-поля; cover=true прокидывается; 400 при неполном body/битом JSON; лишние поля игнорируются; 404), delete (204/404), presign (200 `{url, expires_at}` ≈15min; 404 без вызова storage; 400 при пустом object_key без вызова storage; 500 на ошибке storage), регистрация всех маршрутов.
+```
+ok  mytrip/internal/api/handlers    1.020s  coverage: 95.1%
+ok  mytrip/internal/api/middleware  1.017s  coverage: 69.8%
+ok  mytrip/internal/config          1.020s  coverage: 96.0%
+ok  mytrip/internal/domain          1.012s  coverage: 100.0%
+ok  mytrip/internal/jwtutil         1.019s  coverage: 89.7%
+ok  mytrip/internal/repo            1.019s  coverage: 4.6%   (требует live-Postgres — покрывается e2e в CI)
+ok  mytrip/internal/service         3.166s  coverage: 85.5%  (photo_service_test.go — мок PhotoRepo/TripRepo/StoragePort)
+ok  mytrip/internal/storage         1.012s  coverage: 91.7%
+```
 
-## Рантайм (ReadAppLogs)
+`make backend-lint` (degrade-шаги отмечены):
+- `gofmt -l .` — чисто (exit 0);
+- `go vet ./...` — exit 0;
+- `golangci-lint run` — **не выполнен**: golangci-lint не установлен в песочнице (command not found) — degrade окружения. По явному решению пользователя (комментарий 2026-10-18T10:01Z: «если golangci-lint недоступен — пропустить, считать что все ок») шаг пропущен и засчитан как OK. В CI (.github/workflows/ci.yml) golangci-lint установлен и прогоняется.
 
-- Без env: `config: missing required env: [DATABASE_URL JWT_SECRET]` (exit 1) — ожидаемое поведение config.Load.
-- С env: падение на `migrate: dial tcp 127.0.0.1:5432: connection refused` — Postgres/Docker в песочнице недоступны (degrade окружения); интеграция — `make e2e` в CI.
+## 3. Рантайм (ReadAppLogs, local)
 
-## Заключение
+- Без env: корректное падение `config.Load` (missing DATABASE_URL/JWT_SECRET) — ожидаемое поведение.
+- С env (`DATABASE_URL=...:59999`): `migrate: dial tcp 127.0.0.1:59999: connect: connection refused` — Postgres недоступен в sandbox, Docker-стек не поднимается. Это **degrade окружения, не дефект кода**: стартовый код корректно логирует ошибку миграции и выходит с кодом 1 вместо паники. Интеграционная проверка живого API покрывается самозавершающейся целью `make e2e` (up → healthcheck → Playwright → down) в CI.
 
-- Приёмочные критерии A7-04 п.1–6 выполнены. Сборка и тесты зелёные, расхождений с контрактами Архитектора нет. Дефекты: 0.
-- Задача переведена в статус **testing**.
+## 4. Автотесты (состав по ТЗ)
+
+- unit: `internal/service/photo_service_test.go` — мок PhotoRepo/TripRepo/StoragePort: List (success/trip-not-found), Create (success/cover=true→SetCover/cover=false/insert-error), Delete (success/missing/not-found/объект-сирота при ошибке хранилища).
+- unit: `internal/api/handlers/photo_handler_test.go` — httptest + chi: GET 200/404, POST 201/400 (validation пустых полей, invalid JSON)/404, DELETE 204/404, presign 200 `{url,expires_at}`/404/400.
+- unit: `internal/storage/s3_storage_test.go` — PresignPut (реальный s3.Client, подпись без сети), DeleteObject (мок s3ClientAPI: success/NoSuchKey/NotFound/другие ошибки).
+- интеграционные/E2E: live-Postgres и полный HTTP-сценарий требуют Docker-стека (Postgres/MinIO) — недоступны в sandbox; покрываются `make e2e` в CI (Playwright: frontend/e2e, frontend/src/components/PhotoUploader.test.tsx).
+
+## 5. Дефекты
+
+Обнаружено: 0. Багрепортов создано: 0.
+
+## 6. Итог
+
+Все применимые в sandbox проверки зелёные; недоступные шаги — только degrade окружения (golangci-lint, Postgres/Docker), зафиксированы выше и покрываются CI. Задача переводится в done.
