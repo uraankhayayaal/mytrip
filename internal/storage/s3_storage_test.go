@@ -54,7 +54,10 @@ func TestPresignPut_ReturnsSignedURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PresignPut: %v", err)
 	}
-	if !strings.HasPrefix(url, "http://127.0.0.1:9/photos/trip1%2Fpic.jpg") ||
+	// Ключ может кодироваться как "trip1/pic.jpg" или "trip1%2Fpic.jpg"
+	// в зависимости от версии aws-sdk-go-v2 — проверяем по bucket+host.
+	if !strings.HasPrefix(url, "http://127.0.0.1:9/photos/") ||
+		(!strings.Contains(url, "trip1/pic.jpg") && !strings.Contains(url, "trip1%2Fpic.jpg")) ||
 		!strings.Contains(url, "X-Amz-Signature") ||
 		!strings.Contains(url, "X-Amz-Expires=60") {
 		t.Fatalf("unexpected presigned URL: %s", url)

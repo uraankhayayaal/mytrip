@@ -32,7 +32,7 @@ type s3ClientAPI interface {
 
 // S3Storage — реализация StoragePort поверх s3.Client.
 type S3Storage struct {
-	client *s3.Client // для PresignPut (локальная подпись, без сети)
+	client *s3.Client  // для PresignPut (локальная подпись, без сети)
 	api    s3ClientAPI // для DeleteObject (сетевой вызов; в тестах — мок)
 	bucket string
 	ttl    time.Duration
@@ -46,7 +46,7 @@ func NewS3Storage(client *s3.Client, bucket string, ttl time.Duration) *S3Storag
 	if ttl <= 0 {
 		ttl = presignTTL
 	}
-	api s3ClientAPI = client
+	api := client
 	return &S3Storage{client: client, api: api, bucket: bucket, ttl: ttl}
 }
 
@@ -73,10 +73,9 @@ func (s *S3Storage) DeleteObject(ctx context.Context, objectKey string) error {
 	if err == nil {
 		return nil
 	}
-	// S3: удаление несуществующего объекта — не ошибка (PUT-объект мог не дойти).
-	var apiErr *types.NoSuchKey
 	var nf *types.NotFound
-	if errors.As(err, &apiErr) || errors.As(err, &nf) {
+	var nke *types.NoSuchKey
+	if errors.As(err, &nf) || errors.As(err, &nke) {
 		return nil
 	}
 	var ae smithy.APIError
