@@ -72,12 +72,12 @@ func (c *compositePhotoService) PresignPut(ctx context.Context, objectKey string
 // Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
 func (h *PhotoHandler) Mount(r chi.Router) {
 	impl := h.impl()
-	r.Route("/trips/{id}/photos", func(r chi.Router) {
-		r.Post("/presign", impl.presign)
-		r.Delete("/{photoId}", impl.delete)
-		r.Get("/{*}", impl.list)
-		r.Post("/{*}", impl.create)
-	})
+	r.Post("/trips/{id}/photos/presign", impl.presign)
+	r.Delete("/trips/{id}/photos/{photoId}", impl.delete)
+	// chi: конкретные паттерны регистрируются раньше wildcard'ов; точный
+	// базовый путь (без хвоста) обрабатывается wildcard-паттерном {tail}.
+	r.Get("/trips/{id}/photos/{tail...}", impl.list)
+	r.Post("/trips/{id}/photos/{tail...}", impl.create)
 }
 
 // impl — приватный доступ к реализации по identity-ключу.
