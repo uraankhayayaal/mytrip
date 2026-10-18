@@ -105,20 +105,7 @@ func (s *photoService) Delete(ctx context.Context, userID, tripID, photoID strin
 			// Не критично: логирование недоступно в слое сервиса; сироту уберёт ливер-джоб.
 			_ = err
 		}
-		_ = objectKeyFromURL(url)
 	}
 	return nil
 }
 
-// objectKeyFromURL — извлекает objectKey из URL фото (путь после host).
-// Для pre-signed URL хранилища ключ — путь; используется для DeleteObject.
-func objectKeyFromURL(raw string) string {
-	i := len(raw)
-	for j := 0; j < len(raw); j++ {
-		if raw[j] == '/' && j > 6 && (raw[j-1] == ':' || raw[j-2] == '/') {
-			i = j
-			break
-		}
-	}
-	return raw[i:]
-}
