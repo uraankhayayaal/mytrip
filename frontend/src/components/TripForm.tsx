@@ -24,12 +24,8 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
     const form = e.currentTarget;
     const data = new FormData(form);
     const values = Object.fromEntries(data.entries()) as unknown as TripInput;
-    try {
-      await onSubmit(values as TripPayload);
-    } catch (err) {
-      // Ошибка перехватывается в вызывающем компоненте’s mutation.onSettled или через try-catch
-      throw err;
-    }
+    // Ошибка перехватывается в вызывающем компоненте’s mutation.onSettled или через try-catch
+    await onSubmit(values as TripPayload);
   };
   return (
     <form
