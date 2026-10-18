@@ -76,7 +76,7 @@ type stopRequest struct {
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
 	Location    StopLoc `json:"location"`
-	VisitDate   time.Time
+	VisitDate   time.Time `json:"visit_date"`
 	Order       int `json:"order"`
 }
 
