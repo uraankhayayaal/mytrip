@@ -40,8 +40,14 @@ type tripDeps struct {
 	trips service.TripService
 }
 
+// stopDeps — зависимости CRUD точек маршрута (CHAT-07: A7-03).
+type stopDeps struct {
+	stops service.StopService
+}
+
 var deps *authDeps
 var trips *tripDeps
+var stops *stopDeps
 
 func newAuthDeps(cfg *config.Config, pool *pgxpool.Pool) (*authDeps, error) {
 	userRepo := repo.NewPGUserRepo(pool)
@@ -90,6 +96,10 @@ func main() {
 
 	// Trips (CHAT-07: A7-02): TripRepo + TripService + TripHandler под auth-middleware.
 	trips = &tripDeps{trips: service.NewTripService(repo.NewPGTripRepo(pool))}
+
+	// Stops (CHAT-07: A7-03): StopRepo + StopService + StopHandler под auth-middleware.
+	stopRepo := repo.NewPGStopRepo(pool)
+	stops = &stopDeps{stops: service.NewStopService(stopRepo, repo.NewPGTripRepo(pool))}
 
 	// chi router
 	r := chi.NewRouter()
