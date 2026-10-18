@@ -225,8 +225,8 @@ func TestPhotoService_Delete_Success(t *testing.T) {
 	if len(photos.deletedIDs) != 1 || photos.deletedIDs[0] != expected {
 		t.Fatalf("wrong delete calls: %v", photos.deletedIDs)
 	}
-	if len(storage.deletedKeys) != 1 || storage.deletedKeys[0] != "t1/p1.jpg" {
-		t.Fatalf("storage delete not called with object key: %v", storage.deletedKeys)
+	if len(storage.deletedKeys) != 1 || storage.deletedKeys[0] != "https://s3/t1/p1.jpg" {
+		t.Fatalf("storage delete not called with url: %v", storage.deletedKeys)
 	}
 }
 
@@ -267,18 +267,15 @@ func TestPhotoService_Delete_StorageErrorIgnored(t *testing.T) {
 	}
 }
 
-// --- objectKeyFromURL ---
+// --- Delete (доп. QA) ---
 
-func TestObjectKeyFromURL(t *testing.T) {
-	tests := []struct{ raw, want string }{
-		{"https://s3.example.com/trips/t1/p1.jpg", "trips/t1/p1.jpg"},
-		{"https://s3.example.com", ""},
-		{"https://s3.example.com/", ""},
-		{"https://minio:9000/bucket/trip/abc.jpg?X-Amz-Sig=1", "trip/abc.jpg?X-Amz-Sig=1"},
-	}
-	for _, tc := range tests {
-		if got := objectKeyFromURL(tc.raw); got != tc.want {
-			t.Errorf("objectKeyFromURL(%q) = %q, want %q", tc.raw, got, tc.want)
-		}
+func TestPhotoService_Delete_RepoError(t *testing.T) {
+	repoErr := errors.New("boom")
+	photos := &mockPhotoRepo{listFn: func(context.Context, string) ([]*domain.Photo, error) {
+		return nil, repoErr
+	}}
+	s := newPhotoTestService(newTripRepoWithTrip(newTestTrip(t)), photos, nil)
+	if err := s.Delete(context.Background(), "u1", "t1", "p1"); !errors.Is(err, repoErr) {
+		t.Fatalf("expected repo error to propagate, got %v", err)
 	}
 }
