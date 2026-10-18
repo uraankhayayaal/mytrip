@@ -5,9 +5,7 @@ package repo
 
 import (
 	"context"
-	"errors"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"mytrip/internal/domain"
@@ -82,9 +80,4 @@ func (r *PGPhotoRepo) Delete(ctx context.Context, tripID, id string) error {
 		return domain.NewNotFound("photo not found")
 	}
 	return nil
-}
-
-// isPhotoNotFound — pgx.ErrNoRows → NotFound (запасной путь для Get-подобных операций).
-func isPhotoNotFound(err error) bool {
-	return errors.Is(err, pgx.ErrNoRows)
 }
