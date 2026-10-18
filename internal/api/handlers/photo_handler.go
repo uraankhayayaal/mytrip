@@ -16,14 +16,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"net/http"
-	"time"
-
-	"github.com/go-chi/chi/v5"
-
-	"mytrip/internal/api/middleware"
-	"mytrip/internal/domain"
-	"mytrip/internal/service"
 )
 
 // photoServiceWithPresign — PhotoService + presign (StoragePort) для PhotoHandler.
@@ -204,6 +196,5 @@ func decodeJSON(r *http.Request, v any) error {
 		return errors.New("empty body")
 	}
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20))
-	dec.DisallowUnknownFields()
 	return dec.Decode(v)
 }
