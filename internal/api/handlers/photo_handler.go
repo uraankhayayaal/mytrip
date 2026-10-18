@@ -60,6 +60,14 @@ func (h *PhotoHandler) Mount(r chi.Router) {
 	mountPhotoRoutes(r, h.impl())
 }
 
+// impl — приватный доступ к реализации по identity-ключу.
+func (h *PhotoHandler) impl() *photoHandler {
+	if impl, ok := photoHandlers[h]; ok {
+		return impl
+	}
+	return &photoHandler{photos: nil, svc: nil}
+}
+
 // photoJSON — JSON-представление фото на границе API (frontend Photo).
 type photoJSON struct {
 	ID        string    `json:"id"`
