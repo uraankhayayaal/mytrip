@@ -55,7 +55,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("s3: %v", err)
 	}
-	stg := storage.NewS3Storage(s3Client, cfg.S3Bucket, 15*time.Minute)
+	var stg service.StoragePort = storage.NewS3Storage(s3Client, cfg.S3Bucket, 15*time.Minute)
 
 	// JWT issuer/validator (CHAT-07: A7-05)
 	issuer, validator, err := jwtutil.NewHS256(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
@@ -88,44 +88,23 @@ func main() {
 	r.Use(middleware.ErrorHandler)
 	r.Get("/healthz", healthHandler)
 
-	// authMiddleware — точка внедрения middleware.Auth (CHAT-07: A7-05):
-	// r.With принимает middleware.Handler; middleware.Auth(cfg.JWTSecret)
-	// возвращает http.HandlerFunc, который валидирует Bearer-токен.
-	authMiddleware := middleware.Auth(cfg.JWTSecret)
+	// auth-мидлвар как http.HandlerFunc для chi r.With (CHAT-07: A7-05/A7-06):
+	// middleware.Auth(secret, next) — сигнатура из A7-05.
+	authMiddleware := func(next http.Handler) http.Handler {
+		return middleware.Auth(cfg.JWTSecret, next)
+	}
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Публичные маршруты (без auth)
-		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/login", authHandler.Login)
-		r.Post("/auth/refresh", authHandler.Refresh)
-		r.Post("/auth/logout", authHandler.Logout)
-		r.Get("/users/me", authHandler.Me)
+		// Публичные маршруты (без auth) (CHAT-07: A7-01)
+		authHandler.Mount(r)
 
-		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05)
-		authed := r.With(authMiddleware)
-
-		// Trips (A7-02)
-		authed.Get("/trips", tripHandler.List)
-		authed.Post("/trips", tripHandler.Create)
-		authed.Get("/trips/{id}", tripHandler.Get)
-		authed.Put("/trips/{id}", tripHandler.Update)
-		authed.Delete("/trips/{id}", tripHandler.Delete)
-
-		// Stops (A7-03)
-		authed.Get("/trips/{id}/stops", stopHandler.List)
-		authed.Post("/trips/{id}/stops", stopHandler.Create)
-		authed.Get("/trips/{id}/stops/{stopId}", stopHandler.Get)
-		authed.Put("/trips/{id}/stops/{stopId}", stopHandler.Update)
-		authed.Delete("/trips/{id}/stops/{stopId}", stopHandler.Delete)
-
-		// Photos (A7-04)
-		authed.Get("/trips/{id}/photos", photoHandler.List)
-		authed.Post("/trips/{id}/photos", photoHandler.Create)
-		authed.Delete("/trips/{id}/photos/{photoId}", photoHandler.Delete)
-		authed.Post("/trips/{id}/photos/presign", photoHandler.Presign)
-
-		// Export (A7-06)
-		authed.Get("/trips/{id}/export", exportHandler.Export)
+		// Защищённые маршруты (CHAT-07: A7-02..A7-06)
+		r.With(authMiddleware).Group(func(r chi.Router) {
+			tripHandler.Mount(r)
+			stopHandler.Mount(r)
+			photoHandler.Mount(r)
+			exportHandler.Mount(r)
+		})
 	})
 
 	srv := &http.Server{
