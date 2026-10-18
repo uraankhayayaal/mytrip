@@ -73,10 +73,10 @@ func (c *compositePhotoService) PresignPut(ctx context.Context, objectKey string
 func (h *PhotoHandler) Mount(r chi.Router) {
 	impl := h.impl()
 	r.Route("/trips/{id}/photos", func(r chi.Router) {
-		r.Get("/{*}", impl.list)
-		r.Post("/{*}", impl.create)
 		r.Post("/presign", impl.presign)
 		r.Delete("/{photoId}", impl.delete)
+		r.Get("/{*}", impl.list)
+		r.Post("/{*}", impl.create)
 	})
 }
 
