@@ -124,11 +124,12 @@ func (r *PGTripStopRepo) MaxOrder(ctx context.Context, tripID string) (int, erro
 }
 
 // Reindex — сдвиг order строк при перемещении точки с позиции from на to:
-//   - to > from: строки с order в (from, to] сдвигаются +1, кроме перемещаемой;
-//   - to < from: строки с order в [to, from) сдвигаются -1, кроме перемещаемой.
+//   - to > from: строки с order в (from, to] сдвигаются +1;
+//   - to < from: строки с order в [to, from) сдвигаются -1.
 //
-// Вызывается в той же транзакции, что и Update (см. stopService.Update).
-func (r *PGTripStopRepo) Reindex(ctx context.Context, tripID string, from, to int) error {
+// Вызывается до Update (см. stopService.Update), поэтому перемещаемая строка
+// ещё стоит на позиции from и исключается из сдвига явным id <> $4::uuid.
+func (r *PGTripStopRepo) Reindex(ctx context.Context, tripID string, from, to int, stopID string) error {
 	if from == to {
 		return nil
 	}
@@ -140,6 +141,6 @@ func (r *PGTripStopRepo) Reindex(ctx context.Context, tripID string, from, to in
 		q = `UPDATE trip_stops SET "order" = "order" - 1
 			WHERE trip_id = $1::uuid AND "order" >= $2 AND "order" < $3 AND id <> $4::uuid`
 	}
-	_, err := r.pool.Exec(ctx, q, tripID, from, to)
+	_, err := r.pool.Exec(ctx, q, tripID, from, to, stopID)
 	return err
 }

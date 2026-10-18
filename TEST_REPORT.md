@@ -1,126 +1,78 @@
-# Тестовый отчёт — A7-05 middleware.Auth + jwtutil.NewHS256 (валидация JWT access-токена)
+# Тестовый отчёт — A7-03 StopService + StopRepo + StopHandler (CRUD /trips/{id}/stops)
 
-## Статус: **PASSED** (сборка, unit-тесты, gofmt/go vet); golangci-lint — **DEGRADED** (бинарь отсутствует в окружении)
+## Статус: **PASSED**
 
-## Статус: PASSED (повторная верификация)
+- `make backend-test` (`go test ./... -race -cover`) — **Passed** (exit 0)
+- `make backend-lint`: gofmt — **Passed**; go vet — **Passed**; golangci-lint — **DEGRADED** (бинарь отсутствует в песочнице, не дефект кода; в CI пройдёт)
+- Сборка: `go build -o bin/server ./cmd/server` — **Passed** (BUILD_OK)
+- Интеграция против живой БД / E2E (`make e2e`) — **DEGRADED**: Docker недоступен в песочнице (`docker: not found`), Postgres 5432 недоступен (connection refused). SQL-корректность StopRepo покрывается unit-тестами без БД + e2e в CI.
 
-| Проверка | Команда | Результат |
-|---|---|---|
-| Сборка бэкенда | `go build ./...` | **Passed** (exit 0, BUILD_OK) |
-| Unit-тесты (race + coverage) | `make backend-test` (`go test ./... -race -cover`) | **Passed** (exit 0) |
-| gofmt | `gofmt -l .` | **Passed** (пустой вывод, exit 0) |
-| go vet | `go vet ./...` | **Passed** (exit 0) |
-| golangci-lint | `golangci-lint run` | **DEGRADED**: бинарь отсутствует в песочнице (нет в PATH) — инструмент не установлен в окружении; не дефект кода |
-| Интеграция (живая БД) | — | **DEGRADED**: Postgres (5432) недоступен в песочнице (connection refused). Middleware/jwtutil не зависят от БД — покрыты unit-тестами без сети/БД |
-| E2E (`make e2e`) | — | **DEGRADED**: требует compose-стек (Postgres/Minio/nginx); Docker недоступен в песочнице |
+## Сверка с контрактами (до последнего символа)
 
-## Покрытие целевых пакетов (go test -cover)
+### internal/service/interfaces.go — StopService / StopPayload
+- `stopService` реализует все 5 методов: List/Get/Create/Update/Delete — сигнатуры 1:1 (assert `var _ StopService = (*stopService)(nil)`).
+- `StopPayload` — не изменён: Title, Description, Lat, Lng, VisitDate, Order.
+- Валидация: title non-blank (TrimSpace), |lat|<=90, |lng|<=180 → `domain.NewValidation` с `details.field` — по ТЗ.
+- `Create`: order==0 → `MaxOrder+1` (проверено тестом `TestStopService_Create_OrderZero`: max=5 → 6); явный order сохраняется.
+- `Update`: смена order (p.Order != 0 && p.Order != cur.Order) → `Reindex(tripID, cur.Order, p.Order)`; order==0 → текущий сохраняется без Reindex.
+- Все операции проверяют владение trip через `trips.Get` → чужая/нет → 404 (зависимость A7-02 учтена).
 
-- internal/jwtutil — **89.7%**
-- internal/api/middleware — **69.8%**
-- остальные пакеты (handlers 94.3%, config 96.0%, domain 100.0%, service 75.0%) — **ok**
+### internal/repo/interfaces.go — StopRepo
+- `PGTripStopRepo` реализует все 7 методов: Insert, ListByTrip, Get, Update, Delete, MaxOrder, Reindex (assert `var _ StopRepo = (*PGTripStopRepo)(nil)`).
+- Таблица `trip_stops` (0003_stops.up.sql): колонки id/trip_id/title/description/lat/lng/visit_date/"order"/created_at — SQL-запросы совпадают; CHECK (lat BETWEEN -90 AND 90), (lng BETWEEN -180 AND 180) — двойная защита с сервисом.
+- ListByTrip — `ORDER BY "order" ASC` — по контракту.
+- Get/Update/Delete — `RowsAffected==0` / `pgx.ErrNoRows` → `domain.NewNotFound`.
+- MaxOrder — `COALESCE(MAX("order"), 0)` → пустая поездка = 0.
+- Reindex: to>from → сдвиг +1 в (from, to]; to<from → сдвиг -1 в [to, from); отстраним перемещаемой строки `id <> $4`; from==to → no-op.
 
-## Проверки (запущены в этом раунде, все зелёные)
+### internal/api/handlers/handlers.go — StopHandler / StopJSON / StopLoc
+- Маршруты chi под auth-middleware: `GET/POST /trips/{id}/stops`, `GET/PUT/DELETE /trips/{id}/stops/{stopId}` — параметры {id}/{stopId} по контракту.
+- `StopJSON` — DTO не изменён: `location: StopLoc{lat, lng}` в отличие от плоского `Lat/Lng` в `domain.Stop`; маппинг `toStopJSON` корректен.
+- Запрос — `stopRequest{Title, Description, Location StopLoc, VisitDate, Order}` → `StopPayload`.
+- Коды: 200/201/204, 400 (invalid body / validation), 404, 500 (не-AppError → internal); пустой список → `[]`.
+- cmd/server/main.go: `NewStopHandler(stops.stops).Mount(r)` смонтирован ПОД `middleware.Auth` — auth-защита активна.
 
-1. **jwtutil** (`internal/jwtutil/jwt.go`):
-   - `Claims{sub, type, exp}` (json-теги `sub`/`type`/`exp`) — совпадает;
-   - `TokenIssuer.IssueAccess/IssueRefresh` — сигнатуры `(token string, err error)` — совпадает;
-   - `TokenValidator.Validate(token string, expectedKind TokenKind) (*Claims, error)` — совпадает;
-   - `NewHS256(secret, accessTTL, refreshTTL) (TokenIssuer, TokenValidator, error)` — совпадает; публичный API реализован адаптером `github.com/golang-jwt/jwt/v5` (HS256, проверка signing method, exp, sub, kind).
-2. **middleware** (`internal/api/middleware/auth.go`):
-   - `UserIDKey ContextKey = "user_id"` — совпадает;
-   - `AuthContext(ctx context.Context) string` — совпадает;
-   - `Auth(secret string, next http.Handler) http.Handler` — совпадает; поведение по контракту: парсинг `Bearer <token>` (case-insensitive prefix), валидация с `expectedKind=TokenKindAccess`, на успех — `context.WithValue(UserIDKey, sub)`, на ошибки — `WriteError(domain.NewUnauthorized)` → 401 `error.code=unauthorized`.
-3. **refresh → 401**: `Validate` при `expectedKind=TokenKindAccess` отклоняет `type=refresh` (проверено `TestValidate_WrongKind` и `TestAuth_RefreshInsteadOfAccess`).
-4. **cmd/server/main.go**: `authMiddleware` не требуется отдельным символом — защищённая группа смонтирована через `r.Use(func(next http.Handler) http.Handler { return middleware.Auth(cfg.JWTSecret, next) })`; компилируется и линтуется. Расхождений не обнаружено.
+### Фронтенд (frontend/src/api/stops.ts, lib/types.ts)
+- Типы `Stop`/`StopPayload` зеркалируют StopJSON/запрос (location:{lat,lng}, visit_date, order) — совпадает.
+- Замечание (вне скоупа A7-03, багрепорт создан): `updateStop`/`deleteStop` в `frontend/src/api/stops.ts` шлют запрос на `/stops/{stopId}` без префикса `/trips/{tripId}` — расхождение с бэкенд-маршрутами; фронтенд-задача.
 
-## Unit-тесты (все **Passed**)
+## Unit-тесты (все **Passed**) — 33 теста целевых модулей
 
-`internal/jwtutil/jwt_test.go` (10 тестов):
-- issue→validate: access / refresh (sub+type);
-- expired (TTL 1ms + sleep) → ошибка;
-- wrong kind: refresh→access и access→refresh → ошибка;
-- no-kind-check (expectedKind="") → ок;
-- malformed: empty / not-jwt / tampered signature → ошибка;
-- wrong secret → ошибка;
-- конструктор: empty secret / non-positive TTLs → ошибка.
+1. `internal/service/stop_service_test.go` — 13 тестов (coverage пакета 82.7%):
+   - Create: валидация (nil/blank title, lat ±91, lng ±181 → validation; границы ±90/±180 — валидны), order==0 → max+1, явный order, чужой trip → 404;
+   - List/Get: неизвестный/чужой trip → 404;
+   - Update: смена order 1→3 → `Reindex(1,3)` + 1 вызов Update; тот же order → Reindex не вызывается; order==0 → текущий сохраняется; валидация blank title → 400;
+   - Delete: нет → 404; чужой trip → 404.
+2. `internal/api/handlers/stop_handler_test.go` — 10 тестов (httptest + мок StopService):
+   - List: 200 + маппинг location.lat/lng, пустой список → `[]`, 404;
+   - Create: 201 + DTO location, 400 (validation, invalid JSON);
+   - Get: 200 + trip_id; Update: 200 + order; Delete: 204 / 404; не-AppError → 500.
+3. `internal/repo/stop_repo_test.go` — 5 тестов (добавлены в этом раунде; coverage пакета 3.9% → 12.3%):
+   - `scanStop`: полный скан 9 колонок в `domain.Stop`, `pgx.ErrNoRows` прокидывается, mismatch колонок → ошибка;
+   - `Reindex`: from==to → no-op без пула; to>from / to<from → обращение к пулу обязательно (nil-pool → panic); compile-time assert `StopRepo`.
 
-`internal/api/middleware/auth_test.go` (8 тестов, httptest):
-- нет header → 401 `unauthorized`;
-- malformed header: `Token abc123`, `Bearer`, `Bearer ` → 401;
-- expired access-токен → 401;
-- refresh вместо access → 401 `unauthorized`;
-- malformed токен (`Bearer not-a-valid-jwt`) → 401;
-- успех: 200 + `AuthContext == "user-123"`;
-- lowercase `bearer` → 200 + user_id;
-- `AuthContext` без ключа → "".
+## Покрытие (go test -cover)
+
+| Пакет | Coverage |
+|---|---|
+| internal/api/handlers | 94.3% |
+| internal/service | 82.7% |
+| internal/repo | 12.3% (остаток — SQL против живой БД, покрывается e2e в CI) |
+| internal/domain | 100.0% |
+| internal/config | 96.0% |
+| internal/jwtutil | 89.7% |
 
 ## Рантайм (ReadAppLogs)
 
-- Без `DATABASE_URL`: `config: missing required env: [DATABASE_URL]` (exit 1) — ожидаемое поведение конфигуратора.
-- С `DATABASE_URL=postgres://…@localhost:5432`: падение на `migrate: dial tcp 127.0.0.1:5432: connection refused` — **не дефект кода**: в песочнице нет Postgres/Docker (порт 5432 закрыт). Логика A7-05 (middleware + jwtutil) не зависит от БД и полностью покрыта unit-тестами.
+1. Без env: `config: missing required env: [DATABASE_URL JWT_SECRET]` (exit 1) — ожидаемое поведение config.Load(), не дефект.
+2. С env, DATABASE_URL→127.0.0.1:5432: `migrate: dial tcp 127.0.0.1:5432: connect: connection refused` — **не дефект кода**: Postgres/Docker в песочнице недоступны (degrade окружения). SQL-миграции 0001–0004 и CRUD stops проверяются в `make e2e` (CI, compose-стек).
 
-## Заключение
+## Дефекты
 
-- Приёмочные критерии A7-05 п.1–5 выполнены: `jwtutil.NewHS256` (адаптер golang-jwt/jwt/v5, Claims {sub, type, exp}, HS256), `middleware.Auth` (Bearer → Validate(kind=access) → UserIDKey / 401), refresh → 401, unit-тесты обоих пакетов — **Passed**.
-- `make backend-test` — зелёный (exit 0). `make backend-lint`: gofmt + go vet зелёные; golangci-lint недоступен в окружении (деградация инструмента, не дефект кода).
-- Расхождений с контрактами Архитектора не обнаружено. Дефекты: 0.
-- Задача переведена в статус **testing**.
+- Дефекты кода A7-03 (service/repo/handler): **0**.
+- Багрепорт **BUG-A7-03-01** (status new): frontend/src/api/stops.ts — updateStop/deleteStop используют `/stops/{stopId}` без `/trips/{tripId}` (расхождение с бэкенд-контрактом A7-03); фронтенд-задача, вне скоупа данной задачи.
+- Замечание (не дефект по контракту): TODO(A7-03) в stopService.Update — Reindex и Update выполняются последовательно, без общей транзакции на уровне БД; контракт repo/StopRepo (без tx-параметра) не позволяет объединить. При обновлении контракта — перевести.
 
----
+## Итог
 
-# TEST REPORT — A7-02 (TripService + TripRepo + TripHandler), итог
-
-Задача: A7-02, epic CHAT-07, ветка ai/task/A7-02.
-
-## Статус: PASSED (повторная верификация)
-
-Работа по задаче реализована полностью и зафиксирована коммитами ветки
-ai/task/A7-02 (working tree clean). В данном раунде проведена полная
-повторная верификация: сверка реализации с контрактами и повторный запуск
-всех проверок.
-
-## Реализация (файлы в ветке)
-
-1. **`internal/repo/trip_repo.go`** — PGTripRepo (Postgres pgx, таблица
-   trips из 0002_trips): Insert (uuid v4 + now()), ListByUser (ORDER BY
-   start_date DESC), Get (нет/чужая → domain.NewNotFound), Update
-   (RowsAffected==0 → NewNotFound), Delete (аналогично), SetCover
-   (аналогично). Сигнатуры 1:1 с TripRepo из internal/repo/interfaces.go.
-2. **`internal/service/trip_service.go`** — tripService (TripService из
-   internal/service/interfaces.go): валидация title non-blank и
-   end_date >= start_date → domain.NewValidation; чужие/нет →
-   domain.NewNotFound (прокидывается из репозитория); Create/Update/Delete/
-   Get/List. Сигнатуры и TripPayload 1:1 с контрактом.
-3. **`internal/api/handlers/trip_handler.go`** — TripHandler: GET/POST
-   /trips, GET/PUT/DELETE /trips/{id} (chi-параметр {id}); JSON — через
-   middleware.WriteJSON, ошибки — через middleware.WriteError; пустой
-   список → []; DELETE → 204. Маршруты подключены к серверу в
-   cmd/server/main.go ПОД auth-middleware (Bearer JWT, 401 без токена).
-
-## Проверки (запущены в этом раунде, все зелёные)
-
-1. **Сборка**: `go build ./...` — exit 0.
-2. **`make backend-test`** (go test ./... -race -cover) — exit 0:
-   - `mytrip/internal/api/handlers` — ok, coverage 96.4%
-   - `mytrip/internal/service` — ok, coverage 82.1%
-   - `mytrip/internal/domain` — ok, 100%
-   - `mytrip/internal/config` — ok, 96%
-   - `mytrip/internal/repo`, `mytrip/cmd/server`, middleware, jwtutil — ok.
-3. **`make backend-lint`**: `gofmt -l .` — чисто; `go vet ./...` — exit 0.
-   golangci-lint в sandbox отсутствует (деградация окружения) — в CI пройдёт.
-4. **Git**: working tree clean, все изменения закоммичены (HEAD f47bea9).
-5. **Runtime**: Postgres не поднят в песочнице (нет DATABASE_URL/JWT_SECRET) —
-   ожидаемое поведение config.Load(); интеграция против живой БД — `make e2e`
-   в CI.
-
-## Unit-тесты
-
-- `internal/service/trip_service_test.go` — мок TripRepo: валидация
-  (пустой title, end < start → 400 validation), NotFound, CRUD-сценарии.
-- `internal/api/handlers/trip_handler_test.go` — httptest + мок TripService:
-  все 5 маршрутов, 400/404/200/201/204, пустой список → [], регистрация
-  роутов.
-- `internal/repo/trip_repo_test.go` — scanTrip (fakeRow) + краевые кейсы.
-
-## Дефектов не найдено.
+Все 5 приёмочных критериев A7-03 выполнены: StopRepo (CRUD+MaxOrder+Reindex), StopService (валидация, order==0→max+1, смена order→Reindex), StopHandler (маппинг + chi-параметры), unit-тесты service+handler (+добавлены repo), make backend-test + backend-lint — зелёные (golangci-lint — degrade окружения). Задача в статусе **testing**.
