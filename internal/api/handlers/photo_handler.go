@@ -76,8 +76,6 @@ func (h *PhotoHandler) Mount(r chi.Router) {
 		r.Post("/presign", impl.presign)
 		r.Delete("/{photoId}", impl.delete)
 	})
-	// Точные пути (без wildcards): chi в вложенных Route не принимает пустой
-	// паттерн "", а ""/"{*}" перехватывал бы /presign и /{photoId}.
 	r.Get("/trips/{id}/photos", impl.list)
 	r.Post("/trips/{id}/photos", impl.create)
 }
