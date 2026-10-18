@@ -23,36 +23,11 @@ import (
 	"mytrip/internal/api/handlers"
 	"mytrip/internal/api/middleware"
 	"mytrip/internal/config"
-	"mytrip/internal/domain"
 	"mytrip/internal/jwtutil"
 	"mytrip/internal/repo"
 	"mytrip/internal/service"
+	"mytrip/internal/storage"
 )
-
-// authDeps — зависимости аутентификации (CHAT-07: A7-01).
-type authDeps struct {
-	auth      service.AuthService
-	validator jwtutil.TokenValidator
-}
-
-// tripDeps — зависимости CRUD поездок (CHAT-07: A7-02).
-type tripDeps struct {
-	trips service.TripService
-}
-
-var deps *authDeps
-var trips *tripDeps
-
-func newAuthDeps(cfg *config.Config, pool *pgxpool.Pool) (*authDeps, error) {
-	userRepo := repo.NewPGUserRepo(pool)
-	tokenRepo := repo.NewPGRefreshTokenRepo(pool)
-	issuer, validator, err := jwtutil.NewHS256(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
-	if err != nil {
-		return nil, err
-	}
-	auth := service.NewAuthService(userRepo, tokenRepo, tokenRepo, issuer, validator, cfg.JWTRefreshTTL)
-	return &authDeps{auth: auth, validator: validator}, nil
-}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -80,31 +55,55 @@ func main() {
 	if err != nil {
 		log.Fatalf("s3: %v", err)
 	}
-	_ = s3Client // TODO(BEL-04): передать в storage-сервис
+	var stg service.StoragePort = storage.NewS3Storage(s3Client, cfg.S3Bucket, 15*time.Minute)
 
-	// Auth (CHAT-07: A7-01)
-	deps, err = newAuthDeps(cfg, pool)
+	// JWT issuer/validator (CHAT-07: A7-05)
+	issuer, validator, err := jwtutil.NewHS256(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	if err != nil {
-		log.Fatalf("auth: %v", err)
+		log.Fatalf("jwt: %v", err)
 	}
 
-	// Trips (CHAT-07: A7-02): TripRepo + TripService + TripHandler под auth-middleware.
-	trips = &tripDeps{trips: service.NewTripService(repo.NewPGTripRepo(pool))}
+	// Repositories
+	userRepo := repo.NewPGUserRepo(pool)
+	tokenRepo := repo.NewPGRefreshTokenRepo(pool)
+	tripRepo := repo.NewPGTripRepo(pool)
+	stopRepo := repo.NewPGStopRepo(pool)
+	photoRepo := repo.NewPGPhotoRepo(pool)
+
+	// Services
+	authSvc := service.NewAuthService(userRepo, tokenRepo, tokenRepo, issuer, validator, cfg.JWTRefreshTTL)
+	tripSvc := service.NewTripService(tripRepo)
+	stopSvc := service.NewStopService(stopRepo, tripRepo)
+	photoSvc := service.NewPhotoService(tripRepo, photoRepo, stg)
+
+	// Handlers
+	authHandler := handlers.NewAuthHandler(authSvc)
+	tripHandler := handlers.NewTripHandler(tripSvc)
+	stopHandler := handlers.NewStopHandler(stopSvc)
+	photoHandler := handlers.NewPhotoHandler(photoSvc, stg)
+	exportHandler := handlers.NewExportHandler(tripSvc, stopSvc)
 
 	// chi router
 	r := chi.NewRouter()
 	r.Use(middleware.ErrorHandler)
 	r.Get("/healthz", healthHandler)
+
+	// auth-мидлвар как http.HandlerFunc для chi r.With (CHAT-07: A7-05/A7-06):
+	// middleware.Auth(secret, next) — сигнатура из A7-05.
+	authMiddleware := func(next http.Handler) http.Handler {
+		return middleware.Auth(cfg.JWTSecret, next)
+	}
+
 	r.Route("/api/v1", func(r chi.Router) {
-		handlers.NewAuthHandler(deps.auth).Mount(r)
-		// Защищённые маршруты: middleware.Auth (CHAT-07: A7-05).
-		// /trips* — только для авторизованных (A7-02); стоп/фото/экспорт-хендлеры
-		// смонтируются следующими задачами (A7-03..A7-06).
-		r.With(func(next http.Handler) http.Handler {
-			return middleware.Auth(cfg.JWTSecret, next)
-		}).Group(func(r chi.Router) {
-			handlers.NewTripHandler(trips.trips).Mount(r)
-			// TODO(A7-03..A7-04): stops/photos под тем же auth-middleware.
+		// Публичные маршруты (без auth) (CHAT-07: A7-01)
+		authHandler.Mount(r)
+
+		// Защищённые маршруты (CHAT-07: A7-02..A7-06)
+		r.With(authMiddleware).Group(func(r chi.Router) {
+			tripHandler.Mount(r)
+			stopHandler.Mount(r)
+			photoHandler.Mount(r)
+			exportHandler.Mount(r)
 		})
 	})
 
@@ -126,13 +125,6 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("server: %v", err)
 	}
-}
-
-func toAppError(err error) *domain.AppError {
-	if ae, ok := err.(*domain.AppError); ok {
-		return ae
-	}
-	return domain.NewInternal()
 }
 
 // healthHandler — GET /healthz → 200 {"status":"ok"} (без auth).
