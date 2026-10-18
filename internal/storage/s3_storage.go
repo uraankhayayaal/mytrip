@@ -4,6 +4,10 @@ package storage
 // Контракт: internal/service/interfaces.go (StoragePort).
 // PresignPut — через s3.PresignClient (PUT-URL для прямой загрузки из браузера),
 // DeleteObject — удаление объекта из бакета.
+//
+// Клиент доступен через интерфейс s3ClientAPI (DeleteObject — единственный метод
+// хранилища, требующий сетевых вызовов; PresignPut — локальная подписанная
+// операция над *s3.Client). В продакшене — реальный *s3.Client; в unit-тестах — мок.
 
 import (
 	"context"
@@ -21,9 +25,15 @@ import (
 // presignTTL — срок жизни pre-signed PUT URL (по умолчанию 15 минут).
 const presignTTL = 15 * time.Minute
 
+// s3ClientAPI — узкий интерфейс для DeleteObject; *s3.Client удовлетворяет ему.
+type s3ClientAPI interface {
+	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+}
+
 // S3Storage — реализация StoragePort поверх s3.Client.
 type S3Storage struct {
-	client *s3.Client
+	client *s3.Client // для PresignPut (локальная подпись, без сети)
+	api    s3ClientAPI // для DeleteObject (сетевой вызов; в тестах — мок)
 	bucket string
 	ttl    time.Duration
 }
@@ -31,11 +41,13 @@ type S3Storage struct {
 var _ service.StoragePort = (*S3Storage)(nil)
 
 // NewS3Storage — конструктор. ttl <= 0 → presignTTL.
+// api по умолчанию = client (реальный DeleteObject); тесты подставляют мок.
 func NewS3Storage(client *s3.Client, bucket string, ttl time.Duration) *S3Storage {
 	if ttl <= 0 {
 		ttl = presignTTL
 	}
-	return &S3Storage{client: client, bucket: bucket, ttl: ttl}
+	api s3ClientAPI = client
+	return &S3Storage{client: client, api: api, bucket: bucket, ttl: ttl}
 }
 
 // PresignPut — pre-signed PUT URL для objectKey; срок действия = ttl от момента вызова.
@@ -52,9 +64,9 @@ func (s *S3Storage) PresignPut(ctx context.Context, objectKey string) (string, t
 	return out.URL, expiresAt, nil
 }
 
-// DeleteObject — удаление объекта; NoSuchKey и аналогичные → не ошибка (идемпотентность).
+// DeleteObject — удаление объекта; NoSuchKey/NotFound → не ошибка (идемпотентность).
 func (s *S3Storage) DeleteObject(ctx context.Context, objectKey string) error {
-	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+	_, err := s.api.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(objectKey),
 	})
