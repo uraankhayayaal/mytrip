@@ -1,11 +1,9 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TripDetail } from './TripDetail';
 import { getTrip } from '../api/trips';
-import { listStops, createStop, updateStop, deleteStop } from '../api/stops';
+import { listStops, updateStop, deleteStop } from '../api/stops';
 import { listPhotos } from '../api/photos';
-import { MapView } from '../components/MapView';
 import type { Trip, Stop, Photo } from '../lib/types';
 
 vi.mock('../api/trips', () => ({ getTrip: vi.fn() }));
@@ -21,11 +19,10 @@ vi.mock('../components/MapView', () => ({
     <div data-testid="map-view">
       <span data-testid="stops-count">{stops.length}</span>
       <span data-testid="selected">{selectedStopId ?? 'none'}</span>
-      <button type="button" onClick={() => onSelectStop('stop-1')}>select</button>
-      <button
-        type="button"
-        onClick={() => onMoveStop('stop-1', { lat: 10, lng: 20 })}
-      >
+      <button type="button" onClick={() => onSelectStop('stop-1')}>
+        select
+      </button>
+      <button type="button" onClick={() => onMoveStop('stop-1', { lat: 10, lng: 20 })}>
         move
       </button>
     </div>
@@ -43,7 +40,7 @@ const trip: Trip = {
   title: 'Поездка в Питер',
   start_date: '2025-06-01',
   end_date: '2025-06-10',
-  cover_photo_url: null,
+  cover_photo_url: undefined,
   created_at: '2025-05-01T00:00:00Z',
   updated_at: '2025-05-01T00:00:00Z',
 };
@@ -91,9 +88,12 @@ describe('TripDetail', () => {
     fireEvent.click(screen.getByRole('button', { name: 'move' }));
 
     await waitFor(() => expect(mockUpdateStop).toHaveBeenCalledTimes(1));
-    expect(mockUpdateStop).toHaveBeenCalledWith('stop-1', expect.objectContaining({
-      location: { lat: 10, lng: 20 },
-    }));
+    expect(mockUpdateStop).toHaveBeenCalledWith(
+      'stop-1',
+      expect.objectContaining({
+        location: { lat: 10, lng: 20 },
+      }),
+    );
   });
 
   it('экспорт PDF/CSV устанавливает window.location.href', async () => {
@@ -113,6 +113,8 @@ describe('TripDetail', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /\+ Стоп/ }));
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Сохранить/ })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Сохранить/ })).toBeInTheDocument(),
+    );
   });
 });

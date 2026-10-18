@@ -43,9 +43,7 @@ describe('PhotoUploader', () => {
 
   it('вызывает deletePhoto и onPhotosChange при удалении', async () => {
     const onPhotosChange = vi.fn();
-    render(
-      <PhotoUploader tripId="trip-1" photos={[photo]} onPhotosChange={onPhotosChange} />
-    );
+    render(<PhotoUploader tripId="trip-1" photos={[photo]} onPhotosChange={onPhotosChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Удалить/ }));
 

@@ -9,7 +9,11 @@ export function TripEdit(): JSX.Element {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: trip, isLoading, error } = useQuery({
+  const {
+    data: trip,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['trip', id],
     queryFn: () => getTrip(id!),
   });
@@ -34,7 +38,10 @@ export function TripEdit(): JSX.Element {
   if (error) {
     const apiError = error as ApiError;
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+        role="alert"
+      >
         <span className="font-bold">Ошибка: </span>
         {apiError.message}
       </div>
@@ -46,16 +53,12 @@ export function TripEdit(): JSX.Element {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">Редактирование поездки</h1>
-      <TripForm 
-        initial={trip} 
+      <TripForm
+        initial={trip}
         onSubmit={async (p) => {
-          try {
-            await mutation.mutateAsync(p);
-          } catch (e) {
-            // Ошибка обрабатывается в mutation.onError или через общий баннер
-            throw e;
-          }
-        }} 
+          // Ошибка обрабатывается в mutation.onError или через общий баннер
+          await mutation.mutateAsync(p);
+        }}
       />
     </div>
   );

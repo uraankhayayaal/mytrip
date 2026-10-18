@@ -81,7 +81,10 @@ export function StopForm({ tripId, initial, onSaved, onCancel }: StopFormProps):
   return (
     <form onSubmit={onSubmit} className="space-y-3" noValidate>
       {apiError && (
-        <div role="alert" className="rounded border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded border border-red-300 bg-red-50 p-2 text-sm text-red-700"
+        >
           {apiError}
         </div>
       )}
@@ -160,10 +163,18 @@ export function StopForm({ tripId, initial, onSaved, onCancel }: StopFormProps):
         {errors.order && <p className="text-sm text-red-600">{errors.order.message}</p>}
       </div>
       <div className="flex gap-2">
-        <button type="submit" disabled={isSubmitting} className="rounded bg-blue-600 px-3 py-1 text-white">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded bg-blue-600 px-3 py-1 text-white"
+        >
           Сохранить
         </button>
-        <button type="button" onClick={onCancel} className="rounded border border-gray-300 px-3 py-1">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded border border-gray-300 px-3 py-1"
+        >
           Отмена
         </button>
       </div>
