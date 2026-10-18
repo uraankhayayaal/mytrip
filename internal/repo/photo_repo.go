@@ -80,6 +80,3 @@ func (r *PGPhotoRepo) Delete(ctx context.Context, tripID, id string) error {
 	}
 	return nil
 }
-
-// ensurePgx — фиксирует импорт pgx.ErrNoRows (используется в тестах и при расширении).
-var _ = pgx.ErrNoRows
