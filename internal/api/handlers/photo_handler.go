@@ -2,13 +2,7 @@ package handlers
 
 // PhotoHandler — CRUD /trips/{id}/photos + presign (CHAT-07: A7-04).
 // Контракт: internal/api/handlers/handlers.go (PhotoHandler).
-// Маршруты (относительно /api/v1):
-//
-//	GET    /trips/{id}/photos        → 200 [PhotoJSON]
-//	POST   /trips/{id}/photos        → 201 PhotoJSON; body {object_key, url, cover?}
-//	DELETE /trips/{id}/photos/{photoId} → 204
-//	POST   /trips/{id}/photos/presign   → 200 {url, expires_at} (frontend PhotoUrlResponse)
-//
+// Маршруты (относительно /api/v1) — см. photo_handler_mount.go.
 // JSON — через middleware.WriteJSON; ошибки — через middleware.WriteError.
 
 import (
@@ -25,15 +19,6 @@ import (
 	"mytrip/internal/domain"
 	"mytrip/internal/service"
 )
-
-// photoServiceWithPresign — PhotoService + presign (StoragePort) для PhotoHandler.
-// Presign вынесен из контракта PhotoService (interfaces.go менять нельзя).
-type photoServiceWithPresign interface {
-	List(ctx context.Context, userID, tripID string) ([]*domain.Photo, error)
-	Create(ctx context.Context, userID, tripID, objectKey, url string, cover bool) (*domain.Photo, error)
-	Delete(ctx context.Context, userID, tripID, photoID string) error
-	PresignPut(ctx context.Context, objectKey string) (string, time.Time, error)
-}
 
 // photoHandler — реализация PhotoHandler (identity-реестр, как в tripHandler).
 type photoHandler struct {
@@ -68,25 +53,6 @@ func (c *compositePhotoService) PresignPut(ctx context.Context, objectKey string
 	return c.Storage.PresignPut(ctx, objectKey)
 }
 
-// Mount — регистрация маршрутов на chi router (путь относительно /api/v1).
-// Роуты вешаются ПОД auth-middleware (см. cmd/server/main.go).
-func (h *PhotoHandler) Mount(r chi.Router) {
-	impl := h.impl()
-	r.Post("/trips/{id}/photos/presign", impl.presign)
-	r.Delete("/trips/{id}/photos/{photoId}", impl.delete)
-	// chi: конкретные паттерны регистрируются раньше wildcard'ов; точный
-	// базовый путь (без хвоста) обрабатывается wildcard-паттерном {tail}.
-	r.Get("/trips/{id}/photos/{tail...}", impl.list)
-	r.Post("/trips/{id}/photos/{tail...}", impl.create)
-}
-
-// impl — приватный доступ к реализации по identity-ключу.
-func (h *PhotoHandler) impl() *photoHandler {
-	if impl, ok := photoHandlers[h]; ok {
-		return impl
-	}
-	return &photoHandler{photos: nil, svc: nil}
-}
 // photoJSON — JSON-представление фото на границе API (frontend Photo).
 type photoJSON struct {
 	ID        string    `json:"id"`
@@ -101,9 +67,9 @@ func toPhotoJSON(p *domain.Photo) photoJSON {
 
 // photoRequest — body POST /trips/{id}/photos: {object_key, url, cover?}.
 type photoRequest struct {
-	ObjectKey string  `json:"object_key"`
-	URL       string  `json:"url"`
-	Cover     *bool   `json:"cover,omitempty"`
+	ObjectKey string `json:"object_key"`
+	URL       string `json:"url"`
+	Cover     *bool  `json:"cover,omitempty"`
 }
 
 // presignRequest — body POST /trips/{id}/photos/presign: {object_key}.
