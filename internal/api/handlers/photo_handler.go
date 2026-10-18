@@ -16,6 +16,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+
+	"mytrip/internal/api/middleware"
+	"mytrip/internal/domain"
+	"mytrip/internal/service"
 )
 
 // photoServiceWithPresign — PhotoService + presign (StoragePort) для PhotoHandler.
