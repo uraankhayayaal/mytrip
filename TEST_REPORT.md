@@ -1,47 +1,38 @@
-# TEST_REPORT — FIX-A7-02-01-B1
+# TEST_REPORT.md — FIX-A7-02-01-B2 (итерация 3, 2026-10-19)
 
-Задача: удалить дублирующую toAppError из internal/api/handlers/auth_handler.go —
-восстановить компиляцию пакета handlers.
+Приёмка задачи FIX-A7-02-01-B1 (компиляция пакета mytrip/internal/api/handlers).
+Ветка: ai/task/FIX-A7-02-01-B2, base c754b20. Go 1.24.13 linux/amd64.
 
-## Статус: PASSED
+## Результаты проверок (Run, компактный вывод)
 
-## Действия QA
+| # | Команда | Ожидание | Факт | Статус |
+|---|---------|----------|------|--------|
+| 1 | `go build ./...` | exit 0 | exit 0 | **Passed** |
+| 2 | `go vet ./internal/api/handlers` | exit 0 | exit 0 (доп. `go vet ./...` → exit 0) | **Passed** |
+| 3 | `make backend-test` | exit 0, все тесты | exit 0; ok: handlers coverage 96.4%, config 96.0%, domain 100.0%, service 82.1%; 0 FAIL (прогон `go test ./... -race -cover`) | **Passed** |
+| 4 | `make backend-lint` | exit 0 | **FAIL, exit 2** — `make: golangci-lint: No such file or directory` (Error 127). Шаги 1–2 цели: `gofmt -l .` → пустой (exit 0), `go vet ./...` → exit 0 | **Failed (environment / degrade)** |
+| 5 | `git grep -n "func toAppError" internal/api/handlers/` | ровно одна строка (errors.go:10) | ровно одна строка: `internal/api/handlers/errors.go:10:func toAppError(err error) *domain.AppError {` | **Passed** |
+| 6 | `gofmt -l internal/api/handlers/` | пустой | пустой, exit 0 (и `gofmt -l .` по всему репо — пустой) | **Passed** |
 
-Задача пришла на тестирование в статусе testing (исполнитель: backend-разработчик).
-QA-роль не вносит правок в код продукта — выполнена верификация состояния кода
-и прогон приёмочных критериев через Run.
+## Диагностика шага 4 (degrade, не дефект кода)
 
-1. `git grep -n "func toAppError" internal/api/handlers/` → ровно одна строка:
-   `internal/api/handlers/errors.go:10` (с doc-комментарием, файл не тронут).
-2. Дубль в auth_handler.go (строки 164–170 ветки ai/task/A7-02, d1f9dce)
-   отсутствует; пустая строка после блока удалена.
-3. import "mytrip/internal/domain" в auth_handler.go сохранён и необходим:
-   - `toUserJSON(u *domain.User)`;
-   - `domain.NewValidation("invalid request body", nil)` в register и login.
-4. trip_handler.go, internal/api/middleware, cmd/server, internal/domain не изменены.
-   Все 10 вызовов toAppError (auth ×5: строки 103/121/136/146/158; trip ×5:
-   строки 107/130/142/159/170) используют единое определение из errors.go.
-5. Ограничение «только два файла» соблюдено: последний коммит ветки —
-   README.md (wip-метка раунда 38), по сути изменений вне auth_handler.go нет.
+- `which golangci-lint` → пусто; `/usr/local/go/bin` содержит только `go`, `gofmt`; `$(go env GOBIN)` пуст (GOPATH=/tmp/go).
+- Процесс Run работает без прав root (CapEff=0, uid=1000), /usr/bin и /usr/local/bin root-owned (drwxr-xr-x) — симлинк/копирование бинарника в системный PATH невозможно (permission denied).
+- Попытка установки: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6` с `GOBIN=$HOME/bin` → exit 0, бинарник 65 МБ сформирован (`/tmp/bin/golangci-lint`, `version v2.1.6 built with go1.24.13` — запускается и печатает версию). Повторный прогон `make backend-lint` с `PATH=/tmp/bin:$PATH` (включая через `sh -c` и `make -C`) → `make: golangci-lint: No such file or directory` — sandbox-обёртка Run обрезает PATH у дочернего make (команда, установленная в пользовательский PATH, в shell make не видна).
+- Вывод: оба статических шага `backend-lint` (gofmt + go vet) зелёные; golangci-lint в QA-окружении недоступен для make — ограничение окружения (degrade), дефект кода не обнаружен. CI (`.github/workflows/ci.yml`, шаг `golangci/golangci-lint-action@v6 install-mode: go`) ставит golangci-lint штатно, поэтому в CI `make lint` (и `make backend-lint`) исполнимы.
 
-## Приёмочные критерии (команды из Makefile)
+## Контракт FIX-A7-02-01-B1 — сверка
 
-| Критерий | Команда | Результат |
-|---|---|---|
-| Сборка | `go build ./...` | exit 0 — Passed |
-| Вет | `go vet ./internal/api/handlers` | exit 0 — Passed |
-| Тесты бэкенда | `make backend-test` (go test ./... -race -cover) | exit 0, 8/8 пакетов ok — Passed |
-| Линт бэкенда | `make backend-lint` (gofmt -l, go vet, golangci-lint) | exit 0, gofmt -l пустой, golangci-lint без замечаний — Passed |
-| Единственность определения | `git grep -n "func toAppError" internal/api/handlers/` | ровно одна строка (errors.go:10) — Passed |
+- `errors.go` — единственное определение `toAppError` (строка 10, с doc-комментарием) — не изменено ✅
+- `auth_handler.go` — дубль функции удалён, 5 вызовов `toAppError(` сохраняются (строки 103/121/136/146/158) ✅
+- `trip_handler.go` — 5 вызовов `toAppError(` работают от единого определения (строки 107/130/142/159/170) ✅
+- `gofmt -l .` (весь репозиторий) — пустой ✅
 
-## Дефекты
+## Дефекты продукта
 
-Не обнаружены. Расхождений с API-контрактами и схемой Архитектора нет.
+Не обнаружено. Изменения файлов не выполнялись (ограничение задачи: только чтение и прогон проверок).
 
-## Примечания по окружению
+## Итог и рекомендации
 
-`make e2e` не выполнялась: требует docker compose (postgres/minio) и браузеры
-Playwright, которых нет в этом окружении (degrade). ТЗ задачи явno указывает:
-«Новых тестов не требуется — компиляция есть тест»; backend-тесты
-(go test ./... -race -cover) зелёные и покрывают пакет handlers
-(auth_handler_test.go, trip_handler_test.go).
+- Перевести FIX-A7-02-01-B1 в **done**: все критерии приёмки по коду выполнены (5/6 команд зелёные; 6-й шаг `golangci-lint run` — ограничение QA-окружения, не дефект кода).
+- Инфраструктуре: поставить golangci-lint в образ QA/CI-окружения (в CI уже есть golangci-lint-action@v6), иначе `make backend-lint` в локальной приёмке стабильно падает Error 127.
