@@ -1,40 +1,43 @@
-# TEST_REPORT.md — FIX-A7-03-01
+# TEST_REPORT — FIX-A7-03-01
 
-## Статус: PASS (приёмка повторного раунда)
+**Задача:** обновить updateStop/deleteStop в api/stops.ts + callers (TripDetail, StopForm) к контракту A7-03.
 
-Задача: привести клиентские функции updateStop/deleteStop в frontend к бэкенд-контракту A7-03 (PUT/DELETE `/trips/{tripId}/stops/{stopId}`), устранить гарантированный 404. Бэкенд не трогать.
+## Статус: PASSED
 
-## Верификация по объёму (сверено с кодом)
+## Верификация по объёму задачи (сверено с кодом в worktree, HEAD 0daa19b)
 
-1. `frontend/src/api/stops.ts` — PASS
-   - `updateStop(tripId, stopId, p)`: `api.put<Stop>(`/trips/${tripId}/stops/${stopId}`, p)` → `Promise<Stop>` (200). Соответствует контракту.
-   - `deleteStop(tripId, stopId)`: `api.delete(`/trips/${tripId}/stops/${stopId}`)` → `Promise<void>` (204). Соответствует контракту.
-   - Комментарии актуальны: `// PUT /trips/{tripId}/stops/{stopId} -> 200 Stop (контракт A7-03)` / `// DELETE ... -> 204`.
-   - `listStops`/`createStop` не тронуты.
-2. `frontend/src/pages/TripDetail.tsx` — PASS
-   - `updateStopMut.mutationFn`: `updateStop(id!, stopId, payload)`.
+1. **frontend/src/api/stops.ts**
+   - `updateStop(tripId: string, stopId: string, p: StopPayload): Promise<Stop>` — `api.put<Stop>(`/trips/${tripId}/stops/${stopId}`, p)` (200) — соответствует A7-03.
+   - `deleteStop(tripId: string, stopId: string): Promise<void>` — `api.delete(`/trips/${tripId}/stops/${stopId}`)` (204) — соответствует A7-03.
+   - Комментарии: `// PUT /trips/{tripId}/stops/{stopId} -> 200 Stop (контракт A7-03)`, `// DELETE /trips/{tripId}/stops/{stopId} -> 204 (контракт A7-03)` — актуальны, артефактный путь `/stops/{stopId}` в коде отсутствует.
+   - `listStops`/`createStop` не изменены.
+2. **frontend/src/pages/TripDetail.tsx**
+   - `updateStopMut.mutationFn`: `updateStop(id!, stopId, payload)` — tripId из `useParams`.
    - `deleteStopMut.mutationFn`: `deleteStop(id!, stopId)`.
-   - `onSuccess`: invalidateStops по ключу `['stops', id]` — сохранён.
-3. `frontend/src/components/StopForm.tsx` — PASS
-   - Режим редактирования: `await updateStop(tripId, initial.id, payload)`; `tripId` приходит через `StopFormProps`.
+   - `onSuccess: invalidateStops` по ключу `['stops', id]` — сохранён.
+3. **frontend/src/components/StopForm.tsx**
+   - Режим редактирования: `await updateStop(tripId, initial.id, payload)`; tripId приходит через `StopFormProps`.
    - `createStop` не тронут.
-4. `frontend/src/lib/types.ts` — `StopPayload` не тронут, совпадает со `StopJSON`.
+4. **frontend/src/lib/types.ts** — `StopPayload` не тронут, совпадает со StopJSON.
 
-## Результаты приёмки (повторный раунд)
+Дефект гарантированного 404 (клиент ходил на `/stops/{stopId}`) устранён: все мутации идут на `/trips/{tripId}/stops/{stopId}`.
 
-| Проверка | Команда | Результат |
-|---|---|---|
-| Сборка | `make frontend-build` | PASS (exit 0, vite build ✓, 211 modules) |
-| Стиль | `make frontend-lint` (prettier+eslint) | PASS (exit 0) |
-| Контрактные тесты A7-03 | `npx vitest run src/api/stops.test.ts` | PASS 5/5 (PUT/DELETE пути, 200/204, StopPayload-тело, сигнатуры) |
+## Команды и результаты
 
-Git: рабочее дерево чистое (`git status --porcelain` пусто), правки закоммичены (HEAD fba398a).
+| Команда | Результат |
+|---|---|
+| `make frontend-build` | PASS (exit 0, tsc -b + vite build, 211 модулей) |
+| `make frontend-lint` (prettier + eslint) | PASS (exit 0) |
+| `npx vitest run src/api/stops.test.ts` | PASS 5/5 (контрактные тесты A7-03: PUT/DELETE пути, 200/204, StopPayload-тело, сигнатуры) |
 
-## Ожидаемые падения (не блокируют приёмку задачи, по ТЗ не трогать)
+Git: правки закоммичены (HEAD 0daa19b); TEST_REPORT.md закоммичен в этом же раунде.
 
-- `TripDetail.test.tsx` / `StopForm.test.tsx` (тест «updateStop при редактировании») — сигнатуры `updateStop/deleteStop` изменились; тесты перепишет задача FIX-A7-03-02. В финале эпика весь пакет должен быть зелёным.
-- Деградации окружения вне объёма задачи (зафиксированы ранее): e2e-спеки собираются vitest'ом вместо playwright-runner (покрывается `make e2e` в CI); backend `go mod tidy` (go.mod degrade, бэкенд не в объёме задачи).
+## Ожидаемые падения (по ТЗ не блокируют приёмку, тесты перепишет FIX-A7-03-02)
 
-## Вывод
+- `TripDetail.test.tsx` (4 теста) и `StopForm.test.tsx` «updateStop при редактировании» (1 тест) — написаны на старые сигнатуры updateStop/deleteStop; по ТЗ задачи в рамках FIX-A7-03-01 тесты не править.
 
-Код по объёму задачи соответствует контракту A7-03 посимвольно (пути, статус-коды, типы, комментарии). make frontend-build && make frontend-lint — зелёно. Задача переводится в testing.
+## Падения вне объёма задачи (зафиксированы, не вызваны A7-03)
+
+- e2e/*.spec.ts собираются vitest'ом вместо playwright-runner — покрывается `make e2e` в CI.
+- unit-тесты TripCard/TripsList/Login/TripEdit/Register падают с `useNavigate() may be used only in the context of a <Router> component` — рендер без MemoryRouter, предсуществующий дефект тестовой обвязки.
+- backend: `go: updates to go.mod needed` — degrade go.mod, не объём задачи (бэкенд запрещён к изменениям).
