@@ -55,12 +55,12 @@ describe('TripCard', () => {
   it('should call deleteTrip and invalidate queries when clicking Delete', async () => {
     const invalidateQueries = vi.mocked(useQueryClient().invalidateQueries);
     render(<TripCard trip={mockTrip} />);
-    
+
     // Mock window.confirm
     vi.spyOn(window, 'confirm').mockImplementation(() => true);
-    
+
     fireEvent.click(screen.getByText('Удалить'));
-    
+
     await waitFor(() => {
       expect(deleteTrip).toHaveBeenCalledWith('1');
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['trips'] });

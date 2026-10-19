@@ -9,12 +9,20 @@ export interface MapViewProps {
   onSelectStop?: (stopId: string) => void; // клик по маркеру
 }
 
-export function MapView({ stops, onMoveStop, selectedStopId, onSelectStop }: MapViewProps): JSX.Element {
+export function MapView({
+  stops,
+  onMoveStop,
+  selectedStopId,
+  onSelectStop,
+}: MapViewProps): JSX.Element {
   const stopsSorted = [...stops].sort((a, b) => a.order - b.order);
 
   return (
     <MapContainer center={[55.75, 37.6]} zoom={4} className="h-96 w-full">
-      <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
       {stopsSorted.map((stop) => {
         const isSelected = stop.id === selectedStopId;
         const icon = L.divIcon({

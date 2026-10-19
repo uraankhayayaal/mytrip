@@ -1,0 +1,1861 @@
+
+> mytrip-frontend@0.1.0 test
+> vitest --run
+
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90m/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend[39m
+
+ [32m✓[39m src/api/client.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 83[2mms[22m[39m
+ [32m✓[39m src/api/stops.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m src/components/MapView.test.tsx [2m ([22m[2m5 tests[22m[2m)[22m[90m 105[2mms[22m[39m
+[90mstderr[2m | src/components/TripCard.test.tsx[2m > [22m[2mTripCard[2m > [22m[2mshould navigate to detail page on click[22m[39m
+Error: Uncaught [TypeError: navigate is not a function]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at invokeGuardedCallbackAndCatchFirstError (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4291:25)
+    at executeDispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:9041:3) TypeError: navigate is not a function
+    at handleCardClick [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/components/TripCard.tsx:17:5[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m
+    at HTMLUnknownElementImpl._dispatch [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:233:9[90m)[39m
+    at HTMLUnknownElementImpl.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:104:17[90m)[39m
+    at HTMLUnknownElement.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventTarget.js:241:34[90m)[39m
+    at Object.invokeGuardedCallbackDev [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4213:16[90m)[39m
+    at invokeGuardedCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4277:31[90m)[39m
+Error: Uncaught [TypeError: navigate is not a function]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLDivElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLDivElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLDivElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at /home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/@testing-library/dom/dist/events.js:19:20
+    at /home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/@testing-library/react/dist/pure.js:113:18
+    at /home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/@testing-library/react/dist/act-compat.js:47:24
+    at act (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react/cjs/react.development.js:2512:16) TypeError: navigate is not a function
+    at handleCardClick [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/components/TripCard.tsx:17:5[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m
+    at HTMLUnknownElementImpl._dispatch [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:233:9[90m)[39m
+    at HTMLUnknownElementImpl.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:104:17[90m)[39m
+    at HTMLUnknownElement.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventTarget.js:241:34[90m)[39m
+    at Object.invokeGuardedCallbackDev [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4213:16[90m)[39m
+    at invokeGuardedCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4277:31[90m)[39m {
+  stackStr: [32m'TypeError: navigate is not a function\n'[39m +
+    [32m'    at handleCardClick (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/components/TripCard.tsx:17:5)\n'[39m +
+    [32m'    at HTMLUnknownElement.callCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4164:14)\n'[39m +
+    [32m'    at HTMLUnknownElement.callTheUserObjectsOperation (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)\n'[39m +
+    [32m'    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)\n'[39m +
+    [32m'    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)\n'[39m +
+    [32m'    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)\n'[39m +
+    [32m'    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)\n'[39m +
+    [32m'    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)\n'[39m +
+    [32m'    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)\n'[39m +
+    [32m'    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)'[39m,
+  nameStr: [32m'TypeError'[39m,
+  expected: [32m'undefined'[39m,
+  actual: [32m'undefined'[39m
+}
+
+[90mstderr[2m | src/components/TripCard.test.tsx[2m > [22m[2mTripCard[2m > [22m[2mshould navigate to edit page when clicking Edit[22m[39m
+Error: Uncaught [TypeError: navigate is not a function]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at invokeGuardedCallbackAndCatchFirstError (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4291:25)
+    at executeDispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:9041:3) TypeError: navigate is not a function
+    at handleEditClick [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/components/TripCard.tsx:22:5[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m
+    at HTMLUnknownElementImpl._dispatch [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:233:9[90m)[39m
+    at HTMLUnknownElementImpl.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:104:17[90m)[39m
+    at HTMLUnknownElement.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventTarget.js:241:34[90m)[39m
+    at Object.invokeGuardedCallbackDev [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4213:16[90m)[39m
+    at invokeGuardedCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4277:31[90m)[39m
+Error: Uncaught [TypeError: navigate is not a function]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLButtonElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLButtonElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLButtonElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at /home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/@testing-library/dom/dist/events.js:19:20
+    at /home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/@testing-library/react/dist/pure.js:113:18
+    at /home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/@testing-library/react/dist/act-compat.js:47:24
+    at act (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react/cjs/react.development.js:2512:16) TypeError: navigate is not a function
+    at handleEditClick [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/components/TripCard.tsx:22:5[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m
+    at HTMLUnknownElementImpl._dispatch [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:233:9[90m)[39m
+    at HTMLUnknownElementImpl.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:104:17[90m)[39m
+    at HTMLUnknownElement.dispatchEvent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventTarget.js:241:34[90m)[39m
+    at Object.invokeGuardedCallbackDev [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4213:16[90m)[39m
+    at invokeGuardedCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4277:31[90m)[39m {
+  stackStr: [32m'TypeError: navigate is not a function\n'[39m +
+    [32m'    at handleEditClick (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/components/TripCard.tsx:22:5)\n'[39m +
+    [32m'    at HTMLUnknownElement.callCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4164:14)\n'[39m +
+    [32m'    at HTMLUnknownElement.callTheUserObjectsOperation (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)\n'[39m +
+    [32m'    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)\n'[39m +
+    [32m'    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)\n'[39m +
+    [32m'    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)\n'[39m +
+    [32m'    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)\n'[39m +
+    [32m'    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)\n'[39m +
+    [32m'    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)\n'[39m +
+    [32m'    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)'[39m,
+  nameStr: [32m'TypeError'[39m,
+  expected: [32m'undefined'[39m,
+  actual: [32m'undefined'[39m
+}
+
+[90mstderr[2m | src/pages/Login.test.tsx[2m > [22m[2mLogin[2m > [22m[2mвалидная форма вызывает login и setAccessToken, редирект на /[22m[39m
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | src/pages/TripDetail.test.tsx[2m > [22m[2mTripDetail[2m > [22m[2mрендерит MapView со стопами[22m[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+The above error occurred in the <TripDetail> component:
+
+    at TripDetail (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripDetail.tsx:24:40)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+[90mstderr[2m | src/pages/TripDetail.test.tsx[2m > [22m[2mTripDetail[2m > [22m[2mdrag маркера вызывает updateStop[22m[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+The above error occurred in the <TripDetail> component:
+
+    at TripDetail (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripDetail.tsx:24:40)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+[90mstderr[2m | src/pages/TripDetail.test.tsx[2m > [22m[2mTripDetail[2m > [22m[2mэкспорт PDF/CSV устанавливает window.location.href[22m[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+The above error occurred in the <TripDetail> component:
+
+    at TripDetail (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripDetail.tsx:24:40)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+[90mstderr[2m | src/pages/TripDetail.test.tsx[2m > [22m[2mTripDetail[2m > [22m[2m«+ Стоп» открывает StopForm[22m[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+Error: Uncaught [Error: useNavigate() may be used only in the context of a <Router> component.]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useNavigate() may be used only in the context of a <Router> component.
+    at Object.invariant [as UNSAFE_invariant] [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4m@remix-run[24m/router/history.ts:494:11[90m)[39m
+    at useNavigateUnstable [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:189:3[90m)[39m
+    at Proxy.useNavigate [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-router[24m/lib/hooks.tsx:185:46[90m)[39m
+    at TripDetail [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripDetail.tsx:15:20[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+The above error occurred in the <TripDetail> component:
+
+    at TripDetail (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripDetail.tsx:24:40)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ [33m❯[39m src/pages/TripDetail.test.tsx [2m ([22m[2m4 tests[22m [2m|[22m [31m4 failed[39m[2m)[22m[90m 193[2mms[22m[39m
+[31m   [33m❯[31m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22mрендерит MapView со стопами[39m
+[31m     → useNavigate() may be used only in the context of a <Router> component.[39m
+[31m   [33m❯[31m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22mdrag маркера вызывает updateStop[39m
+[31m     → useNavigate() may be used only in the context of a <Router> component.[39m
+[31m   [33m❯[31m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22mэкспорт PDF/CSV устанавливает window.location.href[39m
+[31m     → useNavigate() may be used only in the context of a <Router> component.[39m
+[31m   [33m❯[31m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22m«+ Стоп» открывает StopForm[39m
+[31m     → useNavigate() may be used only in the context of a <Router> component.[39m
+ [33m❯[39m src/components/StopForm.test.tsx [2m ([22m[2m3 tests[22m [2m|[22m [31m1 failed[39m[2m)[22m[33m 564[2mms[22m[39m
+[31m   [33m❯[31m src/components/StopForm.test.tsx[2m > [22mStopForm[2m > [22mвызывает updateStop при редактировании[39m
+[31m     → expected "spy" to be called with arguments: [ 'stop-1', ObjectContaining{…} ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[2m  Array [[22m
+[31m+   "trip-1",[90m
+[2m    "stop-1",[22m
+[32m-   ObjectContaining {[90m
+[31m+   Object {[90m
+[31m+     "description": "Описание",[90m
+[31m+     "location": Object {[90m
+[31m+       "lat": 55.75,[90m
+[31m+       "lng": 37.61,[90m
+[31m+     },[90m
+[31m+     "order": 1,[90m
+[2m      "title": "Обновлённый",[22m
+[31m+     "visit_date": "2025-06-10",[90m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+ [33m❯[39m src/components/TripCard.test.tsx [2m ([22m[2m4 tests[22m [2m|[22m [31m3 failed[39m[2m)[22m[33m 1193[2mms[22m[39m
+[31m   [33m❯[31m src/components/TripCard.test.tsx[2m > [22mTripCard[2m > [22mshould navigate to detail page on click[39m
+[31m     → undefined is not a spy or a call to a spy![39m
+[31m   [33m❯[31m src/components/TripCard.test.tsx[2m > [22mTripCard[2m > [22mshould navigate to edit page when clicking Edit[39m
+[31m     → undefined is not a spy or a call to a spy![39m
+[31m   [33m❯[31m src/components/TripCard.test.tsx[2m > [22mTripCard[2m > [22mshould call deleteTrip and invalidate queries when clicking Delete[39m
+[31m     → expected "spy" to be called with arguments: [ { queryKey: [ 'trips' ] } ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"[31m
+      [36m>[31m
+        [36m<img[31m
+          [33malt[31m=[32m"Поездка в горы"[31m
+          [33mclass[31m=[32m"w-full h-48 object-cover"[31m
+          [33msrc[31m=[32m"http://example.com/photo.jpg"[31m
+        [36m/>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4"[31m
+        [36m>[31m
+          [36m<h3[31m
+            [33mclass[31m=[32m"text-xl font-bold text-gray-900 truncate"[31m
+          [36m>[31m
+            [0mПоездка в горы[0m
+          [36m</h3>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-sm text-gray-500 mb-2"[31m
+          [36m>[31m
+            [0m01.01.2024[0m
+            [0m — [0m
+            [0m10.01.2024[0m
+          [36m</p>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-gray-600 text-sm line-clamp-2 mb-4"[31m
+          [36m>[31m
+            [0mКрутой отдых в Альпах[0m
+          [36m</p>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[31m
+            [36m>[31m
+              [0mИзменить[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"[31m
+            [36m>[31m
+              [0mУдалить[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+ [32m✓[39m src/api/errors.test.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+[90mstderr[2m | src/pages/TripsList.test.tsx[2m > [22m[2mTripsList[2m > [22m[2mshould render a list of trips[22m[39m
+Error: Uncaught [Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+    at VitestMocker.createError [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:79:19[90m)[39m
+    at Object.get [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:153:22[90m)[39m
+    at TripsList [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripsList.tsx:16:14[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m {
+  codeFrame: [32m'vi\x1B[33m.\x1B[39m\x1B[34mmock\x1B[39m(\x1B[32m"../api/trips"\x1B[39m\x1B[33m,\x1B[39m \x1B[35masync\x1B[39m (importOriginal) \x1B[33m=>\x1B[39m {\n'[39m +
+    [32m'  \x1B[35mconst\x1B[39m actual \x1B[33m=\x1B[39m \x1B[35mawait\x1B[39m \x1B[34mimportOriginal\x1B[39m()\n'[39m +
+    [32m'  \x1B[35mreturn\x1B[39m {\n'[39m +
+    [32m'    \x1B[33m...\x1B[39mactual\x1B[33m,\x1B[39m\n'[39m +
+    [32m'    \x1B[90m// your mocked methods\x1B[39m\n'[39m +
+    [32m'  }\n'[39m +
+    [32m'})'[39m
+}
+Error: Uncaught [Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+    at VitestMocker.createError [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:79:19[90m)[39m
+    at Object.get [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:153:22[90m)[39m
+    at TripsList [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripsList.tsx:16:14[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m {
+  codeFrame: [32m'vi\x1B[33m.\x1B[39m\x1B[34mmock\x1B[39m(\x1B[32m"../api/trips"\x1B[39m\x1B[33m,\x1B[39m \x1B[35masync\x1B[39m (importOriginal) \x1B[33m=>\x1B[39m {\n'[39m +
+    [32m'  \x1B[35mconst\x1B[39m actual \x1B[33m=\x1B[39m \x1B[35mawait\x1B[39m \x1B[34mimportOriginal\x1B[39m()\n'[39m +
+    [32m'  \x1B[35mreturn\x1B[39m {\n'[39m +
+    [32m'    \x1B[33m...\x1B[39mactual\x1B[33m,\x1B[39m\n'[39m +
+    [32m'    \x1B[90m// your mocked methods\x1B[39m\n'[39m +
+    [32m'  }\n'[39m +
+    [32m'})'[39m
+}
+The above error occurred in the <TripsList> component:
+
+    at TripsList (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripsList.tsx:21:36)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+[90mstderr[2m | src/pages/TripsList.test.tsx[2m > [22m[2mTripsList[2m > [22m[2mshould render placeholder when list is empty[22m[39m
+Error: Uncaught [Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+    at VitestMocker.createError [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:79:19[90m)[39m
+    at Object.get [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:153:22[90m)[39m
+    at TripsList [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripsList.tsx:16:14[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m {
+  codeFrame: [32m'vi\x1B[33m.\x1B[39m\x1B[34mmock\x1B[39m(\x1B[32m"../api/trips"\x1B[39m\x1B[33m,\x1B[39m \x1B[35masync\x1B[39m (importOriginal) \x1B[33m=>\x1B[39m {\n'[39m +
+    [32m'  \x1B[35mconst\x1B[39m actual \x1B[33m=\x1B[39m \x1B[35mawait\x1B[39m \x1B[34mimportOriginal\x1B[39m()\n'[39m +
+    [32m'  \x1B[35mreturn\x1B[39m {\n'[39m +
+    [32m'    \x1B[33m...\x1B[39mactual\x1B[33m,\x1B[39m\n'[39m +
+    [32m'    \x1B[90m// your mocked methods\x1B[39m\n'[39m +
+    [32m'  }\n'[39m +
+    [32m'})'[39m
+}
+Error: Uncaught [Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+    at VitestMocker.createError [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:79:19[90m)[39m
+    at Object.get [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:153:22[90m)[39m
+    at TripsList [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripsList.tsx:16:14[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m {
+  codeFrame: [32m'vi\x1B[33m.\x1B[39m\x1B[34mmock\x1B[39m(\x1B[32m"../api/trips"\x1B[39m\x1B[33m,\x1B[39m \x1B[35masync\x1B[39m (importOriginal) \x1B[33m=>\x1B[39m {\n'[39m +
+    [32m'  \x1B[35mconst\x1B[39m actual \x1B[33m=\x1B[39m \x1B[35mawait\x1B[39m \x1B[34mimportOriginal\x1B[39m()\n'[39m +
+    [32m'  \x1B[35mreturn\x1B[39m {\n'[39m +
+    [32m'    \x1B[33m...\x1B[39mactual\x1B[33m,\x1B[39m\n'[39m +
+    [32m'    \x1B[90m// your mocked methods\x1B[39m\n'[39m +
+    [32m'  }\n'[39m +
+    [32m'})'[39m
+}
+The above error occurred in the <TripsList> component:
+
+    at TripsList (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripsList.tsx:21:36)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+[90mstderr[2m | src/pages/TripsList.test.tsx[2m > [22m[2mTripsList[2m > [22m[2mshould create a draft trip and navigate to edit when clicking + New Trip[22m[39m
+Error: Uncaught [Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+    at VitestMocker.createError [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:79:19[90m)[39m
+    at Object.get [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:153:22[90m)[39m
+    at TripsList [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripsList.tsx:16:14[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m {
+  codeFrame: [32m'vi\x1B[33m.\x1B[39m\x1B[34mmock\x1B[39m(\x1B[32m"../api/trips"\x1B[39m\x1B[33m,\x1B[39m \x1B[35masync\x1B[39m (importOriginal) \x1B[33m=>\x1B[39m {\n'[39m +
+    [32m'  \x1B[35mconst\x1B[39m actual \x1B[33m=\x1B[39m \x1B[35mawait\x1B[39m \x1B[34mimportOriginal\x1B[39m()\n'[39m +
+    [32m'  \x1B[35mreturn\x1B[39m {\n'[39m +
+    [32m'    \x1B[33m...\x1B[39mactual\x1B[33m,\x1B[39m\n'[39m +
+    [32m'    \x1B[90m// your mocked methods\x1B[39m\n'[39m +
+    [32m'  }\n'[39m +
+    [32m'})'[39m
+}
+Error: Uncaught [Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+]
+    at reportException (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
+    at innerInvokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
+    at invokeEventListeners (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+    at HTMLUnknownElementImpl._dispatch (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+    at HTMLUnknownElementImpl.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+    at HTMLUnknownElement.dispatchEvent (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+    at Object.invokeGuardedCallbackDev (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
+    at invokeGuardedCallback (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
+    at beginWork$1 (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
+    at performUnitOfWork (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+    at VitestMocker.createError [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:79:19[90m)[39m
+    at Object.get [90m(file:///home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mvitest[24m/dist/vendor/execute.fL3szUAI.js:153:22[90m)[39m
+    at TripsList [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39msrc/pages/TripsList.tsx:16:14[90m)[39m
+    at renderWithHooks [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:15486:18[90m)[39m
+    at mountIndeterminateComponent [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:20103:13[90m)[39m
+    at beginWork [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:21626:16[90m)[39m
+    at HTMLUnknownElement.callCallback [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom.development.js:4164:14[90m)[39m
+    at HTMLUnknownElement.callTheUserObjectsOperation [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/generated/EventListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:350:25[90m)[39m
+    at invokeEventListeners [90m(/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/[39mnode_modules/[4mjsdom[24m/lib/jsdom/living/events/EventTarget-impl.js:286:3[90m)[39m {
+  codeFrame: [32m'vi\x1B[33m.\x1B[39m\x1B[34mmock\x1B[39m(\x1B[32m"../api/trips"\x1B[39m\x1B[33m,\x1B[39m \x1B[35masync\x1B[39m (importOriginal) \x1B[33m=>\x1B[39m {\n'[39m +
+    [32m'  \x1B[35mconst\x1B[39m actual \x1B[33m=\x1B[39m \x1B[35mawait\x1B[39m \x1B[34mimportOriginal\x1B[39m()\n'[39m +
+    [32m'  \x1B[35mreturn\x1B[39m {\n'[39m +
+    [32m'    \x1B[33m...\x1B[39mactual\x1B[33m,\x1B[39m\n'[39m +
+    [32m'    \x1B[90m// your mocked methods\x1B[39m\n'[39m +
+    [32m'  }\n'[39m +
+    [32m'})'[39m
+}
+The above error occurred in the <TripsList> component:
+
+    at TripsList (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/src/pages/TripsList.tsx:21:36)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ [33m❯[39m src/pages/TripsList.test.tsx [2m ([22m[2m3 tests[22m [2m|[22m [31m3 failed[39m[2m)[22m[90m 102[2mms[22m[39m
+[31m   [33m❯[31m src/pages/TripsList.test.tsx[2m > [22mTripsList[2m > [22mshould render a list of trips[39m
+[31m     → [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+[39m
+[31m   [33m❯[31m src/pages/TripsList.test.tsx[2m > [22mTripsList[2m > [22mshould render placeholder when list is empty[39m
+[31m     → [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+[39m
+[31m   [33m❯[31m src/pages/TripsList.test.tsx[2m > [22mTripsList[2m > [22mshould create a draft trip and navigate to edit when clicking + New Trip[39m
+[31m     → [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+[39m
+[90mstderr[2m | src/pages/Register.test.tsx[2m > [22m[2mRegister[2m > [22m[2mвалидная форма вызывает register, редирект на /login[22m[39m
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m✓[39m src/components/PhotoUploader.test.tsx [2m ([22m[2m2 tests[22m[2m)[22m[90m 215[2mms[22m[39m
+ [33m❯[39m e2e/trips.spec.ts [2m ([22m[2m0 test[22m[2m)[22m
+[90mstderr[2m | Object.<anonymous> (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/playwright-core/lib/bootstrap.js:28:11)[22m[39m
+You are running Node.js 18.20.4.
+Playwright requires Node.js 20 or higher. 
+Please update your version of Node.js.
+
+ [33m❯[39m src/pages/Login.test.tsx [2m ([22m[2m3 tests[22m [2m|[22m [31m2 failed[39m[2m)[22m[33m 3095[2mms[22m[39m
+[31m   [33m❯[31m src/pages/Login.test.tsx[2m > [22mLogin[2m > [22mвалидная форма вызывает login и setAccessToken, редирект на /[39m
+[31m     → expected "spy" to be called with arguments: [ { email: 'a@b.c', …(1) } ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[31m   [33m❯[31m src/pages/Login.test.tsx[2m > [22mLogin[2m > [22mApiError unauthorized: баннер «Неверный email или пароль»[39m
+[31m     → Unable to find an accessible element with the role "alert"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "Вход":
+  [36m<h1[31m
+    [33mclass[31m=[32m"mb-4 text-2xl font-bold text-gray-900"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Email":
+  [36m<input[31m
+    [33mautocomplete[31m=[32m"email"[31m
+    [33mclass[31m=[32m"w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"[31m
+    [33mid[31m=[32m"email"[31m
+    [33mname[31m=[32m"email"[31m
+    [33mtype[31m=[32m"email"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"mt-1 text-sm text-red-600"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"mt-4 text-center text-sm text-gray-600"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  button:
+
+  Name "Войти":
+  [36m<button[31m
+    [33mclass[31m=[32m"w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"[31m
+    [33mtype[31m=[32m"submit"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  link:
+
+  Name "Регистрация":
+  [36m<a[31m
+    [33mclass[31m=[32m"text-blue-600 hover:underline"[31m
+    [33mhref[31m=[32m"/register"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex min-h-screen items-center justify-center bg-gray-50 px-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md rounded-lg bg-white p-6 shadow"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33mclass[31m=[32m"mb-4 text-2xl font-bold text-gray-900"[31m
+        [36m>[31m
+          [0mВход[0m
+        [36m</h1>[31m
+        [36m<form[31m
+          [33mclass[31m=[32m"space-y-4"[31m
+          [33mnovalidate[31m=[32m""[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-sm font-medium text-gray-700"[31m
+              [33mfor[31m=[32m"email"[31m
+            [36m>[31m
+              [0mEmail[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mautocomplete[31m=[32m"email"[31m
+              [33mclass[31m=[32m"w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"[31m
+              [33mid[31m=[32m"email"[31m
+              [33mname[31m=[32m"email"[31m
+              [33mtype[31m=[32m"email"[31m
+            [36m/>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-red-600"[31m
+            [36m>[31m
+              [0mInvalid email[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-sm font-medium text-gray-700"[31m
+              [33mfor[31m=[32m"password"[31m
+            [36m>[31m
+              [0mПароль[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mautocomplete[31m=[32m"current-password"[31m
+              [33mclass[31m=[32m"w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"[31m
+              [33mid[31m=[32m"password"[31m
+              [33mname[31m=[32m"password"[31m
+              [33mtype[31m=[32m"password"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"[31m
+            [33mtype[31m=[32m"submit"[31m
+          [36m>[31m
+            [0mВойти[0m
+          [36m</button>[31m
+        [36m</form>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"mt-4 text-center text-sm text-gray-600"[31m
+        [36m>[31m
+          [0mНет аккаунта?[0m
+          [0m [0m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-blue-600 hover:underline"[31m
+            [33mhref[31m=[32m"/register"[31m
+          [36m>[31m
+            [0mРегистрация[0m
+          [36m</a>[31m
+        [36m</p>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+ [33m❯[39m e2e/auth.spec.ts [2m ([22m[2m0 test[22m[2m)[22m
+[90mstderr[2m | Object.<anonymous> (/home/ayaal/app/ollama/temp/.wt-task-mytrip-FIX-A7-03-01/frontend/node_modules/playwright-core/lib/bootstrap.js:28:11)[22m[39m
+You are running Node.js 18.20.4.
+Playwright requires Node.js 20 or higher. 
+Please update your version of Node.js.
+
+ [33m❯[39m src/pages/TripEdit.test.tsx [2m ([22m[2m2 tests[22m [2m|[22m [31m2 failed[39m[2m)[22m[33m 1198[2mms[22m[39m
+[31m   [33m❯[31m src/pages/TripEdit.test.tsx[2m > [22mTripEdit[2m > [22mshould prefill form with trip data[39m
+[31m     → Found a label with the text of: /Название поездки/i, however no form control was found associated to that label. Make sure you're using the "for" attribute or "aria-labelledby" attribute correctly.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"p-4"[31m
+    [36m>[31m
+      [36m<h1[31m
+        [33mclass[31m=[32m"text-2xl font-bold mb-6"[31m
+      [36m>[31m
+        [0mРедактирование поездки[0m
+      [36m</h1>[31m
+      [36m<form[31m
+        [33mclass[31m=[32m"space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"grid grid-cols-1 gap-4"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+            [36m>[31m
+              [0mНазвание поездки[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+              [33mname[31m=[32m"title"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+            [36m>[31m
+              [0mОписание[0m
+            [36m</label>[31m
+            [36m<textarea[31m
+              [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+              [33mname[31m=[32m"description"[31m
+              [33mrows[31m=[32m"4"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"grid grid-cols-1 sm:grid-cols-2 gap-4"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mДата начала[0m
+              [36m</label>[31m
+              [36m<input[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"start_date"[31m
+                [33mtype[31m=[32m"date"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mДата окончания[0m
+              [36m</label>[31m
+              [36m<input[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"end_date"[31m
+                [33mtype[31m=[32m"date"[31m
+              [36m/>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+            [36m>[31m
+              [0mURL обложки (опционально)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+              [33mname[31m=[32m"cover_photo_url"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex justify-end gap-3 pt-4"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"[31m
+            [33mtype[31m=[32m"button"[31m
+          [36m>[31m
+            [0mОтмена[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"[31m
+            [33mtype[31m=[32m"submit"[31m
+          [36m>[31m
+            [0mСохранить[0m
+          [36m</button>[31m
+        [36m</div>[31m
+      [36m</form>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[31m   [33m❯[31m src/pages/TripEdit.test.tsx[2m > [22mTripEdit[2m > [22mshould update trip and navigate on submit[39m
+[31m     → expected "spy" to be called with arguments: [ '/trips/1' ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  2nd spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  3rd spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  4th spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  5th spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  6th spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+[31m[90m
+
+Number of calls: [1m6[22m
+[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"p-4"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33mclass[31m=[32m"text-2xl font-bold mb-6"[31m
+        [36m>[31m
+          [0mРедактирование поездки[0m
+        [36m</h1>[31m
+        [36m<form[31m
+          [33mclass[31m=[32m"space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"grid grid-cols-1 gap-4"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mНазвание поездки[0m
+              [36m</label>[31m
+              [36m<input[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"title"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mОписание[0m
+              [36m</label>[31m
+              [36m<textarea[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"description"[31m
+                [33mrows[31m=[32m"4"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"grid grid-cols-1 sm:grid-cols-2 gap-4"[31m
+            [36m>[31m
+              [36m<div>[31m
+                [36m<label[31m
+                  [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+                [36m>[31m
+                  [0mДата начала[0m
+                [36m</label>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                  [33mname[31m=[32m"start_date"[31m
+                  [33mtype[31m=[32m"date"[31m
+                [36m/>[31m
+              [36m</div>[31m
+              [36m<div>[31m
+                [36m<label[31m
+                  [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+                [36m>[31m
+                  [0mДата окончания[0m
+                [36m</label>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                  [33mname[31m=[32m"end_date"[31m
+                  [33mtype[31m=[32m"date"[31m
+                [36m/>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mURL обложки (опционально)[0m
+              [36m</label>[31m
+              [36m<input[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"cover_photo_url"[31m
+              [36m/>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex justify-end gap-3 pt-4"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [0mОтмена[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"[31m
+              [33mtype[31m=[32m"submit"[31m
+            [36m>[31m
+              [0mСохранить[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</form>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+ [33m❯[39m src/pages/Register.test.tsx [2m ([22m[2m2 tests[22m [2m|[22m [31m1 failed[39m[2m)[22m[33m 1576[2mms[22m[39m
+[31m   [33m❯[31m src/pages/Register.test.tsx[2m > [22mRegister[2m > [22mвалидная форма вызывает register, редирект на /login[39m
+[31m     → expected "spy" to be called with arguments: [ { email: 'a@b.c', …(2) } ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Failed Suites 2 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m e2e/auth.spec.ts [2m[ e2e/auth.spec.ts ][22m
+[31m[1m[7m FAIL [27m[22m[39m e2e/trips.spec.ts [2m[ e2e/trips.spec.ts ][22m
+[31m[1mError[22m: process.exit unexpectedly called with "1"[39m
+[90m [2m❯[22m Object.<anonymous> node_modules/playwright-core/lib/bootstrap.js:[2m33:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> node_modules/playwright-core/index.js:[2m16:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 16 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/components/StopForm.test.tsx[2m > [22mStopForm[2m > [22mвызывает updateStop при редактировании
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ 'stop-1', ObjectContaining{…} ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[2m  Array [[22m
+[31m+   "trip-1",[90m
+[2m    "stop-1",[22m
+[32m-   ObjectContaining {[90m
+[31m+   Object {[90m
+[31m+     "description": "Описание",[90m
+[31m+     "location": Object {[90m
+[31m+       "lat": 55.75,[90m
+[31m+       "lng": 37.61,[90m
+[31m+     },[90m
+[31m+     "order": 1,[90m
+[2m      "title": "Обновлённый",[22m
+[31m+     "visit_date": "2025-06-10",[90m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m src/components/StopForm.test.tsx:[2m64:24[22m[39m
+    [90m 62| [39m
+    [90m 63| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m [34mexpect[39m(mockUpdate)[33m.[39m[34mtoHaveBeenCalledTimes[39m([34m1[39m))[33m;[39m
+    [90m 64| [39m    [34mexpect[39m(mockUpdate)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   | [39m                       [31m^[39m
+    [90m 65| [39m      [32m'stop-1'[39m[33m,[39m
+    [90m 66| [39m      expect[33m.[39m[34mobjectContaining[39m({
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/components/TripCard.test.tsx[2m > [22mTripCard[2m > [22mshould navigate to detail page on click
+[31m[1mTypeError[22m: undefined is not a spy or a call to a spy![39m
+[36m [2m❯[22m src/components/TripCard.test.tsx:[2m45:22[22m[39m
+    [90m 43| [39m    [34mrender[39m([33m<[39m[33mTripCard[39m [33mtrip[39m[33m=[39m[33m{[39mmockTrip[33m}[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 44| [39m    fireEvent[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByText[39m([32m'Поездка в горы'[39m)[33m.[39m[34mclosest[39m([32m'div'[39m))[33m;[39m
+    [90m 45| [39m    [34mexpect[39m(navigate)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'/trips/1'[39m)[33m;[39m
+    [90m   | [39m                     [31m^[39m
+    [90m 46| [39m  })[33m;[39m
+    [90m 47| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/components/TripCard.test.tsx[2m > [22mTripCard[2m > [22mshould navigate to edit page when clicking Edit
+[31m[1mTypeError[22m: undefined is not a spy or a call to a spy![39m
+[36m [2m❯[22m src/components/TripCard.test.tsx:[2m52:22[22m[39m
+    [90m 50| [39m    [34mrender[39m([33m<[39m[33mTripCard[39m [33mtrip[39m[33m=[39m[33m{[39mmockTrip[33m}[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 51| [39m    fireEvent[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByText[39m([32m'Изменить'[39m))[33m;[39m
+    [90m 52| [39m    [34mexpect[39m(navigate)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'/trips/1/edit'[39m)[33m;[39m
+    [90m   | [39m                     [31m^[39m
+    [90m 53| [39m  })[33m;[39m
+    [90m 54| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/components/TripCard.test.tsx[2m > [22mTripCard[2m > [22mshould call deleteTrip and invalidate queries when clicking Delete
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ { queryKey: [ 'trips' ] } ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"[31m
+      [36m>[31m
+        [36m<img[31m
+          [33malt[31m=[32m"Поездка в горы"[31m
+          [33mclass[31m=[32m"w-full h-48 object-cover"[31m
+          [33msrc[31m=[32m"http://example.com/photo.jpg"[31m
+        [36m/>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4"[31m
+        [36m>[31m
+          [36m<h3[31m
+            [33mclass[31m=[32m"text-xl font-bold text-gray-900 truncate"[31m
+          [36m>[31m
+            [0mПоездка в горы[0m
+          [36m</h3>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-sm text-gray-500 mb-2"[31m
+          [36m>[31m
+            [0m01.01.2024[0m
+            [0m — [0m
+            [0m10.01.2024[0m
+          [36m</p>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-gray-600 text-sm line-clamp-2 mb-4"[31m
+          [36m>[31m
+            [0mКрутой отдых в Альпах[0m
+          [36m</p>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"[31m
+            [36m>[31m
+              [0mИзменить[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"[31m
+            [36m>[31m
+              [0mУдалить[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+[36m [2m❯[22m src/components/TripCard.test.tsx:[2m66:33[22m[39m
+    [90m 64| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m 65| [39m      [34mexpect[39m(deleteTrip)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'1'[39m)[33m;[39m
+    [90m 66| [39m      [34mexpect[39m(invalidateQueries)[33m.[39m[34mtoHaveBeenCalledWith[39m({ queryKey[33m:[39m [[32m'tri[39m…
+    [90m   | [39m                                [31m^[39m
+    [90m 67| [39m    })[33m;[39m
+    [90m 68| [39m  })[33m;[39m
+[90m [2m❯[22m runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:[2m47:12[22m[39m
+[90m [2m❯[22m checkCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m124:77[22m[39m
+[90m [2m❯[22m Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m118:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/Login.test.tsx[2m > [22mLogin[2m > [22mвалидная форма вызывает login и setAccessToken, редирект на /
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ { email: 'a@b.c', …(1) } ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m src/pages/Login.test.tsx:[2m46:21[22m[39m
+    [90m 44| [39m    [35mawait[39m user[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByRole[39m([32m'button'[39m[33m,[39m { name[33m:[39m [32m'Войти'[39m }))[33m;[39m
+    [90m 45| [39m    [35mawait[39m vi[33m.[39m[34mwaitFor[39m(() [33m=>[39m {
+    [90m 46| [39m      [34mexpect[39m(login)[33m.[39m[34mtoHaveBeenCalledWith[39m({ email[33m:[39m [32m'a@b.c'[39m[33m,[39m password[33m:[39m [32m'[39m…
+    [90m   | [39m                    [31m^[39m
+    [90m 47| [39m    })[33m;[39m
+    [90m 48| [39m    [34mexpect[39m(setAccessToken)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'tok-123'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/Login.test.tsx[2m > [22mLogin[2m > [22mApiError unauthorized: баннер «Неверный email или пароль»
+[31m[1mTestingLibraryElementError[22m: Unable to find an accessible element with the role "alert"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "Вход":
+  [36m<h1[31m
+    [33mclass[31m=[32m"mb-4 text-2xl font-bold text-gray-900"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Email":
+  [36m<input[31m
+    [33mautocomplete[31m=[32m"email"[31m
+    [33mclass[31m=[32m"w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"[31m
+    [33mid[31m=[32m"email"[31m
+    [33mname[31m=[32m"email"[31m
+    [33mtype[31m=[32m"email"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"mt-1 text-sm text-red-600"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"mt-4 text-center text-sm text-gray-600"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  button:
+
+  Name "Войти":
+  [36m<button[31m
+    [33mclass[31m=[32m"w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"[31m
+    [33mtype[31m=[32m"submit"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  link:
+
+  Name "Регистрация":
+  [36m<a[31m
+    [33mclass[31m=[32m"text-blue-600 hover:underline"[31m
+    [33mhref[31m=[32m"/register"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex min-h-screen items-center justify-center bg-gray-50 px-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md rounded-lg bg-white p-6 shadow"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33mclass[31m=[32m"mb-4 text-2xl font-bold text-gray-900"[31m
+        [36m>[31m
+          [0mВход[0m
+        [36m</h1>[31m
+        [36m<form[31m
+          [33mclass[31m=[32m"space-y-4"[31m
+          [33mnovalidate[31m=[32m""[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-sm font-medium text-gray-700"[31m
+              [33mfor[31m=[32m"email"[31m
+            [36m>[31m
+              [0mEmail[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mautocomplete[31m=[32m"email"[31m
+              [33mclass[31m=[32m"w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"[31m
+              [33mid[31m=[32m"email"[31m
+              [33mname[31m=[32m"email"[31m
+              [33mtype[31m=[32m"email"[31m
+            [36m/>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-red-600"[31m
+            [36m>[31m
+              [0mInvalid email[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-sm font-medium text-gray-700"[31m
+              [33mfor[31m=[32m"password"[31m
+            [36m>[31m
+              [0mПароль[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mautocomplete[31m=[32m"current-password"[31m
+              [33mclass[31m=[32m"w-full rounded border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"[31m
+              [33mid[31m=[32m"password"[31m
+              [33mname[31m=[32m"password"[31m
+              [33mtype[31m=[32m"password"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"[31m
+            [33mtype[31m=[32m"submit"[31m
+          [36m>[31m
+            [0mВойти[0m
+          [36m</button>[31m
+        [36m</form>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"mt-4 text-center text-sm text-gray-600"[31m
+        [36m>[31m
+          [0mНет аккаунта?[0m
+          [0m [0m
+          [36m<a[31m
+            [33mclass[31m=[32m"text-blue-600 hover:underline"[31m
+            [33mhref[31m=[32m"/register"[31m
+          [36m>[31m
+            [0mРегистрация[0m
+          [36m</a>[31m
+        [36m</p>[31m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/pages/Login.test.tsx:[2m69:21[22m[39m
+    [90m 67| [39m    [35mawait[39m user[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByRole[39m([32m'button'[39m[33m,[39m { name[33m:[39m [32m'Войти'[39m }))[33m;[39m
+    [90m 68| [39m    [35mawait[39m vi[33m.[39m[34mwaitFor[39m(() [33m=>[39m {
+    [90m 69| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByRole[39m([32m'alert'[39m))[33m.[39m[34mtoHaveTextContent[39m([32m'Неверный em[39m…
+    [90m   | [39m                    [31m^[39m
+    [90m 70| [39m    })[33m;[39m
+    [90m 71| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/Register.test.tsx[2m > [22mRegister[2m > [22mвалидная форма вызывает register, редирект на /login
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ { email: 'a@b.c', …(2) } ][90m
+
+Received: 
+
+[31m[90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m src/pages/Register.test.tsx:[2m43:24[22m[39m
+    [90m 41| [39m    [35mawait[39m user[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByRole[39m([32m'button'[39m[33m,[39m { name[33m:[39m [32m'Зарегистриров[39m…
+    [90m 42| [39m    [35mawait[39m vi[33m.[39m[34mwaitFor[39m(() [33m=>[39m {
+    [90m 43| [39m      [34mexpect[39m(register)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m   | [39m                       [31m^[39m
+    [90m 44| [39m        email[33m:[39m [32m'a@b.c'[39m[33m,[39m
+    [90m 45| [39m        password[33m:[39m [32m'password123'[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22mрендерит MapView со стопами
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22mdrag маркера вызывает updateStop
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22mэкспорт PDF/CSV устанавливает window.location.href
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripDetail.test.tsx[2m > [22mTripDetail[2m > [22m«+ Стоп» открывает StopForm
+[31m[1mError[22m: useNavigate() may be used only in the context of a <Router> component.[39m
+[90m [2m❯[22m Object.invariant [as UNSAFE_invariant] node_modules/@remix-run/router/history.ts:[2m494:11[22m[39m
+[90m [2m❯[22m useNavigateUnstable node_modules/react-router/lib/hooks.tsx:[2m189:3[22m[39m
+[90m [2m❯[22m Proxy.useNavigate node_modules/react-router/lib/hooks.tsx:[2m185:46[22m[39m
+[36m [2m❯[22m TripDetail src/pages/TripDetail.tsx:[2m15:20[22m[39m
+    [90m 13| [39m[35mexport[39m [35mfunction[39m [33mTripDetail[39m()[33m:[39m [33mJSX[39m[33m.[39m[33mElement[39m {
+    [90m 14| [39m  [35mconst[39m { id } [33m=[39m useParams[33m<[39m{ id[33m:[39m string }[33m>[39m()[33m;[39m
+    [90m 15| [39m  [35mconst[39m navigate [33m=[39m [34museNavigate[39m()[33m;[39m
+    [90m   | [39m                   [31m^[39m
+    [90m 16| [39m  [35mconst[39m queryClient [33m=[39m [34museQueryClient[39m()[33m;[39m
+    [90m 17| [39m
+[90m [2m❯[22m renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:[2m15486:18[22m[39m
+[90m [2m❯[22m mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:[2m20103:13[22m[39m
+[90m [2m❯[22m beginWork node_modules/react-dom/cjs/react-dom.development.js:[2m21626:16[22m[39m
+[90m [2m❯[22m beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:[2m27465:14[22m[39m
+[90m [2m❯[22m performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:[2m26599:12[22m[39m
+[90m [2m❯[22m workLoopSync node_modules/react-dom/cjs/react-dom.development.js:[2m26505:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripEdit.test.tsx[2m > [22mTripEdit[2m > [22mshould prefill form with trip data
+[31m[1mTestingLibraryElementError[22m: Found a label with the text of: /Название поездки/i, however no form control was found associated to that label. Make sure you're using the "for" attribute or "aria-labelledby" attribute correctly.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"p-4"[31m
+    [36m>[31m
+      [36m<h1[31m
+        [33mclass[31m=[32m"text-2xl font-bold mb-6"[31m
+      [36m>[31m
+        [0mРедактирование поездки[0m
+      [36m</h1>[31m
+      [36m<form[31m
+        [33mclass[31m=[32m"space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"grid grid-cols-1 gap-4"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+            [36m>[31m
+              [0mНазвание поездки[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+              [33mname[31m=[32m"title"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+            [36m>[31m
+              [0mОписание[0m
+            [36m</label>[31m
+            [36m<textarea[31m
+              [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+              [33mname[31m=[32m"description"[31m
+              [33mrows[31m=[32m"4"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"grid grid-cols-1 sm:grid-cols-2 gap-4"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mДата начала[0m
+              [36m</label>[31m
+              [36m<input[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"start_date"[31m
+                [33mtype[31m=[32m"date"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+              [36m>[31m
+                [0mДата окончания[0m
+              [36m</label>[31m
+              [36m<input[31m
+                [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+                [33mname[31m=[32m"end_date"[31m
+                [33mtype[31m=[32m"date"[31m
+              [36m/>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"block text-sm font-medium text-gray-700"[31m
+            [36m>[31m
+              [0mURL обложки (опционально)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[31m
+              [33mname[31m=[32m"cover_photo_url"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex justify-end gap-3 pt-4"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"[31m
+            [33mtype[31m=[32m"button"[31m
+          [36m>[31m
+            [0mОтмена[0m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"[31m
+            [33mtype[31m=[32m"submit"[31m
+          [36m>[31m
+            [0mСохранить[0m
+          [36m</button>[31m
+        [36m</div>[31m
+      [36m</form>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getAllByLabelText node_modules/@testing-library/dom/dist/queries/label-text.js:[2m108:40[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/pages/TripEdit.test.tsx:[2m48:19[22m[39m
+    [90m 46| [39m
+    [90m 47| [39m    [34mrender[39m([33m<[39m[33mTripEdit[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 48| [39m    [34mexpect[39m(screen[33m.[39m[34mgetByLabelText[39m([36m/Название поездки/i[39m))[33m.[39m[34mtoHaveValue[39m([32m'Tr[39m…
+    [90m   | [39m                  [31m^[39m
+    [90m 49| [39m    [34mexpect[39m(screen[33m.[39m[34mgetByLabelText[39m([36m/Описание/i[39m))[33m.[39m[34mtoHaveValue[39m([32m'Desc 1'[39m)[33m;[39m
+    [90m 50| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripEdit.test.tsx[2m > [22mTripEdit[2m > [22mshould update trip and navigate on submit
+[31m[1mAssertionError[22m[39m: expected "spy" to be called with arguments: [ '/trips/1' ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  2nd spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  3rd spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  4th spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  5th spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+
+[1m  6th spy call:
+
+[22m[32m- Array [[90m
+[32m-   "/trips/1",[90m
+[32m- ][90m
+[31m+ Array [][90m
+[39m[90m
+
+Number of calls: [1m6[22m
+[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"p-4"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"text-2xl font-bold mb-6"[39m
+        [36m>[39m
+          [0mРедактирование поездки[0m
+        [36m</h1>[39m
+        [36m<form[39m
+          [33mclass[39m=[32m"space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 gap-4"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"block text-sm font-medium text-gray-700"[39m
+              [36m>[39m
+                [0mНазвание поездки[0m
+              [36m</label>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[39m
+                [33mname[39m=[32m"title"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"block text-sm font-medium text-gray-700"[39m
+              [36m>[39m
+                [0mОписание[0m
+              [36m</label>[39m
+              [36m<textarea[39m
+                [33mclass[39m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[39m
+                [33mname[39m=[32m"description"[39m
+                [33mrows[39m=[32m"4"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 gap-4"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"block text-sm font-medium text-gray-700"[39m
+                [36m>[39m
+                  [0mДата начала[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33mclass[39m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[39m
+                  [33mname[39m=[32m"start_date"[39m
+                  [33mtype[39m=[32m"date"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"block text-sm font-medium text-gray-700"[39m
+                [36m>[39m
+                  [0mДата окончания[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33mclass[39m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[39m
+                  [33mname[39m=[32m"end_date"[39m
+                  [33mtype[39m=[32m"date"[39m
+                [36m/>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"block text-sm font-medium text-gray-700"[39m
+              [36m>[39m
+                [0mURL обложки (опционально)[0m
+              [36m</label>[39m
+              [36m<input[39m
+                [33mclass[39m=[32m"mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"[39m
+                [33mname[39m=[32m"cover_photo_url"[39m
+              [36m/>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-end gap-3 pt-4"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mОтмена[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"[39m
+              [33mtype[39m=[32m"submit"[39m
+            [36m>[39m
+              [0mСохранить[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</form>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+[36m [2m❯[22m src/pages/TripEdit.test.tsx:[2m73:24[22m[39m
+    [90m 71| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m 72| [39m      [34mexpect[39m(mutateAsync)[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m 73| [39m      [34mexpect[39m(navigate)[33m.[39m[34mtoHaveBeenCalledWith[39m([32m'/trips/1'[39m)[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m 74| [39m    })[33m;[39m
+    [90m 75| [39m  })[33m;[39m
+[90m [2m❯[22m runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:[2m47:12[22m[39m
+[90m [2m❯[22m checkCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m124:77[22m[39m
+[90m [2m❯[22m Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m118:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/18]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripsList.test.tsx[2m > [22mTripsList[2m > [22mshould render a list of trips
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripsList.test.tsx[2m > [22mTripsList[2m > [22mshould render placeholder when list is empty
+[31m[1m[7m FAIL [27m[22m[39m src/pages/TripsList.test.tsx[2m > [22mTripsList[2m > [22mshould create a draft trip and navigate to edit when clicking + New Trip
+[31m[1mError[22m: [vitest] No "listTrips" export is defined on the "../api/trips" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+[39m
+vi[33m.[39m[34mmock[39m([32m"../api/trips"[39m[33m,[39m [35masync[39m (importOriginal) [33m=>[39m {
+  [35mconst[39m actual [33m=[39m [35mawait[39m [34mimportOriginal[39m()
+  [35mreturn[39m {
+    [33m...[39mactual[33m,[39m
+    [90m// your mocked methods[39m
+  }
+})
+
+[36m [2m❯[22m TripsList src/pages/TripsList.tsx:[2m16:14[22m[39m
+    [90m 14| [39m  } [33m=[39m [34museQuery[39m({
+    [90m 15| [39m    queryKey[33m:[39m [[32m'trips'[39m][33m,[39m
+    [90m 16| [39m    queryFn[33m:[39m listTrips[33m,[39m
+    [90m   | [39m             [31m^[39m
+    [90m 17| [39m  })[33m;[39m
+    [90m 18| [39m
+[90m [2m❯[22m renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:[2m15486:18[22m[39m
+[90m [2m❯[22m mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:[2m20103:13[22m[39m
+[90m [2m❯[22m beginWork node_modules/react-dom/cjs/react-dom.development.js:[2m21626:16[22m[39m
+[90m [2m❯[22m beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:[2m27465:14[22m[39m
+[90m [2m❯[22m performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:[2m26599:12[22m[39m
+[90m [2m❯[22m workLoopSync node_modules/react-dom/cjs/react-dom.development.js:[2m26505:5[22m[39m
+[90m [2m❯[22m renderRootSync node_modules/react-dom/cjs/react-dom.development.js:[2m26473:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/18]⎯[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Unhandled Errors [27m[22m⎯⎯⎯⎯⎯⎯[39m
+[31m[1m
+Vitest caught 4 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.[22m[39m
+
+[31m⎯⎯⎯⎯⎯[1m[7m Uncaught Exception [27m[22m⎯⎯⎯⎯⎯[39m
+[31m[1mTypeError[22m: navigate is not a function[39m
+[36m [2m❯[22m handleCardClick src/components/TripCard.tsx:[2m17:5[22m[39m
+    [90m 15| [39m
+    [90m 16| [39m  [35mconst[39m handleCardClick [33m=[39m () [33m=>[39m {
+    [90m 17| [39m    [34mnavigate[39m([32m`/trips/[39m[36m${[39mtrip[33m.[39mid[36m}[39m[32m`[39m)[33m;[39m
+    [90m   | [39m    [31m^[39m
+    [90m 18| [39m  }[33m;[39m
+    [90m 19| [39m
+[90m [2m❯[22m HTMLUnknownElement.callCallback node_modules/react-dom/cjs/react-dom.development.js:[2m4164:14[22m[39m
+[90m [2m❯[22m HTMLUnknownElement.callTheUserObjectsOperation node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:[2m26:30[22m[39m
+[90m [2m❯[22m innerInvokeEventListeners node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m350:25[22m[39m
+[90m [2m❯[22m invokeEventListeners node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m286:3[22m[39m
+[90m [2m❯[22m HTMLUnknownElementImpl._dispatch node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m233:9[22m[39m
+[90m [2m❯[22m HTMLUnknownElementImpl.dispatchEvent node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m104:17[22m[39m
+[90m [2m❯[22m HTMLUnknownElement.dispatchEvent node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:[2m241:34[22m[39m
+[90m [2m❯[22m Object.invokeGuardedCallbackDev node_modules/react-dom/cjs/react-dom.development.js:[2m4213:16[22m[39m
+[90m [2m❯[22m invokeGuardedCallback node_modules/react-dom/cjs/react-dom.development.js:[2m4277:31[22m[39m
+
+[31mThis error originated in "[1msrc/components/TripCard.test.tsx[22m" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.[39m
+[31mThe latest test that might've caused the error is "[1mshould navigate to detail page on click[22m". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.[39m
+
+[31m⎯⎯⎯⎯⎯[1m[7m Uncaught Exception [27m[22m⎯⎯⎯⎯⎯[39m
+[31m[1mTypeError[22m: navigate is not a function[39m
+[36m [2m❯[22m handleEditClick src/components/TripCard.tsx:[2m22:5[22m[39m
+    [90m 20| [39m  [35mconst[39m handleEditClick [33m=[39m (e[33m:[39m [33mReact[39m[33m.[39m[33mMouseEvent[39m) [33m=>[39m {
+    [90m 21| [39m    e[33m.[39m[34mstopPropagation[39m()[33m;[39m
+    [90m 22| [39m    [34mnavigate[39m([32m`/trips/[39m[36m${[39mtrip[33m.[39mid[36m}[39m[32m/edit`[39m)[33m;[39m
+    [90m   | [39m    [31m^[39m
+    [90m 23| [39m  }[33m;[39m
+    [90m 24| [39m
+[90m [2m❯[22m HTMLUnknownElement.callCallback node_modules/react-dom/cjs/react-dom.development.js:[2m4164:14[22m[39m
+[90m [2m❯[22m HTMLUnknownElement.callTheUserObjectsOperation node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:[2m26:30[22m[39m
+[90m [2m❯[22m innerInvokeEventListeners node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m350:25[22m[39m
+[90m [2m❯[22m invokeEventListeners node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m286:3[22m[39m
+[90m [2m❯[22m HTMLUnknownElementImpl._dispatch node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m233:9[22m[39m
+[90m [2m❯[22m HTMLUnknownElementImpl.dispatchEvent node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:[2m104:17[22m[39m
+[90m [2m❯[22m HTMLUnknownElement.dispatchEvent node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:[2m241:34[22m[39m
+[90m [2m❯[22m Object.invokeGuardedCallbackDev node_modules/react-dom/cjs/react-dom.development.js:[2m4213:16[22m[39m
+[90m [2m❯[22m invokeGuardedCallback node_modules/react-dom/cjs/react-dom.development.js:[2m4277:31[22m[39m
+
+[31mThis error originated in "[1msrc/components/TripCard.test.tsx[22m" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.[39m
+[31mThe latest test that might've caused the error is "[1mshould navigate to edit page when clicking Edit[22m". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.[39m
+
+[31m⎯⎯⎯⎯[1m[7m Unhandled Rejection [27m[22m⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: process.exit unexpectedly called with "1"[39m
+[90m [2m❯[22m process.exit node_modules/vitest/dist/vendor/execute.fL3szUAI.js:[2m401:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> node_modules/playwright-core/lib/bootstrap.js:[2m33:11[22m[39m
+[90m [2m❯[22m Module._compile node:internal/modules/cjs/loader:[2m1364:14[22m[39m
+[90m [2m❯[22m Object.Module._extensions..js node:internal/modules/cjs/loader:[2m1422:10[22m[39m
+[90m [2m❯[22m Module.load node:internal/modules/cjs/loader:[2m1203:32[22m[39m
+[90m [2m❯[22m Function.Module._load node:internal/modules/cjs/loader:[2m1019:12[22m[39m
+[90m [2m❯[22m Module.require node:internal/modules/cjs/loader:[2m1231:19[22m[39m
+[90m [2m❯[22m require node:internal/modules/helpers:[2m177:18[22m[39m
+[90m [2m❯[22m Object.<anonymous> node_modules/playwright-core/index.js:[2m16:1[22m[39m
+[90m [2m❯[22m Module._compile node:internal/modules/cjs/loader:[2m1364:14[22m[39m
+
+[31mThis error originated in "[1me2e/trips.spec.ts[22m" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.[39m
+
+[31m⎯⎯⎯⎯[1m[7m Unhandled Rejection [27m[22m⎯⎯⎯⎯⎯[39m
+[31m[1mError[22m: process.exit unexpectedly called with "1"[39m
+[90m [2m❯[22m process.exit node_modules/vitest/dist/vendor/execute.fL3szUAI.js:[2m401:11[22m[39m
+[90m [2m❯[22m Object.<anonymous> node_modules/playwright-core/lib/bootstrap.js:[2m33:11[22m[39m
+[90m [2m❯[22m Module._compile node:internal/modules/cjs/loader:[2m1364:14[22m[39m
+[90m [2m❯[22m Object.Module._extensions..js node:internal/modules/cjs/loader:[2m1422:10[22m[39m
+[90m [2m❯[22m Module.load node:internal/modules/cjs/loader:[2m1203:32[22m[39m
+[90m [2m❯[22m Function.Module._load node:internal/modules/cjs/loader:[2m1019:12[22m[39m
+[90m [2m❯[22m Module.require node:internal/modules/cjs/loader:[2m1231:19[22m[39m
+[90m [2m❯[22m require node:internal/modules/helpers:[2m177:18[22m[39m
+[90m [2m❯[22m Object.<anonymous> node_modules/playwright-core/index.js:[2m16:1[22m[39m
+[90m [2m❯[22m Module._compile node:internal/modules/cjs/loader:[2m1364:14[22m[39m
+
+[31mThis error originated in "[1me2e/auth.spec.ts[22m" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.[39m
+[31m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39m
+
+[2m Test Files [22m [1m[31m9 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (14)[39m
+[2m      Tests [22m [1m[31m16 failed[39m[22m[2m | [22m[1m[32m28 passed[39m[22m[90m (44)[39m
+[2m     Errors [22m [1m[31m4 errors[39m[22m
+[2m   Start at [22m 08:02:00
+[2m   Duration [22m 6.56s[2m (transform 1.59s, setup 2.33s, collect 4.23s, tests 8.34s, environment 16.05s, prepare 3.78s)[22m
+

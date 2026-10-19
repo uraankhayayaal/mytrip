@@ -39,11 +39,11 @@ export function TripDetail(): JSX.Element {
 
   const updateStopMut = useMutation({
     mutationFn: ({ stopId, payload }: { stopId: string; payload: StopPayload }) =>
-      updateStop(stopId, payload),
+      updateStop(id!, stopId, payload),
     onSuccess: invalidateStops,
   });
   const deleteStopMut = useMutation({
-    mutationFn: (stopId: string) => deleteStop(stopId),
+    mutationFn: (stopId: string) => deleteStop(id!, stopId),
     onSuccess: invalidateStops,
   });
   const createStopMut = useMutation({

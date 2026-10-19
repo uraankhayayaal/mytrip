@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { TripEdit } from '../pages/TripEdit';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTrip, updateTrip } from '../api/trips';
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),
@@ -64,7 +63,7 @@ describe('TripEdit', () => {
     });
 
     render(<TripEdit />);
-    
+
     // Find the submit button
     const submitBtn = screen.getByText('Сохранить');
     fireEvent.click(submitBtn);

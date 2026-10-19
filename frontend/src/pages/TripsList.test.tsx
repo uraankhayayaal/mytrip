@@ -20,8 +20,24 @@ vi.mock('../api/trips', () => ({
 describe('TripsList', () => {
   it('should render a list of trips', async () => {
     const mockTrips = [
-      { id: '1', title: 'Trip 1', description: 'Desc 1', start_date: '2024-01-01', end_date: '2024-01-02', created_at: '', updated_at: '' },
-      { id: '2', title: 'Trip 2', description: 'Desc 2', start_date: '2024-01-03', end_date: '2024-01-04', created_at: '', updated_at: '' },
+      {
+        id: '1',
+        title: 'Trip 1',
+        description: 'Desc 1',
+        start_date: '2024-01-01',
+        end_date: '2024-01-02',
+        created_at: '',
+        updated_at: '',
+      },
+      {
+        id: '2',
+        title: 'Trip 2',
+        description: 'Desc 2',
+        start_date: '2024-01-03',
+        end_date: '2024-01-04',
+        created_at: '',
+        updated_at: '',
+      },
     ];
     vi.mocked(useQuery).mockReturnValue({
       data: mockTrips,

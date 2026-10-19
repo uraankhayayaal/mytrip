@@ -35,33 +35,27 @@ export function TripCard({ trip }: TripCardProps): JSX.Element {
   };
 
   return (
-    <div 
+    <div
       onClick={handleCardClick}
       className="cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
       {trip.cover_photo_url && (
-        <img 
-          src={trip.cover_photo_url} 
-          alt={trip.title} 
-          className="w-full h-48 object-cover"
-        />
+        <img src={trip.cover_photo_url} alt={trip.title} className="w-full h-48 object-cover" />
       )}
       <div className="p-4">
         <h3 className="text-xl font-bold text-gray-900 truncate">{trip.title}</h3>
         <p className="text-sm text-gray-500 mb-2">
           {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
         </p>
-        <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-          {trip.description}
-        </p>
+        <p className="text-gray-600 text-sm line-clamp-2 mb-4">{trip.description}</p>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={handleEditClick}
             className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             Изменить
           </button>
-          <button 
+          <button
             onClick={handleDeleteClick}
             className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
           >

@@ -15,6 +15,7 @@
     "moduleDetection": "force",
     "noEmit": true
   },
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx", "src/test/setup.ts"],
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

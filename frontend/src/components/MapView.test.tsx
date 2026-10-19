@@ -4,14 +4,19 @@ import type { Stop, Location } from '../lib/types';
 
 // Мок react-leaflet ОБЯЗАТЕЛЕН: jsdom не поддерживает canvas/SVG-карту.
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children?: React.ReactNode }) => <div data-testid="map-container">{children}</div>,
+  MapContainer: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="map-container">{children}</div>
+  ),
   TileLayer: () => <div data-testid="tile-layer" />,
   Marker: ({
     position,
     eventHandlers,
   }: {
     position: [number, number];
-    eventHandlers?: { click?: () => void; dragend?: (e: { target: { getLatLng: () => { lat: number; lng: number } } }) => void };
+    eventHandlers?: {
+      click?: () => void;
+      dragend?: (e: { target: { getLatLng: () => { lat: number; lng: number } } }) => void;
+    };
   }) => (
     <div
       data-testid="marker"
@@ -19,7 +24,9 @@ vi.mock('react-leaflet', () => ({
       data-lng={position[1]}
       onClick={() => eventHandlers?.click?.()}
       onDragEnd={() =>
-        eventHandlers?.dragend?.({ target: { getLatLng: () => ({ lat: position[0] + 0.1, lng: position[1] + 0.1 }) } })
+        eventHandlers?.dragend?.({
+          target: { getLatLng: () => ({ lat: position[0] + 0.1, lng: position[1] + 0.1 }) },
+        })
       }
     />
   ),
@@ -93,7 +100,10 @@ describe('MapView', () => {
     const unsorted: Stop[] = [stops[2], stops[0], stops[1]];
     render(<MapView stops={unsorted} />);
     const polyline = screen.getByTestId('polyline');
-    const positions = JSON.parse(polyline.getAttribute('data-positions') ?? '[]') as [number, number][];
+    const positions = JSON.parse(polyline.getAttribute('data-positions') ?? '[]') as [
+      number,
+      number,
+    ][];
     expect(positions).toEqual([
       [55.75, 37.6],
       [55.8, 37.7],

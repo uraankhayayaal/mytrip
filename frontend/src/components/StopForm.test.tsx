@@ -44,10 +44,13 @@ describe('StopForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /Сохранить/ }));
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
-    expect(mockCreate).toHaveBeenCalledWith('trip-1', expect.objectContaining({
-      title: 'Новый стоп',
-      location: { lat: 55.75, lng: 37.61 },
-    }));
+    expect(mockCreate).toHaveBeenCalledWith(
+      'trip-1',
+      expect.objectContaining({
+        title: 'Новый стоп',
+        location: { lat: 55.75, lng: 37.61 },
+      }),
+    );
     expect(onSaved).toHaveBeenCalled();
   });
 
@@ -58,9 +61,12 @@ describe('StopForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /Сохранить/ }));
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
-    expect(mockUpdate).toHaveBeenCalledWith('stop-1', expect.objectContaining({
-      title: 'Обновлённый',
-    }));
+    expect(mockUpdate).toHaveBeenCalledWith(
+      'stop-1',
+      expect.objectContaining({
+        title: 'Обновлённый',
+      }),
+    );
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
