@@ -14,14 +14,14 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
   const navigate = useNavigate();
   const {
     register,
-    handleSubmit,
+    handleSubmit: handleSubmitHook,
     formState: { errors },
   } = useForm<TripInput>({
     resolver: zodResolver(tripSchema),
     defaultValues: initial,
   });
 
-  const handleSubmit = async (data: TripInput) => {
+  const onSubmitForm = async (data: TripInput) => {
     try {
       await onSubmit(data as TripPayload);
     } catch (err) {
@@ -31,11 +31,12 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
   };
 
   return (
-    <form onSubmit={handleSubmit(handleSubmit)} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
+    <form onSubmit={handleSubmitHook(onSubmitForm)} className="space-y-4 max-w-2xl bg-white p-6 rounded-lg border shadow-sm">
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Название поездки</label>
+          <label htmlFor="trip-title" className="block text-sm font-medium text-gray-700">Название поездки</label>
           <input 
+            id="trip-title"
             {...register('title')} 
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
@@ -43,8 +44,9 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Описание</label>
+          <label htmlFor="trip-description" className="block text-sm font-medium text-gray-700">Описание</label>
           <textarea 
+            id="trip-description"
             {...register('description')} 
             rows={4}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -54,18 +56,20 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Дата начала</label>
+            <label htmlFor="trip-start-date" className="block text-sm font-medium text-gray-700">Дата начала</label>
             <input 
-              type="date" 
+              id="trip-start-date"
+              type="date"
               {...register('start_date')} 
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
             {errors.start_date && <p className="text-red-500 text-xs mt-1">{errors.start_date.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Дата окончания</label>
+            <label htmlFor="trip-end-date" className="block text-sm font-medium text-gray-700">Дата окончания</label>
             <input 
-              type="date" 
+              id="trip-end-date"
+              type="date"
               {...register('end_date')} 
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
@@ -74,9 +78,11 @@ export function TripForm({ initial, onSubmit }: TripFormProps): JSX.Element {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">URL обложки (опционально)</label>
+          <label htmlFor="trip-cover-photo" className="block text-sm font-medium text-gray-700">URL обложки (опционально)</label>
           <input 
+            id="trip-cover-photo"
             {...register('cover_photo_url')} 
+            defaultValue={initial?.cover_photo_url} 
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
           {errors.cover_photo_url && <p className="text-red-500 text-xs mt-1">{errors.cover_photo_url.message}</p>}

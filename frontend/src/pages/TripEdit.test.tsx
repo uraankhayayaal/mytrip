@@ -1,77 +1,147 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { TripEdit } from '../pages/TripEdit';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactElement } from 'react';
+import type { QueryObserverResult, UseMutationResult } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery, useMutation } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getTrip, updateTrip } from '../api/trips';
+import type { Trip } from '../lib/types';
+import { TripEdit } from './TripEdit';
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: vi.fn(),
-  useMutation: vi.fn(),
-  useQueryClient: vi.fn(() => ({
-    invalidateQueries: vi.fn(),
-  })),
-}));
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>(
+    '@tanstack/react-query',
+  );
+  return {
+    ...actual,
+    useQuery: vi.fn(),
+    useMutation: vi.fn(),
+  };
+});
 
 vi.mock('react-router-dom', () => ({
-  useParams: vi.fn(),
   useNavigate: vi.fn(),
+  useParams: vi.fn(() => ({ id: 'trip-1' })),
 }));
 
 vi.mock('../api/trips', () => ({
   getTrip: vi.fn(),
   updateTrip: vi.fn(),
+  listTrips: vi.fn(),
+  createTrip: vi.fn(),
+  deleteTrip: vi.fn(),
 }));
 
-describe('TripEdit', () => {
-  const mockTrip = {
-    id: '1',
-    title: 'Trip 1',
-    description: 'Desc 1',
-    start_date: '2024-01-01',
-    end_date: '2024-01-02',
-    created_at: '',
-    updated_at: '',
+const mockUseQuery = vi.mocked(useQuery);
+const mockUseMutation = vi.mocked(useMutation);
+const mockUseParams = vi.mocked(useParams);
+const mockUseNavigate = vi.mocked(useNavigate);
+const mockGetTrip = vi.mocked(getTrip);
+const mockUpdateTrip = vi.mocked(updateTrip);
+
+const fullTrip: Trip = {
+  id: 'trip-1',
+  title: 'Original Title',
+  description: 'Original desc',
+  start_date: '2024-05-01',
+  end_date: '2024-05-05',
+  created_at: '2024-05-01T00:00:00Z',
+  updated_at: '2024-05-01T00:00:00Z',
+};
+
+// Возврат useQuery типизируется под реальный QueryObserverResult<Trip, unknown>
+function tripQuery(
+  overrides: Partial<QueryObserverResult<Trip, unknown>>,
+): QueryObserverResult<Trip, unknown> {
+  return {
+    data: undefined,
+    dataUpdatedAt: 0,
+    error: null,
+    errorUpdatedAt: 0,
+    fetchStatus: 'idle',
+    fetchFailureCount: 0,
+    isFetching: false,
+    isInitialLoading: false,
+    isLoading: false,
+    isError: false,
+    isLoadingError: false,
+    isPaused: false,
+    isPlaceholderData: false,
+    isPreviousData: false,
+    isRefetchError: false,
+    isRefetching: false,
+    isStale: false,
+    isSuccess: false,
+    refetch: vi.fn(),
+    remove: vi.fn(),
+    status: 'idle',
+    suspense: false,
+    ...overrides,
   };
+}
 
-  it('should prefill form with trip data', async () => {
-    vi.mocked(useParams).mockReturnValue({ id: '1' });
-    vi.mocked(useQuery).mockReturnValue({
-      data: mockTrip,
-      isLoading: false,
-      error: null,
-    });
-    vi.mocked(useMutation).mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({}),
-    });
+function renderWithProvider(ui: ReactElement) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+}
 
-    render(<TripEdit />);
-    expect(screen.getByLabelText(/Название поездки/i)).toHaveValue('Trip 1');
-    expect(screen.getByLabelText(/Описание/i)).toHaveValue('Desc 1');
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockUseParams.mockReturnValue({ id: 'trip-1' });
+  mockUseNavigate.mockReturnValue(vi.fn());
+  mockGetTrip.mockResolvedValue(fullTrip);
+  mockUseQuery.mockReturnValue(tripQuery({ data: fullTrip, isSuccess: true }));
+  mockUseMutation.mockReturnValue({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    reset: vi.fn(),
+    status: 'idle',
+    data: undefined,
+    error: null,
+    variables: undefined,
+  } as unknown as UseMutationResult);
+});
+
+describe('TripEdit', () => {
+  it('should prefill form with trip data', () => {
+    mockUseQuery.mockReturnValue(tripQuery({ data: fullTrip, isSuccess: true }));
+    renderWithProvider(<TripEdit />);
+
+    expect(screen.getByDisplayValue('Original Title')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Original desc')).toBeInTheDocument();
   });
 
   it('should update trip and navigate on submit', async () => {
-    const navigate = vi.mocked(useNavigate);
-    vi.mocked(useParams).mockReturnValue({ id: '1' });
-    vi.mocked(useQuery).mockReturnValue({
-      data: mockTrip,
-      isLoading: false,
-      error: null,
-    });
-    const mutateAsync = vi.fn().mockResolvedValue({});
-    vi.mocked(useMutation).mockReturnValue({
+    const updated: Trip = { ...fullTrip, title: 'Updated Title', updated_at: '2024-05-02T00:00:00Z' };
+    const mutateAsync = vi.fn().mockResolvedValue(updated);
+    mockUpdateTrip.mockResolvedValue(updated);
+    mockUseMutation.mockReturnValue({
+      mutate: vi.fn(),
       mutateAsync,
-    });
+      reset: vi.fn(),
+      status: 'idle',
+      data: undefined,
+      error: null,
+      variables: undefined,
+    } as unknown as UseMutationResult);
+    const navigate = vi.fn();
+    mockUseNavigate.mockReturnValue(navigate);
+    mockUseQuery.mockReturnValue(tripQuery({ data: fullTrip, isSuccess: true }));
 
-    render(<TripEdit />);
-    
-    // Find the submit button
-    const submitBtn = screen.getByText('Сохранить');
-    fireEvent.click(submitBtn);
+    renderWithProvider(<TripEdit />);
+
+    const titleInput = screen.getByDisplayValue('Original Title') as HTMLInputElement;
+    fireEvent.change(titleInput, { target: { value: 'Updated Title' } });
+    fireEvent.click(screen.getByRole('button', { name: /сохранить/i }));
 
     await waitFor(() => {
-      expect(mutateAsync).toHaveBeenCalled();
-      expect(navigate).toHaveBeenCalledWith('/trips/1');
+      expect(mockUpdateTrip).toHaveBeenCalledWith('trip-1', {
+        title: 'Updated Title',
+        description: 'Original desc',
+        start_date: '2024-05-01',
+        end_date: '2024-05-05',
+      });
     });
+    expect(navigate).toHaveBeenCalledWith('/trips/trip-1');
   });
 });
