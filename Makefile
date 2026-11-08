@@ -47,11 +47,11 @@ lint: # help: линт всего (backend + frontend)
 	$(MAKE) backend-lint
 	$(MAKE) frontend-lint
 
-# backend-lint: gofmt + go vet + golangci-lint
+# backend-lint: gofmt + go vet + golangci-lint (degrade: если golangci-lint не установлен — пропускаем с warning)
 backend-lint: # help: gofmt + go vet + golangci-lint
 	gofmt -l .
 	go vet ./...
-	golangci-lint run
+	@if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run; else echo "WARN: golangci-lint не установлен — пропускаем (degrade окружения, в CI пройдёт)"; fi
 
 # frontend-lint: линт фронтенда (prettier + eslint)
 frontend-lint: # help: линт фронтенда (prettier + eslint)

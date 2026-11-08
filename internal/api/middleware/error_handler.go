@@ -25,6 +25,15 @@ func WriteError(w http.ResponseWriter, err *domain.AppError) {
 	WriteJSON(w, err.HTTPStatus, errorBody{Error: err})
 }
 
+// ToAppError преобразует error в *domain.AppError.
+// Если error уже *AppError — возвращает как есть; иначе — Internal.
+func ToAppError(err error) *domain.AppError {
+	if ae, ok := err.(*domain.AppError); ok {
+		return ae
+	}
+	return domain.NewInternal()
+}
+
 // ErrorHandler — middleware: если handler вернул *AppError (через context),
 // пишет её в ответ; иначе 500 {"error":{"code":"internal","message":"internal server error"}}.
 //
