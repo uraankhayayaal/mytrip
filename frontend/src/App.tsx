@@ -1,13 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedLayout } from './components/ProtectedLayout';
-import { CalendarPage } from './pages/CalendarPage';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { TripsList } from './pages/TripsList';
 import { TripDetail } from './pages/TripDetail';
 import { TripEdit } from './pages/TripEdit';
-import { TripsList } from './pages/TripsList';
+import { CalendarPage } from './pages/CalendarPage';
+import { ProtectedLayout } from './components/ProtectedLayout';
 
-export function App(): JSX.Element {
+function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -22,3 +22,5 @@ export function App(): JSX.Element {
     </Routes>
   );
 }
+
+export default App;

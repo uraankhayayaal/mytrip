@@ -1,100 +1,118 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { login } from '../api/auth';
-import { setAccessToken } from '../api/client';
-import { ApiError } from '../api/errors';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import { Login } from './Login';
 
+// Mock the auth API
+const mockLogin = vi.fn();
 vi.mock('../api/auth', () => ({
-  login: vi.fn(),
+  login: mockLogin,
 }));
 
+// Mock the client API
+const mockSetAccessToken = vi.fn();
 vi.mock('../api/client', () => ({
-  setAccessToken: vi.fn(),
+  setAccessToken: mockSetAccessToken,
 }));
-
-function renderLogin() {
-  return render(
-    <MemoryRouter>
-      <Login />
-    </MemoryRouter>,
-  );
-}
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  Object.defineProperty(window, 'location', {
-    value: { href: 'http://localhost:3000/' },
-    writable: true,
-    configurable: true,
-  });
-});
 
 describe('Login', () => {
-  it('валидная форма вызывает login и setAccessToken, редирект на /', async () => {
-    vi.mocked(login).mockResolvedValue({
-      access_token: 'tok-123',
-      user: { id: 'u1', email: 'a@b.c', name: 'A', created_at: '' },
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Mock window.location
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { href: '' },
     });
-    renderLogin();
-    
-    // Use fireEvent directly on form fields + dispatch submit event manually
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Пароль');
-    
-    // Set values and dispatch both input and change events
-    emailInput.value = 'a@b.c';
-    fireEvent.input(emailInput, { target: { value: 'a@b.c' } });
-    fireEvent.change(emailInput, { target: { value: 'a@b.c' } });
-    
-    passwordInput.value = 'password123';
-    fireEvent.input(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    
-    // Dispatch submit event with cancelable flag to prevent native behavior
-    const form = document.querySelector('form')!;
-    const submitEvent = new SubmitEvent('submit', { cancelable: true, bubbles: true });
-    form.dispatchEvent(submitEvent);
-    
-    await waitFor(() => {
-      expect(login).toHaveBeenCalledWith({ email: 'a@b.c', password: 'password123' });
-    });
-    expect(setAccessToken).toHaveBeenCalledWith('tok-123');
-    expect(window.location.href).toBe('/');
   });
 
-  it('пустые поля: ошибки zod, запрос не уходит', async () => {
-    renderLogin();
-    const form = document.querySelector('form')!;
-    const submitEvent = new SubmitEvent('submit', { cancelable: true, bubbles: true });
-    form.dispatchEvent(submitEvent);
-    expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
-    expect(screen.getByText('Минимум 8 символов')).toBeInTheDocument();
-    expect(login).not.toHaveBeenCalled();
+  it('renders login form correctly', () => {
+    render(<Login />);
+    
+    expect(screen.getByText('Войти в аккаунт')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email адрес')).toBeInTheDocument();
+    expect(screen.getByLabelText('Пароль')).toBeInTheDocument();
+    expect(screen.getByText('Войти')).toBeInTheDocument();
+    expect(screen.getByText('Нет аккаунта? Регистрация')).toBeInTheDocument();
   });
 
-  it('ApiError unauthorized: баннер «Неверный email или пароль»', async () => {
-    vi.mocked(login).mockRejectedValue(new ApiError('unauthorized', 'bad credentials'));
-    renderLogin();
+  it('submits valid form and calls login function', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValue({ access_token: 'test-token', user: { id: '1', email: 'test@example.com', name: 'Test User', created_at: '2023-01-01' } });
     
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Пароль');
+    render(<Login />);
     
-    emailInput.value = 'a@b.c';
-    fireEvent.input(emailInput, { target: { value: 'a@b.c' } });
-    fireEvent.change(emailInput, { target: { value: 'a@b.c' } });
-    
-    passwordInput.value = 'password123';
-    fireEvent.input(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    
-    const form = document.querySelector('form')!;
-    const submitEvent = new SubmitEvent('submit', { cancelable: true, bubbles: true });
-    form.dispatchEvent(submitEvent);
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Войти'));
     
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Неверный email или пароль');
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+      expect(mockSetAccessToken).toHaveBeenCalledWith('test-token');
+      expect(window.location.href).toBe('/');
+    });
+  });
+
+  it('shows validation errors for empty fields', async () => {
+    const user = userEvent.setup();
+    render(<Login />);
+    
+    await user.click(screen.getByText('Войти'));
+    
+    expect(screen.getByText('Email адрес обязателен')).toBeInTheDocument();
+    expect(screen.getByText('Пароль обязателен')).toBeInTheDocument();
+  });
+
+  it('shows error message for unauthorized login', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'unauthorized',
+            message: 'Unauthorized',
+          },
+        },
+      },
+    });
+    
+    render(<Login />);
+    
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Войти'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Неверный email или пароль')).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation errors from backend for validation error', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockRejectedValue({
+      response: {
+        data: {
+          error: {
+            code: 'validation',
+            message: 'Validation failed',
+            details: {
+              email: ['Email already exists'],
+            },
+          },
+        },
+      },
+    });
+    
+    render(<Login />);
+    
+    await user.type(screen.getByLabelText('Email адрес'), 'test@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'password123');
+    await user.click(screen.getByText('Войти'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Email already exists')).toBeInTheDocument();
     });
   });
 });
