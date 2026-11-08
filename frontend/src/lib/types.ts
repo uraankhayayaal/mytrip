@@ -71,6 +71,14 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface TripInput {
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  cover_photo_url?: string;
+}
+
 export interface TripPayload {
   title: string;
   description: string;

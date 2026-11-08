@@ -8,6 +8,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"mytrip/internal/domain"
 )
 
@@ -48,6 +51,15 @@ type StopRepo interface {
 	MaxOrder(ctx context.Context, tripID string) (int, error)
 	// Reindex — сдвиг order после Update с изменением order (в одной транзакции с Update в сервисе).
 	Reindex(ctx context.Context, tripID string, from, to int) error
+}
+
+// PgTx — интерфейс транзакции pgx (совместим с pgx.Tx и *pgxpool.Pool).
+type PgTx interface {
+	Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context) error
 }
 
 // PhotoRepo — фото (таблица photos, 0004_photos).

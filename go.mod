@@ -1,6 +1,6 @@
 module mytrip
 
-go 1.26.0
+go 1.24
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.1
@@ -8,8 +8,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.0
 	github.com/go-chi/chi/v5 v5.3.2
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/jackc/pgx/v5 v5.1.1
+	golang.org/x/crypto v0.21.0
 )
 
 require (
@@ -34,7 +36,10 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 )
+
+replace golang.org/x/text v0.42.0 => golang.org/x/text v0.28.0
+
+replace golang.org/x/sync v0.23.0 => golang.org/x/sync v0.16.0

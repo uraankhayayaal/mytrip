@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -59,7 +60,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		const prefix = "Bearer "
-		if len(header) <= len(prefix) || header[:len(prefix)] != prefix {
+		if !strings.HasPrefix(header, prefix) {
 			middleware.WriteError(w, domain.NewUnauthorized("missing or malformed Authorization header"))
 			return
 		}
@@ -139,13 +140,6 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("server: %v", err)
 	}
-}
-
-func toAppError(err error) *domain.AppError {
-	if ae, ok := err.(*domain.AppError); ok {
-		return ae
-	}
-	return domain.NewInternal()
 }
 
 // healthHandler — GET /healthz → 200 {"status":"ok"} (без auth).

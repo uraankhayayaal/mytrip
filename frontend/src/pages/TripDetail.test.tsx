@@ -1,12 +1,26 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TripDetail } from './TripDetail';
 import { getTrip } from '../api/trips';
-import { listStops, createStop, updateStop, deleteStop } from '../api/stops';
+import { listStops, updateStop, deleteStop } from '../api/stops';
 import { listPhotos } from '../api/photos';
-import { MapView } from '../components/MapView';
 import type { Trip, Stop, Photo } from '../lib/types';
+import type { UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+
+vi.mock('react-router-dom', () => ({
+  useParams: () => ({ id: 'trip-1' }),
+  useNavigate: vi.fn(() => vi.fn()),
+}));
+
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+  useQueryClient: vi.fn(() => ({
+    invalidateQueries: vi.fn(),
+    refetchQueries: vi.fn(),
+  })),
+}));
 
 vi.mock('../api/trips', () => ({ getTrip: vi.fn() }));
 vi.mock('../api/stops', () => ({
@@ -41,9 +55,9 @@ const mockListPhotos = vi.mocked(listPhotos);
 const trip: Trip = {
   id: 'trip-1',
   title: 'Поездка в Питер',
+  description: '',
   start_date: '2025-06-01',
   end_date: '2025-06-10',
-  cover_photo_url: null,
   created_at: '2025-05-01T00:00:00Z',
   updated_at: '2025-05-01T00:00:00Z',
 };
@@ -67,14 +81,87 @@ const photo: Photo = {
   created_at: '2025-05-01T00:00:00Z',
 };
 
+function makeQueryResult(data: unknown): UseQueryResult<unknown, unknown> {
+  return {
+    data,
+    isLoading: false,
+    isFetching: false,
+    isFetched: true,
+    isPending: false,
+    isSuccess: data !== undefined && data !== null,
+    isError: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    isFetchNextPageError: false,
+    isFetchPreviousPageError: false,
+    error: null,
+    fetchStatus: 'idle' as const,
+    fetchNextPage: vi.fn(),
+    fetchPreviousPage: vi.fn(),
+    refetch: vi.fn().mockResolvedValue({ data } as any),
+    remove: vi.fn(),
+    promise: Promise.resolve(data),
+    hasNextPage: false,
+    hasPreviousPage: false,
+    dataUpdatedAt: Date.now(),
+    errorUpdatedAt: 0,
+    observersCount: 1,
+  } as any;
+}
+
+function makeMutation(): UseMutationResult<any, any, any, any> {
+  return {
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    data: undefined,
+    error: null,
+    variables: undefined,
+    isSuccess: false,
+    isError: false,
+    isIdle: true,
+    isPending: false,
+    isSettled: false,
+    status: 'idle' as const,
+    reset: vi.fn(),
+    promise: undefined,
+  } as any;
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  // Mock window.location for export tests
+  Object.defineProperty(window, 'location', {
+    value: { href: 'http://localhost:3000/' },
+    writable: true,
+    configurable: true,
+  });
   mockGetTrip.mockResolvedValue(trip);
   mockListStops.mockResolvedValue([stop]);
   mockListPhotos.mockResolvedValue([photo]);
   mockUpdateStop.mockResolvedValue(stop);
   mockDeleteStop.mockResolvedValue(undefined);
   vi.spyOn(window, 'confirm').mockReturnValue(true);
+  
+  // Mock all queries used in TripDetail
+  vi.mocked(useQuery).mockImplementation((opts: any) => {
+    if (opts?.queryKey?.includes('trip')) {
+      return makeQueryResult(trip);
+    }
+    if (opts?.queryKey?.includes('stops')) {
+      return makeQueryResult([stop]);
+    }
+    if (opts?.queryKey?.includes('photos')) {
+      return makeQueryResult([photo]);
+    }
+    return makeQueryResult(undefined);
+  });
+
+  // Mock all mutations used in TripDetail — mutate calls the actual API mock
+  const mutState = makeMutation();
+  vi.mocked(mutState.mutate as any).mockImplementation((params: { stopId: string; payload: any }) => {
+    mockUpdateStop(params.stopId, params.payload);
+  });
+  vi.mocked(useMutation).mockReturnValue(mutState);
 });
 
 describe('TripDetail', () => {

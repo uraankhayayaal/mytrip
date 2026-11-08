@@ -104,7 +104,7 @@ func (h *tripHandler) list(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	trips, err := h.trips.List(r.Context(), userID)
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	if trips == nil {
@@ -127,7 +127,7 @@ func (h *tripHandler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	t, err := h.trips.Create(r.Context(), userID, body.payload())
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	middleware.WriteJSON(w, http.StatusCreated, toTripJSON(t))
@@ -139,7 +139,7 @@ func (h *tripHandler) get(w http.ResponseWriter, r *http.Request) {
 	tripID := chi.URLParam(r, "id")
 	t, err := h.trips.Get(r.Context(), userID, tripID)
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	middleware.WriteJSON(w, http.StatusOK, toTripJSON(t))
@@ -156,7 +156,7 @@ func (h *tripHandler) update(w http.ResponseWriter, r *http.Request) {
 	}
 	t, err := h.trips.Update(r.Context(), userID, tripID, body.payload())
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	middleware.WriteJSON(w, http.StatusOK, toTripJSON(t))
@@ -167,7 +167,7 @@ func (h *tripHandler) delete(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	tripID := chi.URLParam(r, "id")
 	if err := h.trips.Delete(r.Context(), userID, tripID); err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

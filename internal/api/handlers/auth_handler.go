@@ -100,7 +100,7 @@ func (h *authHandler) register(w http.ResponseWriter, r *http.Request) {
 	}
 	u, err := h.auth.Register(r.Context(), body.Email, body.Password, body.Name)
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	middleware.WriteJSON(w, http.StatusCreated, map[string]any{"user": toUserJSON(u)})
@@ -118,7 +118,7 @@ func (h *authHandler) login(w http.ResponseWriter, r *http.Request) {
 	}
 	u, access, refresh, err := h.auth.Login(r.Context(), body.Email, body.Password)
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	h.setRefreshCookie(w, refresh, RefreshCookieMaxAge)
@@ -133,7 +133,7 @@ func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {
 	token := h.refreshCookie(r)
 	access, newRefresh, err := h.auth.Refresh(r.Context(), token)
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	h.setRefreshCookie(w, newRefresh, RefreshCookieMaxAge)
@@ -143,7 +143,7 @@ func (h *authHandler) refresh(w http.ResponseWriter, r *http.Request) {
 // POST /auth/logout — cookie 'rt' → 204 + Clear-Cookie.
 func (h *authHandler) logout(w http.ResponseWriter, r *http.Request) {
 	if err := h.auth.Logout(r.Context(), h.refreshCookie(r)); err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	h.clearRefreshCookie(w)
@@ -155,15 +155,8 @@ func (h *authHandler) me(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.AuthContext(r.Context())
 	u, err := h.auth.Me(r.Context(), userID)
 	if err != nil {
-		middleware.WriteError(w, toAppError(err))
+		middleware.WriteError(w, middleware.ToAppError(err))
 		return
 	}
 	middleware.WriteJSON(w, http.StatusOK, toUserJSON(u))
-}
-
-func toAppError(err error) *domain.AppError {
-	if ae, ok := err.(*domain.AppError); ok {
-		return ae
-	}
-	return domain.NewInternal()
 }
