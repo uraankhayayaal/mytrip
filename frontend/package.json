@@ -24,6 +24,7 @@
     "@vitejs/plugin-react": "^4",
     "autoprefixer": "^10",
     "axios": "^1",
+    "date-fns": "^4.4.0",
     "eslint": "^8",
     "jsdom": "^22",
     "leaflet": "^1.9",
